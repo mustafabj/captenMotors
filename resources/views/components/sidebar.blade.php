@@ -4,8 +4,8 @@
        <div class="kt-sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0"
            id="sidebar_header">
            <a class="dark:hidden" href="html/demo1.html">
-               <img class="default-logo min-h-[22px] max-w-none" src="assets/media/app/default-logo.svg" />
-               <img class="small-logo min-h-[22px] max-w-none" src="assets/media/app/mini-logo.svg" />
+               <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/default-logo.svg') }}" />
+               <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
            </a>
            <a class="hidden dark:block" href="html/demo1.html">
                <img class="default-logo min-h-[22px] max-w-none" src="assets/media/app/default-logo-dark.svg" />

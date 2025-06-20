@@ -92,6 +92,7 @@
                 <!-- End of Container -->
             </main>
             <!-- End of Content -->
+            @include('components.footer')
         </div>
         <!-- End of Wrapper -->
     </div>
