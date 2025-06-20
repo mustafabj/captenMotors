@@ -199,17 +199,17 @@
                                                 false,
                                             );
                                         @endphp
-                                        @if ($daysUntilExpiry < 0)
+                                        @if ($daysUntilExpiry > 0)
                                             <span class="kt-badge kt-badge-destructive kt-badge-outline">
-                                                Expired {{ abs($daysUntilExpiry) }} days ago
+                                                Expired {{ $daysUntilExpiry }} days ago
                                             </span>
-                                        @elseif($daysUntilExpiry <= 30)
+                                        @elseif($daysUntilExpiry >= -30)
                                             <span class="kt-badge kt-badge-warning kt-badge-outline">
-                                                Expires in {{ $daysUntilExpiry }} days
+                                                Expires in {{ abs($daysUntilExpiry) }} days
                                             </span>
                                         @else
                                             <span class="kt-badge kt-badge-success kt-badge-outline">
-                                                Valid for {{ $daysUntilExpiry }} days
+                                                Valid for {{abs($daysUntilExpiry) }} days
                                             </span>
                                         @endif
                                     </div>
