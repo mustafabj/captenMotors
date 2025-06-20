@@ -114,7 +114,7 @@ class CarController extends Controller
             'engine_type' => 'nullable|string|max:50',
             'purchase_date' => 'required|date',
             'purchase_price' => 'nullable|numeric|min:0',
-            'insurance_expiry_date' => 'required|date|after:purchase_date',
+            'insurance_expiry_date' => 'required|date',
             'expected_sale_price' => 'required|numeric|min:0',
             'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
         ]);
