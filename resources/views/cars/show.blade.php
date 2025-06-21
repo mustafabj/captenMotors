@@ -476,14 +476,73 @@
 
                 <!-- Images Tab -->
                 <div class="hidden" id="tab_1_7">
-                    <div class="kt-card">
-                        <div class="kt-card-content text-center py-12">
-                            <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
-                            <h4 class="text-lg font-bold text-gray-900 mb-2">Car Images</h4>
-                            <p class="text-gray-600">Image management feature coming soon.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Car License Image -->
+                        <div class="kt-card">
+                            <div class="kt-card-header">
+                                <h4 class="text-lg font-bold mb-6">Car License</h4>
+                            </div>
+                            <div class="kt-card-content">
+                                @if($car->getFirstMedia('car_license'))
+                                    <div class="text-center">
+                                        <img src="{{ $car->getFirstMedia('car_license')->getUrl() }}" 
+                                             alt="Car License" 
+                                             class="max-w-full h-auto rounded-lg shadow-md">
+                                        <p class="text-sm text-gray-500 mt-2">License Image</p>
+                                    </div>
+                                @else
+                                    <div class="text-center py-12">
+                                        <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
+                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No License Image</h4>
+                                        <p class="text-gray-600">No car license image has been uploaded.</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Car Images -->
+                        <div class="kt-card">
+                            <div class="kt-card-header">
+                                <h4 class="text-lg font-bold mb-6">Car Images ({{ $car->getMedia('car_images')->count() }})</h4>
+                            </div>
+                            <div class="kt-card-content">
+                                @if($car->getMedia('car_images')->count() > 0)
+                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        @foreach($car->getMedia('car_images') as $image)
+                                            <div class="relative group">
+                                                <img src="{{ $image->getUrl() }}" 
+                                                     alt="Car Image" 
+                                                     class="w-full h-32 object-cover rounded-lg shadow-md cursor-pointer"
+                                                     onclick="openImageModal('{{ $image->getUrl() }}')">
+                                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                    <i class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-12">
+                                        <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
+                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No Car Images</h4>
+                                        <p class="text-gray-600">No car images have been uploaded.</p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative max-w-4xl w-full">
+                <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 z-10">
+                    <i class="ki-filled ki-cross"></i>
+                </button>
+                <img id="modalImage" src="" alt="Car Image" class="max-w-full h-auto rounded-lg shadow-xl">
             </div>
         </div>
     </div>
@@ -567,5 +626,15 @@
                 closeAddCostModal();
             }
         });
+
+        // Image modal functionality
+        function openImageModal(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
     </script>
 @endsection

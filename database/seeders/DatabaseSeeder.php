@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed cars with their options and inspections
         $this->call([
+            BulkDealSeeder::class,
             CarSeeder::class,
         ]);
     }
