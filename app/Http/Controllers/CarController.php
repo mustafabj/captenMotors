@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\BulkDeal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CarController extends Controller
 {
@@ -21,7 +23,10 @@ class CarController extends Controller
      */
     public function create()
     {
-        return view('cars.create');
+        $bulkDeals = BulkDeal::where('status', 'active')
+            ->withCount('cars')
+            ->get();
+        return view('cars.create', compact('bulkDeals'));
     }
 
     /**
@@ -29,52 +34,90 @@ class CarController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'model' => 'required|string|max:255',
-            'vehicle_category' => 'nullable|string|max:255',
-            'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'place_of_manufacture' => 'nullable|string|max:255',
-            'number_of_keys' => 'required|integer|min:1|max:10',
-            'chassis_number' => 'required|string|unique:cars,chassis_number',
-            'plate_number' => 'nullable|string|unique:cars,plate_number',
-            'engine_capacity' => 'required|string|max:50',
-            'engine_type' => 'nullable|string|max:50',
-            'purchase_date' => 'required|date',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'insurance_expiry_date' => 'required|date|after:purchase_date',
-            'expected_sale_price' => 'required|numeric|min:0',
-            'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
-        ]);
-
-        $car = Car::create($validated);
-
-        // Create initial status history entry
-        $car->statusHistories()->create([
-            'status' => $car->status,
-            'notes' => 'Initial status set during car creation'
-        ]);
-
-        // Handle car options
-        if ($request->has('options')) {
-            foreach ($request->options as $optionName) {
-                $car->options()->create(['name' => $optionName]);
-            }
-        }
-
-        // Handle inspection data
-        if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
-            $car->inspection()->create([
-                'front_chassis_right' => $request->front_chassis_right,
-                'front_chassis_left' => $request->front_chassis_left,
-                'rear_chassis_right' => $request->rear_chassis_right,
-                'rear_chassis_left' => $request->rear_chassis_left,
-                'transmission' => $request->transmission,
-                'motor' => $request->motor,
-                'body_notes' => $request->body_notes,
+        try {
+            $validated = $request->validate([
+                'model' => 'required|string|max:255',
+                'vehicle_category' => 'nullable|string|max:255',
+                'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+                'place_of_manufacture' => 'nullable|string|max:255',
+                'number_of_keys' => 'required|integer|min:1|max:10',
+                'chassis_number' => 'required|string|unique:cars,chassis_number',
+                'plate_number' => 'nullable|string|unique:cars,plate_number',
+                'engine_capacity' => 'required|string|max:50',
+                'engine_type' => 'nullable|string|max:50',
+                'purchase_date' => 'required|date',
+                'purchase_price' => 'nullable|numeric|min:0',
+                'insurance_expiry_date' => 'required|date|after:purchase_date',
+                'expected_sale_price' => 'required|numeric|min:0',
+                'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
+                'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
+                'car_license' => 'nullable|string',
+                'car_images_data' => 'nullable|string',
             ]);
-        }
 
-        return redirect()->route('cars.show', $car)->with('success', 'Car created successfully!');
+            return DB::transaction(function () use ($validated, $request) {
+                $car = Car::create($validated);
+
+                // Handle car license image (base64)
+                if ($request->filled('car_license')) {
+                    $base64Data = $request->car_license;
+                    if (strpos($base64Data, 'data:image/') === 0) {
+                        $car->addMediaFromBase64($base64Data)
+                            ->toMediaCollection('car_license');
+                    }
+                }
+
+                // Handle car images (base64 array)
+                if ($request->filled('car_images_data')) {
+                    $carImagesData = json_decode($request->car_images_data, true);
+                    if (is_array($carImagesData)) {
+                        foreach ($carImagesData as $base64Data) {
+                            if (strpos($base64Data, 'data:image/') === 0) {
+                                $car->addMediaFromBase64($base64Data)
+                                    ->toMediaCollection('car_images');
+                            }
+                        }
+                    }
+                }
+
+                // Create initial status history entry
+                $car->statusHistories()->create([
+                    'status' => $car->status,
+                    'notes' => 'Initial status set during car creation'
+                ]);
+
+                // Handle car options
+                if ($request->has('options')) {
+                    foreach ($request->options as $optionName) {
+                        $car->options()->create(['name' => $optionName]);
+                    }
+                }
+
+                // Handle inspection data
+                if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
+                    $car->inspection()->create([
+                        'front_chassis_right' => $request->front_chassis_right,
+                        'front_chassis_left' => $request->front_chassis_left,
+                        'rear_chassis_right' => $request->rear_chassis_right,
+                        'rear_chassis_left' => $request->rear_chassis_left,
+                        'transmission' => $request->transmission,
+                        'motor' => $request->motor,
+                        'body_notes' => $request->body_notes,
+                    ]);
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Car created successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while creating the car. Please try again.'])
+                ->withInput();
+        }
     }
 
     /**
@@ -100,72 +143,106 @@ class CarController extends Controller
      */
     public function update(Request $request, Car $car)
     {
-        $car->load(['options', 'inspection', 'statusHistories', 'equipmentCosts']);
-        
-        $validated = $request->validate([
-            'model' => 'required|string|max:255',
-            'vehicle_category' => 'nullable|string|max:255',
-            'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'place_of_manufacture' => 'nullable|string|max:255',
-            'number_of_keys' => 'required|integer|min:1|max:10',
-            'chassis_number' => 'required|string|unique:cars,chassis_number,' . $car->id,
-            'plate_number' => 'nullable|string|unique:cars,plate_number,' . $car->id,
-            'engine_capacity' => 'required|string|max:50',
-            'engine_type' => 'nullable|string|max:50',
-            'purchase_date' => 'required|date',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'insurance_expiry_date' => 'required|date',
-            'expected_sale_price' => 'required|numeric|min:0',
-            'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
-        ]);
-
-        // Check if status has changed
-        $statusChanged = $car->status !== $validated['status'];
-
-        $car->update($validated);
-
-        // Create status history entry if status changed
-        if ($statusChanged) {
-            $car->statusHistories()->create([
-                'status' => $validated['status'],
-                'notes' => $request->status_notes ?? 'Status updated'
+        try {
+            $validated = $request->validate([
+                'model' => 'required|string|max:255',
+                'vehicle_category' => 'nullable|string|max:255',
+                'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+                'place_of_manufacture' => 'nullable|string|max:255',
+                'number_of_keys' => 'required|integer|min:1|max:10',
+                'chassis_number' => 'required|string|unique:cars,chassis_number,' . $car->id,
+                'plate_number' => 'nullable|string|unique:cars,plate_number,' . $car->id,
+                'engine_capacity' => 'required|string|max:50',
+                'engine_type' => 'nullable|string|max:50',
+                'purchase_date' => 'required|date',
+                'purchase_price' => 'nullable|numeric|min:0',
+                'insurance_expiry_date' => 'required|date',
+                'expected_sale_price' => 'required|numeric|min:0',
+                'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
+                'car_license' => 'nullable|string',
+                'car_images_data' => 'nullable|string',
             ]);
-        }
 
-        // Handle car options
-        $car->options()->delete(); // Remove existing options
-        if ($request->has('options')) {
-            foreach ($request->options as $optionName) {
-                $car->options()->create(['name' => $optionName]);
-            }
-        }
+            return DB::transaction(function () use ($validated, $request, $car) {
+                $car->update($validated);
 
-        // Handle inspection data
-        if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
-            if ($car->inspection) {
-                $car->inspection()->update([
-                    'front_chassis_right' => $request->front_chassis_right,
-                    'front_chassis_left' => $request->front_chassis_left,
-                    'rear_chassis_right' => $request->rear_chassis_right,
-                    'rear_chassis_left' => $request->rear_chassis_left,
-                    'transmission' => $request->transmission,
-                    'motor' => $request->motor,
-                    'body_notes' => $request->body_notes,
-                ]);
-            } else {
-                $car->inspection()->create([
-                    'front_chassis_right' => $request->front_chassis_right,
-                    'front_chassis_left' => $request->front_chassis_left,
-                    'rear_chassis_right' => $request->rear_chassis_right,
-                    'rear_chassis_left' => $request->rear_chassis_left,
-                    'transmission' => $request->transmission,
-                    'motor' => $request->motor,
-                    'body_notes' => $request->body_notes,
-                ]);
-            }
-        }
+                // Handle car license image update
+                if ($request->filled('car_license')) {
+                    $base64Data = $request->car_license;
+                    if (strpos($base64Data, 'data:image/') === 0) {
+                        $car->clearMediaCollection('car_license');
+                        $car->addMediaFromBase64($base64Data)
+                            ->toMediaCollection('car_license');
+                    }
+                }
 
-        return redirect()->route('cars.show', $car)->with('success', 'Car updated successfully!');
+                // Handle car images update
+                if ($request->filled('car_images_data')) {
+                    $carImagesData = json_decode($request->car_images_data, true);
+                    if (is_array($carImagesData)) {
+                        $car->clearMediaCollection('car_images');
+                        foreach ($carImagesData as $base64Data) {
+                            if (strpos($base64Data, 'data:image/') === 0) {
+                                $car->addMediaFromBase64($base64Data)
+                                    ->toMediaCollection('car_images');
+                            }
+                        }
+                    }
+                }
+
+                // Create status history entry if status changed
+                if ($car->status !== $validated['status']) {
+                    $car->statusHistories()->create([
+                        'status' => $validated['status'],
+                        'notes' => $request->status_notes ?? 'Status updated'
+                    ]);
+                }
+
+                // Handle car options
+                $car->options()->delete(); // Remove existing options
+                if ($request->has('options')) {
+                    foreach ($request->options as $optionName) {
+                        $car->options()->create(['name' => $optionName]);
+                    }
+                }
+
+                // Handle inspection data
+                if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
+                    if ($car->inspection) {
+                        $car->inspection()->update([
+                            'front_chassis_right' => $request->front_chassis_right,
+                            'front_chassis_left' => $request->front_chassis_left,
+                            'rear_chassis_right' => $request->rear_chassis_right,
+                            'rear_chassis_left' => $request->rear_chassis_left,
+                            'transmission' => $request->transmission,
+                            'motor' => $request->motor,
+                            'body_notes' => $request->body_notes,
+                        ]);
+                    } else {
+                        $car->inspection()->create([
+                            'front_chassis_right' => $request->front_chassis_right,
+                            'front_chassis_left' => $request->front_chassis_left,
+                            'rear_chassis_right' => $request->rear_chassis_right,
+                            'rear_chassis_left' => $request->rear_chassis_left,
+                            'transmission' => $request->transmission,
+                            'motor' => $request->motor,
+                            'body_notes' => $request->body_notes,
+                        ]);
+                    }
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Car updated successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while updating the car. Please try again.'])
+                ->withInput();
+        }
     }
 
     /**
@@ -214,5 +291,20 @@ class CarController extends Controller
         ]);
 
         return redirect()->route('cars.show', $car)->with('success', 'Car status updated successfully!');
+    }
+
+    /**
+     * Delete car image
+     */
+    public function deleteImage(Request $request, Car $car)
+    {
+        $request->validate([
+            'media_id' => 'required|exists:media,id'
+        ]);
+
+        $media = $car->media()->findOrFail($request->media_id);
+        $media->delete();
+
+        return redirect()->route('cars.show', $car)->with('success', 'Image deleted successfully!');
     }
 }

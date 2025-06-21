@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Car extends Model
+class Car extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'model',
@@ -24,7 +26,8 @@ class Car extends Model
         'purchase_price',
         'insurance_expiry_date',
         'expected_sale_price',
-        'status'
+        'status',
+        'bulk_deal_id'
     ];
 
     protected $casts = [
@@ -53,12 +56,10 @@ class Car extends Model
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        // Only allow full slug format, not just ID
         if (is_numeric($value)) {
             abort(404);
         }
         
-        // Extract ID from slug and find the car
         $parts = explode('-', $value);
         $id = (int) end($parts);
         
@@ -83,5 +84,20 @@ class Car extends Model
     public function equipmentCosts()
     {
         return $this->hasMany(CarEquipmentCost::class);
+    }
+
+    public function bulkDeal()
+    {
+        return $this->belongsTo(BulkDeal::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('car_license')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg']);
+
+        $this->addMediaCollection('car_images')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg']);
     }
 }

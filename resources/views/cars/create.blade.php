@@ -1,429 +1,707 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($car) ? 'Edit Car' : 'Add New Car' }} - Capten Motors</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
+@extends('layouts.app')
+
+@section('content')
+    <!-- Dropzone.js CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
+    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+
+    <form action="{{ isset($car) ? route('cars.update', $car) : route('cars.store') }}" method="POST" id="car-form" enctype="multipart/form-data">
+        @csrf
+        @if(isset($car))
+            @method('PUT')
+        @endif
+        
+        <!-- General Error Messages -->
+        @if($errors->any())
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="ki-filled ki-information-5 text-red-400"></i>
+                        </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc pl-5 space-y-1">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         <!-- Header -->
-        <div class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-6">
-                    <h1 class="text-3xl font-bold text-gray-900">{{ isset($car) ? 'Edit Car' : 'Add New Car' }}</h1>
-                    <a href="{{ route('cars.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
-                        Back to List
-                    </a>
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold">{{ isset($car) ? 'Edit Car' : 'Add New Car' }}</h1>
+                <p class="text-sm text-gray-500">Home - Car Management - {{ isset($car) ? 'Edit Car' : 'Add Car' }}</p>
                 </div>
+            <div>
+                <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-outline">
+                    Cancel
+                </a>
+                <button type="submit" class="kt-btn kt-btn-primary ml-2">
+                    {{ isset($car) ? 'Update Car' : 'Create Car' }}
+                </button>
             </div>
         </div>
 
-        <!-- Progress Bar -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-            <div class="mb-8">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="step-indicator active" data-step="1">
-                            <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
-                            <span class="text-sm font-medium text-blue-600">Basic Info</span>
-                        </div>
-                        <div class="step-indicator" data-step="2">
-                            <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">2</div>
-                            <span class="text-sm font-medium text-gray-500">Options</span>
-                        </div>
-                        <div class="step-indicator" data-step="3">
-                            <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">3</div>
-                            <span class="text-sm font-medium text-gray-500">Inspection</span>
-                        </div>
-                        <div class="step-indicator" data-step="4">
-                            <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">4</div>
-                            <span class="text-sm font-medium text-gray-500">Review</span>
-                        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+            <!-- Left Column -->
+            <div class="lg:col-span-1 space-y-8 p-2" id="left-column">
+                <!-- Status Card -->
+                <div class="kt-card mb-4">
+                    <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">Status</h3>
                     </div>
-                </div>
-                <div class="mt-4 bg-gray-200 rounded-full h-2">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progress-bar" style="width: 25%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Wizard Form -->
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <form action="{{ isset($car) ? route('cars.update', $car) : route('cars.store') }}" method="POST" id="car-wizard-form">
-                @csrf
-                @if(isset($car))
-                    @method('PUT')
-                @endif
-                
-                <!-- Step 1: Basic Information -->
-                <div class="step-content" id="step-1">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">Basic Car Information</h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="kt-card-content p-6">
+                        <div class="space-y-4">
                             <div>
-                                <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Car Model *</label>
-                                <input type="text" name="model" id="model" value="{{ old('model', $car->model ?? '') }}" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                @error('model')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="vehicle_category" class="block text-sm font-medium text-gray-700 mb-2">Vehicle Category</label>
-                                <select name="vehicle_category" id="vehicle_category"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Category</option>
-                                    <option value="Sedan" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Sedan' ? 'selected' : '' }}>Sedan</option>
-                                    <option value="SUV" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'SUV' ? 'selected' : '' }}>SUV</option>
-                                    <option value="Hatchback" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Hatchback' ? 'selected' : '' }}>Hatchback</option>
-                                    <option value="Coupe" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Coupe' ? 'selected' : '' }}>Coupe</option>
-                                    <option value="Wagon" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Wagon' ? 'selected' : '' }}>Wagon</option>
-                                    <option value="Convertible" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Convertible' ? 'selected' : '' }}>Convertible</option>
-                                    <option value="Pickup" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Pickup' ? 'selected' : '' }}>Pickup</option>
-                                    <option value="Van" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Van' ? 'selected' : '' }}>Van</option>
-                                    <option value="Sports Car" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Sports Car' ? 'selected' : '' }}>Sports Car</option>
-                                    <option value="Luxury Car" {{ old('vehicle_category', $car->vehicle_category ?? '') == 'Luxury Car' ? 'selected' : '' }}>Luxury Car</option>
+                                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Car Status *</label>
+                                <select name="status" id="status" required class="kt-select w-full">
+                                    <option value="">Select Status</option>
+                                    <option value="not_received" {{ old('status') == 'not_received' ? 'selected' : '' }}>Not Received</option>
+                                    <option value="paint" {{ old('status') == 'paint' ? 'selected' : '' }}>Paint</option>
+                                    <option value="upholstery" {{ old('status') == 'upholstery' ? 'selected' : '' }}>Upholstery</option>
+                                    <option value="mechanic" {{ old('status') == 'mechanic' ? 'selected' : '' }}>Mechanic</option>
+                                    <option value="electrical" {{ old('status') == 'electrical' ? 'selected' : '' }}>Electrical</option>
+                                    <option value="agency" {{ old('status') == 'agency' ? 'selected' : '' }}>Agency</option>
+                                    <option value="polish" {{ old('status') == 'polish' ? 'selected' : '' }}>Polish</option>
+                                    <option value="ready" {{ old('status') == 'ready' ? 'selected' : '' }}>Ready</option>
                                 </select>
-                                @error('vehicle_category')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="text-sm text-gray-500 mt-2">Set the car status.</p>
+                                @error('status')
+                                    <p class="error-message">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label for="manufacturing_year" class="block text-sm font-medium text-gray-700 mb-2">Manufacturing Year *</label>
-                                <input type="number" name="manufacturing_year" id="manufacturing_year" value="{{ old('manufacturing_year', $car->manufacturing_year ?? '') }}" min="1900" max="{{ date('Y') + 1 }}" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                @error('manufacturing_year')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="place_of_manufacture" class="block text-sm font-medium text-gray-700 mb-2">Place of Manufacture</label>
-                                <input type="text" name="place_of_manufacture" id="place_of_manufacture" value="{{ old('place_of_manufacture', $car->place_of_manufacture ?? '') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Japan, Germany, USA">
-                                @error('place_of_manufacture')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="number_of_keys" class="block text-sm font-medium text-gray-700 mb-2">Number of Keys *</label>
-                                <input type="number" name="number_of_keys" id="number_of_keys" value="{{ old('number_of_keys', $car->number_of_keys ?? '') }}" min="1" max="10" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                @error('number_of_keys')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="chassis_number" class="block text-sm font-medium text-gray-700 mb-2">Chassis Number *</label>
-                                <input type="text" name="chassis_number" id="chassis_number" value="{{ old('chassis_number', $car->chassis_number ?? '') }}" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="17-character VIN">
-                                @error('chassis_number')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="plate_number" class="block text-sm font-medium text-gray-700 mb-2">Plate Number</label>
-                                <input type="text" name="plate_number" id="plate_number" value="{{ old('plate_number', $car->plate_number ?? '') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., AB123CD">
-                                @error('plate_number')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="engine_capacity" class="block text-sm font-medium text-gray-700 mb-2">Engine Capacity *</label>
-                                <input type="text" name="engine_capacity" id="engine_capacity" value="{{ old('engine_capacity', $car->engine_capacity ?? '') }}" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 2.0L">
-                                @error('engine_capacity')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="engine_type" class="block text-sm font-medium text-gray-700 mb-2">Engine Type</label>
-                                <select name="engine_type" id="engine_type"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Engine Type</option>
-                                    <option value="Gasoline" {{ old('engine_type', $car->engine_type ?? '') == 'Gasoline' ? 'selected' : '' }}>Gasoline</option>
-                                    <option value="Diesel" {{ old('engine_type', $car->engine_type ?? '') == 'Diesel' ? 'selected' : '' }}>Diesel</option>
-                                    <option value="Hybrid" {{ old('engine_type', $car->engine_type ?? '') == 'Hybrid' ? 'selected' : '' }}>Hybrid</option>
-                                    <option value="Electric" {{ old('engine_type', $car->engine_type ?? '') == 'Electric' ? 'selected' : '' }}>Electric</option>
-                                    <option value="Plug-in Hybrid" {{ old('engine_type', $car->engine_type ?? '') == 'Plug-in Hybrid' ? 'selected' : '' }}>Plug-in Hybrid</option>
+                                <label for="bulk_deal_id" class="block text-sm font-medium text-gray-700 mb-2">Bulk Deal (Optional)</label>
+                                <select name="bulk_deal_id" id="bulk_deal_id" class="kt-select w-full">
+                                    <option value="">No Bulk Deal</option>
+                                    @foreach($bulkDeals as $deal)
+                                        <option value="{{ $deal->id }}" {{ old('bulk_deal_id') == $deal->id ? 'selected' : '' }}>
+                                            {{ $deal->name }} ({{ $deal->cars_count ?? 0 }} cars)
+                                        </option>
+                                    @endforeach
                                 </select>
-                                @error('engine_type')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                <p class="text-sm text-gray-500 mt-2">Associate this car with a bulk deal.</p>
+                                @error('bulk_deal_id')
+                                    <p class="error-message">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
                     </div>
+                            </div>
+
+                <!-- Car Details Card -->
+                <div class="kt-card mb-4">
+                    <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">Car Details</h3>
+                    </div>
+                    <div class="kt-card-content p-6 space-y-6">
+                            <div>
+                            <label for="vehicle_category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <input type="text" name="vehicle_category" id="vehicle_category" value="{{ old('vehicle_category') }}" 
+                                class="kt-input w-full" placeholder="e.g., Sedan, SUV">
+                            <p class="text-sm text-gray-500 mt-2">Add car to a category.</p>
+                             @error('vehicle_category')
+                                <p class="error-message">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        <div>
+                            <label for="options" class="block text-sm font-medium text-gray-700 mb-2">Features (Tags)</label>
+                             <select
+                                 class="kt-select"
+                                 data-kt-select="true"
+                                 data-kt-select-multiple="true"
+                                 data-kt-select-placeholder="Select car features..."
+                                 name="options[]"
+                                 multiple
+                             >
+                                 @php
+                                     $carOptions = [
+                                         'Leather Seats', 'Sunroof', 'Navigation System', 'Bluetooth',
+                                         'Backup Camera', 'Heated Seats', 'Ventilated Seats', 'Premium Audio',
+                                         'Alloy Wheels', 'LED Headlights', 'Cruise Control', 'Keyless Entry',
+                                         'Push Button Start', 'Dual Zone Climate Control', 'Power Windows',
+                                         'Power Locks', 'Fog Lights', 'Spoiler', 'Tinted Windows'
+                                     ];
+                                     $existingOptions = old('options', []);
+                                 @endphp
+                                 
+                                 @foreach($carOptions as $option)
+                                     <option value="{{ $option }}" 
+                                         {{ in_array($option, $existingOptions) ? 'selected' : '' }}>
+                                         {{ $option }}
+                                     </option>
+                                 @endforeach
+                             </select>
+                            <p class="text-sm text-gray-500 mt-2">Add features to the car.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Step 2: Financial Information -->
-                <div class="step-content hidden" id="step-2">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">Financial Information</h2>
-                        
+                <!-- Insurance & Purchase Date Card -->
+                <div class="kt-card mb-4">
+                    <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">Important Dates</h3>
+                    </div>
+                    <div class="kt-card-content p-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="purchase_date" class="block text-sm font-medium text-gray-700 mb-2">Purchase Date *</label>
-                                <input type="date" name="purchase_date" id="purchase_date" value="{{ old('purchase_date', isset($car) ? $car->purchase_date->format('Y-m-d') : '') }}" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="date" name="purchase_date" id="purchase_date" value="{{ old('purchase_date') }}" required
+                                    class="kt-input w-full">
                                 @error('purchase_date')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    <p class="error-message">{{ $message }}</p>
                                 @enderror
                             </div>
-
-                            <div>
-                                <label for="purchase_price" class="block text-sm font-medium text-gray-700 mb-2">Purchase Price</label>
-                                <input type="number" name="purchase_price" id="purchase_price" value="{{ old('purchase_price', $car->purchase_price ?? '') }}" min="0" step="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
-                                @error('purchase_price')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
                             <div>
                                 <label for="insurance_expiry_date" class="block text-sm font-medium text-gray-700 mb-2">Insurance Expiry Date *</label>
-                                <input type="date" name="insurance_expiry_date" id="insurance_expiry_date" value="{{ old('insurance_expiry_date', isset($car) ? $car->insurance_expiry_date->format('Y-m-d') : '') }}" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="date" name="insurance_expiry_date" id="insurance_expiry_date" value="{{ old('insurance_expiry_date') }}" required
+                                    class="kt-input w-full">
                                 @error('insurance_expiry_date')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    <p class="error-message">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                            </div>
+
+            <!-- Right Column -->
+            <div class="lg:col-span-2 space-y-8" id="right-column">
+                 <!-- General Card -->
+                <div class="kt-card mb-4">
+                    <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">General</h3>
+                    </div>
+                    <div class="kt-card-content p-6 space-y-6">
+                            <div>
+                            <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Car Model *</label>
+                            <input type="text" name="model" id="model" value="{{ old('model') }}" required
+                                class="kt-input w-full">
+                            @error('model')
+                                <p class="error-message">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label for="expected_sale_price" class="block text-sm font-medium text-gray-700 mb-2">Expected Sale Price *</label>
-                                <input type="number" name="expected_sale_price" id="expected_sale_price" value="{{ old('expected_sale_price', $car->expected_sale_price ?? '') }}" min="0" step="0.01" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
-                                @error('expected_sale_price')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <h4 class="text-md font-semibold text-gray-800 mb-4 mt-4">Specifications</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                               <div>
+                                    <label for="manufacturing_year" class="block text-sm font-medium text-gray-700 mb-2">Manufacturing Year *</label>
+                                    <input type="number" name="manufacturing_year" id="manufacturing_year" value="{{ old('manufacturing_year') }}" 
+                                        min="1900" max="{{ date('Y') + 1 }}" required class="kt-input w-full">
+                                    @error('manufacturing_year')
+                                        <p class="error-message">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="chassis_number" class="block text-sm font-medium text-gray-700 mb-2">Chassis Number *</label>
+                                    <input type="text" name="chassis_number" id="chassis_number" value="{{ old('chassis_number') }}" required
+                                        class="kt-input w-full font-mono">
+                                    @error('chassis_number')
+                                        <p class="error-message">{{ $message }}</p>
                                 @enderror
                             </div>
-
                             <div>
-                                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                                <select name="status" id="status" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Status</option>
-                                    <option value="not_received" {{ old('status', $car->status ?? '') == 'not_received' ? 'selected' : '' }}>Not Received</option>
-                                    <option value="paint" {{ old('status', $car->status ?? '') == 'paint' ? 'selected' : '' }}>Paint</option>
-                                    <option value="upholstery" {{ old('status', $car->status ?? '') == 'upholstery' ? 'selected' : '' }}>Upholstery</option>
-                                    <option value="mechanic" {{ old('status', $car->status ?? '') == 'mechanic' ? 'selected' : '' }}>Mechanic</option>
-                                    <option value="electrical" {{ old('status', $car->status ?? '') == 'electrical' ? 'selected' : '' }}>Electrical</option>
-                                    <option value="agency" {{ old('status', $car->status ?? '') == 'agency' ? 'selected' : '' }}>Agency</option>
-                                    <option value="polish" {{ old('status', $car->status ?? '') == 'polish' ? 'selected' : '' }}>Polish</option>
-                                    <option value="ready" {{ old('status', $car->status ?? '') == 'ready' ? 'selected' : '' }}>Ready</option>
+                                <label for="engine_capacity" class="block text-sm font-medium text-gray-700 mb-2">Engine Capacity *</label>
+                                    <input type="text" name="engine_capacity" id="engine_capacity" value="{{ old('engine_capacity') }}" required
+                                        class="kt-input w-full">
+                                @error('engine_capacity')
+                                        <p class="error-message">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="engine_type" class="block text-sm font-medium text-gray-700 mb-2">Engine Type</label>
+                                    <select name="engine_type" id="engine_type" class="kt-input w-full">
+                                    <option value="">Select Engine Type</option>
+                                        <option value="Gasoline" {{ old('engine_type') == 'Gasoline' ? 'selected' : '' }}>Gasoline</option>
+                                        <option value="Diesel" {{ old('engine_type') == 'Diesel' ? 'selected' : '' }}>Diesel</option>
+                                        <option value="Hybrid" {{ old('engine_type') == 'Hybrid' ? 'selected' : '' }}>Hybrid</option>
+                                        <option value="Electric" {{ old('engine_type') == 'Electric' ? 'selected' : '' }}>Electric</option>
+                                        <option value="Plug-in Hybrid" {{ old('engine_type') == 'Plug-in Hybrid' ? 'selected' : '' }}>Plug-in Hybrid</option>
                                 </select>
-                                @error('status')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @error('engine_type')
+                                        <p class="error-message">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="number_of_keys" class="block text-sm font-medium text-gray-700 mb-2">Number of Keys *</label>
+                                    <input type="number" name="number_of_keys" id="number_of_keys" value="{{ old('number_of_keys') }}" 
+                                        min="1" max="10" required class="kt-input w-full">
+                                    @error('number_of_keys')
+                                        <p class="error-message">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="plate_number" class="block text-sm font-medium text-gray-700 mb-2">Plate Number</label>
+                                    <input type="text" name="plate_number" id="plate_number" value="{{ old('plate_number') }}"
+                                        class="kt-input w-full">
+                                    @error('plate_number')
+                                        <p class="error-message">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="place_of_manufacture" class="block text-sm font-medium text-gray-700 mb-2">Place of Manufacture</label>
+                                    <input type="text" name="place_of_manufacture" id="place_of_manufacture" value="{{ old('place_of_manufacture') }}"
+                                        class="kt-input w-full">
+                                    @error('place_of_manufacture')
+                                        <p class="error-message">{{ $message }}</p>
                                 @enderror
+                                </div>
                             </div>
-
-                            @if(isset($car))
-                            <div>
-                                <label for="status_notes" class="block text-sm font-medium text-gray-700 mb-2">Status Change Notes</label>
-                                <textarea name="status_notes" id="status_notes" rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Optional notes for status change"></textarea>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>
 
-                <!-- Step 3: Car Options -->
-                <div class="step-content hidden" id="step-3">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">Car Options & Features</h2>
-                        <p class="text-gray-600 mb-6">Select the options and features available on this car.</p>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            @php
-                                $carOptions = [
-                                    'Leather Seats', 'Sunroof', 'Navigation System', 'Bluetooth',
-                                    'Backup Camera', 'Heated Seats', 'Ventilated Seats', 'Premium Audio',
-                                    'Alloy Wheels', 'LED Headlights', 'Cruise Control', 'Keyless Entry',
-                                    'Push Button Start', 'Dual Zone Climate Control', 'Power Windows',
-                                    'Power Locks', 'Fog Lights', 'Spoiler', 'Tinted Windows'
-                                ];
-                                
-                                $existingOptions = isset($car) ? $car->options->pluck('name')->toArray() : [];
-                            @endphp
-                            
-                            @foreach($carOptions as $option)
-                                <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                    <input type="checkbox" name="options[]" value="{{ $option }}" 
-                                        {{ in_array($option, old('options', $existingOptions)) ? 'checked' : '' }}
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                                    <span class="ml-3 text-sm font-medium text-gray-900">{{ $option }}</span>
-                                </label>
-                            @endforeach
-                        </div>
+                <!-- Pricing Card -->
+                <div class="kt-card mb-4">
+                     <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">Pricing</h3>
                     </div>
-                </div>
-
-                <!-- Step 4: Inspection Details -->
-                <div class="step-content hidden" id="step-4">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-6">Inspection Details</h2>
-                        <p class="text-gray-600 mb-6">Provide inspection information for this car (optional).</p>
-                        
+                    <div class="kt-card-content p-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="front_chassis_right" class="block text-sm font-medium text-gray-700 mb-2">Front Chassis Right</label>
-                                <select name="front_chassis_right" id="front_chassis_right"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Condition</option>
-                                    <option value="Good" {{ old('front_chassis_right', $car->inspection->front_chassis_right ?? '') == 'Good' ? 'selected' : '' }}>Good</option>
-                                    <option value="Minor Damage" {{ old('front_chassis_right', $car->inspection->front_chassis_right ?? '') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
-                                    <option value="Repaired" {{ old('front_chassis_right', $car->inspection->front_chassis_right ?? '') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
-                                    <option value="Excellent" {{ old('front_chassis_right', $car->inspection->front_chassis_right ?? '') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
-                                    <option value="Needs Attention" {{ old('front_chassis_right', $car->inspection->front_chassis_right ?? '') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
-                                </select>
+                                <label for="purchase_price" class="block text-sm font-medium text-gray-700 mb-2">Purchase Price *</label>
+                                <input type="number" name="purchase_price" id="purchase_price" value="{{ old('purchase_price') }}" 
+                                    min="0" step="0.01" required class="kt-input w-full">
+                                 <p class="text-sm text-gray-500 mt-2">Set the car purchase price.</p>
+                                @error('purchase_price')
+                                    <p class="error-message">{{ $message }}</p>
+                                @enderror
                             </div>
-
                             <div>
-                                <label for="front_chassis_left" class="block text-sm font-medium text-gray-700 mb-2">Front Chassis Left</label>
-                                <select name="front_chassis_left" id="front_chassis_left"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Condition</option>
-                                    <option value="Good" {{ old('front_chassis_left', $car->inspection->front_chassis_left ?? '') == 'Good' ? 'selected' : '' }}>Good</option>
-                                    <option value="Minor Damage" {{ old('front_chassis_left', $car->inspection->front_chassis_left ?? '') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
-                                    <option value="Repaired" {{ old('front_chassis_left', $car->inspection->front_chassis_left ?? '') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
-                                    <option value="Excellent" {{ old('front_chassis_left', $car->inspection->front_chassis_left ?? '') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
-                                    <option value="Needs Attention" {{ old('front_chassis_left', $car->inspection->front_chassis_left ?? '') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
-                                </select>
+                                <label for="expected_sale_price" class="block text-sm font-medium text-gray-700 mb-2">Expected Sale Price *</label>
+                                <input type="number" name="expected_sale_price" id="expected_sale_price" value="{{ old('expected_sale_price') }}" 
+                                    min="0" step="0.01" required class="kt-input w-full">
+                                <p class="text-sm text-gray-500 mt-2">Set the car expected sale price.</p>
+                                @error('expected_sale_price')
+                                    <p class="error-message">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
                             </div>
 
+
+                <!-- Images Card -->
+                <div class="kt-card mb-4">
+                    <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">Car Images</h3>
+                    </div>
+                    <div class="kt-card-content p-6">
+                        <div class="space-y-6">
+                            <!-- Car License Image -->
                             <div>
-                                <label for="rear_chassis_right" class="block text-sm font-medium text-gray-700 mb-2">Rear Chassis Right</label>
-                                <select name="rear_chassis_right" id="rear_chassis_right"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Condition</option>
-                                    <option value="Good" {{ old('rear_chassis_right', $car->inspection->rear_chassis_right ?? '') == 'Good' ? 'selected' : '' }}>Good</option>
-                                    <option value="Minor Damage" {{ old('rear_chassis_right', $car->inspection->rear_chassis_right ?? '') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
-                                    <option value="Repaired" {{ old('rear_chassis_right', $car->inspection->rear_chassis_right ?? '') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
-                                    <option value="Excellent" {{ old('rear_chassis_right', $car->inspection->rear_chassis_right ?? '') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
-                                    <option value="Needs Attention" {{ old('rear_chassis_right', $car->inspection->rear_chassis_right ?? '') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
-                                </select>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Car License Image</label>
+                                @if(isset($car) && $car->getFirstMedia('car_license'))
+                                    <div class="mb-4">
+                                        <p class="text-sm text-gray-600 mb-2">Current License Image:</p>
+                                        <img src="{{ $car->getFirstMedia('car_license')->getUrl() }}" 
+                                             alt="Current License" 
+                                             class="w-32 h-24 object-cover rounded border">
+                                    </div>
+                                @endif
+                                <div id="license-dropzone" class="dropzone-license border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors">
+                                    <div class="dz-message">
+                                        <i class="ki-filled ki-picture text-2xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600">Drop license image here or click to upload</p>
+                                        <p class="text-xs text-gray-500 mt-1">JPG, PNG (Max 2MB)</p>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="car_license" id="car_license_input">
+                                @error('car_license')
+                                    <p class="error-message">{{ $message }}</p>
+                                @enderror
                             </div>
 
+                            <!-- Car Images -->
                             <div>
-                                <label for="rear_chassis_left" class="block text-sm font-medium text-gray-700 mb-2">Rear Chassis Left</label>
-                                <select name="rear_chassis_left" id="rear_chassis_left"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Condition</option>
-                                    <option value="Good" {{ old('rear_chassis_left', $car->inspection->rear_chassis_left ?? '') == 'Good' ? 'selected' : '' }}>Good</option>
-                                    <option value="Minor Damage" {{ old('rear_chassis_left', $car->inspection->rear_chassis_left ?? '') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
-                                    <option value="Repaired" {{ old('rear_chassis_left', $car->inspection->rear_chassis_left ?? '') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
-                                    <option value="Excellent" {{ old('rear_chassis_left', $car->inspection->rear_chassis_left ?? '') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
-                                    <option value="Needs Attention" {{ old('rear_chassis_left', $car->inspection->rear_chassis_left ?? '') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="transmission" class="block text-sm font-medium text-gray-700 mb-2">Transmission</label>
-                                <select name="transmission" id="transmission"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Type</option>
-                                    <option value="Automatic" {{ old('transmission', $car->inspection->transmission ?? '') == 'Automatic' ? 'selected' : '' }}>Automatic</option>
-                                    <option value="Manual" {{ old('transmission', $car->inspection->transmission ?? '') == 'Manual' ? 'selected' : '' }}>Manual</option>
-                                    <option value="CVT" {{ old('transmission', $car->inspection->transmission ?? '') == 'CVT' ? 'selected' : '' }}>CVT</option>
-                                    <option value="Semi-Automatic" {{ old('transmission', $car->inspection->transmission ?? '') == 'Semi-Automatic' ? 'selected' : '' }}>Semi-Automatic</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="motor" class="block text-sm font-medium text-gray-700 mb-2">Motor Condition</label>
-                                <select name="motor" id="motor"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                    <option value="">Select Condition</option>
-                                    <option value="Excellent" {{ old('motor', $car->inspection->motor ?? '') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
-                                    <option value="Good" {{ old('motor', $car->inspection->motor ?? '') == 'Good' ? 'selected' : '' }}>Good</option>
-                                    <option value="Fair" {{ old('motor', $car->inspection->motor ?? '') == 'Fair' ? 'selected' : '' }}>Fair</option>
-                                    <option value="Needs Service" {{ old('motor', $car->inspection->motor ?? '') == 'Needs Service' ? 'selected' : '' }}>Needs Service</option>
-                                    <option value="Recently Serviced" {{ old('motor', $car->inspection->motor ?? '') == 'Recently Serviced' ? 'selected' : '' }}>Recently Serviced</option>
-                                </select>
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label for="body_notes" class="block text-sm font-medium text-gray-700 mb-2">Body Notes</label>
-                                <textarea name="body_notes" id="body_notes" rows="4"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Additional notes about the car's body condition">{{ old('body_notes', $car->inspection->body_notes ?? '') }}</textarea>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Car Images</label>
+                                @if(isset($car) && $car->getMedia('car_images')->count() > 0)
+                                    <div class="mb-4">
+                                        <p class="text-sm text-gray-600 mb-2">Current Car Images ({{ $car->getMedia('car_images')->count() }}):</p>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            @foreach($car->getMedia('car_images') as $image)
+                                                <div class="relative group">
+                                                    <img src="{{ $image->getUrl() }}" 
+                                                         alt="Car Image" 
+                                                         class="w-full h-20 object-cover rounded border">
+                                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded flex items-center justify-center">
+                                                        <span class="text-white opacity-0 group-hover:opacity-100 text-xs">Existing</span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                <div id="car-images-dropzone" class="dropzone-car-images border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-colors">
+                                    <div class="dz-message">
+                                        <i class="ki-filled ki-picture text-2xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-600">Drop car images here or click to upload</p>
+                                        <p class="text-xs text-gray-500 mt-1">JPG, PNG (Max 2MB each)</p>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="car_images_data" id="car_images_input">
+                                @error('car_images')
+                                    <p class="error-message">{{ $message }}</p>
+                                @enderror
+                                @error('car_images.*')
+                                    <p class="error-message">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Navigation Buttons -->
-                <div class="flex justify-between mt-6">
-                    <button type="button" id="prev-btn" class="kt-btn kt-btn-outline" style="display: none;">
-                        <i class="ki-filled ki-arrow-left"></i>
-                        Previous
-                    </button>
-                    
-                    <div class="flex gap-2">
-                        <button type="button" id="next-btn" class="kt-btn kt-btn-primary">
-                            Next
-                            <i class="ki-filled ki-arrow-right"></i>
-                        </button>
-                        
-                        <button type="submit" id="submit-btn" class="kt-btn kt-btn-success" style="display: none;">
-                            <i class="ki-filled ki-check"></i>
-                            {{ isset($car) ? 'Update Car' : 'Create Car' }}
-                        </button>
+                <!-- Inspection Card -->
+                <div class="kt-card mb-4">
+                    <div class="kt-card-header">
+                        <h3 class="text-lg font-semibold">Inspection Details (Optional)</h3>
+                    </div>
+                     <div class="kt-card-content p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="text-md font-semibold mb-4 text-gray-800">Chassis</h5>
+                                <div class="space-y-4">
+                            <div>
+                                <label for="front_chassis_right" class="block text-sm font-medium text-gray-700 mb-2">Front Chassis Right</label>
+                                        <select name="front_chassis_right" id="front_chassis_right" class="kt-input w-full">
+                                    <option value="">Select Condition</option>
+                                            <option value="Good" {{ old('front_chassis_right') == 'Good' ? 'selected' : '' }}>Good</option>
+                                            <option value="Minor Damage" {{ old('front_chassis_right') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
+                                            <option value="Repaired" {{ old('front_chassis_right') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
+                                            <option value="Excellent" {{ old('front_chassis_right') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
+                                            <option value="Needs Attention" {{ old('front_chassis_right') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="front_chassis_left" class="block text-sm font-medium text-gray-700 mb-2">Front Chassis Left</label>
+                                        <select name="front_chassis_left" id="front_chassis_left" class="kt-input w-full">
+                                    <option value="">Select Condition</option>
+                                            <option value="Good" {{ old('front_chassis_left') == 'Good' ? 'selected' : '' }}>Good</option>
+                                            <option value="Minor Damage" {{ old('front_chassis_left') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
+                                            <option value="Repaired" {{ old('front_chassis_left') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
+                                            <option value="Excellent" {{ old('front_chassis_left') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
+                                            <option value="Needs Attention" {{ old('front_chassis_left') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="rear_chassis_right" class="block text-sm font-medium text-gray-700 mb-2">Rear Chassis Right</label>
+                                        <select name="rear_chassis_right" id="rear_chassis_right" class="kt-input w-full">
+                                    <option value="">Select Condition</option>
+                                            <option value="Good" {{ old('rear_chassis_right') == 'Good' ? 'selected' : '' }}>Good</option>
+                                            <option value="Minor Damage" {{ old('rear_chassis_right') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
+                                            <option value="Repaired" {{ old('rear_chassis_right') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
+                                            <option value="Excellent" {{ old('rear_chassis_right') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
+                                            <option value="Needs Attention" {{ old('rear_chassis_right') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="rear_chassis_left" class="block text-sm font-medium text-gray-700 mb-2">Rear Chassis Left</label>
+                                        <select name="rear_chassis_left" id="rear_chassis_left" class="kt-input w-full">
+                                    <option value="">Select Condition</option>
+                                            <option value="Good" {{ old('rear_chassis_left') == 'Good' ? 'selected' : '' }}>Good</option>
+                                            <option value="Minor Damage" {{ old('rear_chassis_left') == 'Minor Damage' ? 'selected' : '' }}>Minor Damage</option>
+                                            <option value="Repaired" {{ old('rear_chassis_left') == 'Repaired' ? 'selected' : '' }}>Repaired</option>
+                                            <option value="Excellent" {{ old('rear_chassis_left') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
+                                            <option value="Needs Attention" {{ old('rear_chassis_left') == 'Needs Attention' ? 'selected' : '' }}>Needs Attention</option>
+                                </select>
+                                    </div>
+                                </div>
+                            </div>
+                             <div>
+                                <h5 class="text-md font-semibold mb-4 text-gray-800">Mechanical</h5>
+                                <div class="space-y-4">
+                            <div>
+                                <label for="transmission" class="block text-sm font-medium text-gray-700 mb-2">Transmission</label>
+                                        <select name="transmission" id="transmission" class="kt-input w-full">
+                                    <option value="">Select Type</option>
+                                            <option value="Automatic" {{ old('transmission') == 'Automatic' ? 'selected' : '' }}>Automatic</option>
+                                            <option value="Manual" {{ old('transmission') == 'Manual' ? 'selected' : '' }}>Manual</option>
+                                            <option value="CVT" {{ old('transmission') == 'CVT' ? 'selected' : '' }}>CVT</option>
+                                            <option value="Semi-Automatic" {{ old('transmission') == 'Semi-Automatic' ? 'selected' : '' }}>Semi-Automatic</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="motor" class="block text-sm font-medium text-gray-700 mb-2">Motor Condition</label>
+                                        <select name="motor" id="motor" class="kt-input w-full">
+                                    <option value="">Select Condition</option>
+                                            <option value="Excellent" {{ old('motor') == 'Excellent' ? 'selected' : '' }}>Excellent</option>
+                                            <option value="Good" {{ old('motor') == 'Good' ? 'selected' : '' }}>Good</option>
+                                            <option value="Fair" {{ old('motor') == 'Fair' ? 'selected' : '' }}>Fair</option>
+                                            <option value="Needs Service" {{ old('motor') == 'Needs Service' ? 'selected' : '' }}>Needs Service</option>
+                                            <option value="Recently Serviced" {{ old('motor') == 'Recently Serviced' ? 'selected' : '' }}>Recently Serviced</option>
+                                </select>
+                            </div>
+                                </div>
+                                <div class="mt-6">
+                                <label for="body_notes" class="block text-sm font-medium text-gray-700 mb-2">Body Notes</label>
+                                <textarea name="body_notes" id="body_notes" rows="4"
+                                        class="kt-input w-full" placeholder="Additional notes about the car's body condition">{{ old('body_notes') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
 
     <script>
-        let currentStep = 1;
-        const totalSteps = 4;
+        // Add error styling CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .error-message {
+                color: #dc2626;
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+            .error-input {
+                border-color: #dc2626;
+            }
+            /* Dropzone custom styles */
+            .dropzone {
+                border: 2px dashed #e5e7eb;
+                border-radius: 0.5rem;
+                background: #f9fafb;
+                padding: 1rem;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                align-items: flex-start;
+                min-height: 150px;
+            }
+            .dropzone .dz-message {
+                width: 100%;
+                text-align: center;
+                margin: 2rem 0;
+            }
+            .dropzone .dz-preview {
+                position: relative;
+                margin: 0.5rem;
+                width: 120px;
+                height: 120px;
+                background: white;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .dropzone .dz-preview .dz-image {
+                width: 120px;
+                height: 120px;
+            }
+            .dropzone .dz-preview .dz-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .dropzone .dz-preview .dz-details,
+            .dropzone .dz-preview .dz-progress,
+            .dropzone .dz-preview .dz-success-mark,
+            .dropzone .dz-preview .dz-error-mark {
+                display: none;
+            }
+            .dropzone .dz-preview .dz-error-message {
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(220, 38, 38, 0.8);
+                color: white;
+                font-size: 0.8rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.5rem;
+                text-align: center;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .dropzone .dz-preview:hover .dz-error-message {
+                opacity: 1;
+            }
+            .dropzone .dz-preview .dz-remove {
+                position: absolute;
+                top: 4px;
+                right: 4px;
+                width: 20px;
+                height: 20px;
+                background: rgba(0,0,0,0.6);
+                color: white;
+                border-radius: 50%;
+                text-align: center;
+                line-height: 20px;
+                font-size: 14px;
+                font-weight: bold;
+                text-decoration: none;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+            .dropzone .dz-preview:hover .dz-remove {
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
 
-        function showStep(step) {
-            // Hide all steps
-            document.querySelectorAll('.step-content').forEach(content => {
-                content.classList.add('hidden');
-            });
+        // Global variables to store files
+        let licenseFile = null;
+        let carImagesFiles = [];
 
-            // Show current step
-            document.getElementById(`step-${step}`).classList.remove('hidden');
+        // Initialize Dropzone for License Image
+        Dropzone.autoDiscover = false;
+        
+        const licenseDropzone = new Dropzone("#license-dropzone", {
+            url: "#", // We'll handle upload manually
+            maxFiles: 1,
+            acceptedFiles: "image/jpeg,image/png,image/jpg",
+            maxFilesize: 2, // 2MB
+            addRemoveLinks: true,
+            dictRemoveFile: "×",
+            dictFileTooBig: "File is too big. Max filesize: 2MB.",
+            dictInvalidFileType: "You can't upload files of this type.",
+            init: function() {
+                this.on("addedfile", function(file) {
+                    if (this.files.length > 1) {
+                        this.removeFile(this.files[0]);
+                    }
+                    licenseFile = file;
+                    updateLicenseInput();
+                });
+                
+                this.on("removedfile", function(file) {
+                    if (licenseFile === file) {
+                        licenseFile = null;
+                        updateLicenseInput();
+                    }
+                });
+            }
+        });
 
-            // Update navigation buttons
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const submitBtn = document.getElementById('submit-btn');
+        // Initialize Dropzone for Car Images
+        const carImagesDropzone = new Dropzone("#car-images-dropzone", {
+            url: "#", // We'll handle upload manually
+            maxFiles: 10,
+            acceptedFiles: "image/jpeg,image/png,image/jpg",
+            maxFilesize: 2, // 2MB
+            addRemoveLinks: true,
+            dictRemoveFile: "×",
+            dictFileTooBig: "File is too big. Max filesize: 2MB.",
+            dictInvalidFileType: "You can't upload files of this type.",
+            init: function() {
+                this.on("addedfile", function(file) {
+                    carImagesFiles.push(file);
+                    updateCarImagesInput();
+                });
+                
+                this.on("removedfile", function(file) {
+                    const index = carImagesFiles.findIndex(f => f.upload.uuid === file.upload.uuid);
+                    if (index > -1) {
+                        carImagesFiles.splice(index, 1);
+                        updateCarImagesInput();
+                    }
+                });
+            }
+        });
 
-            prevBtn.style.display = step > 1 ? 'inline-flex' : 'none';
-            nextBtn.style.display = step < totalSteps ? 'inline-flex' : 'none';
-            submitBtn.style.display = step === totalSteps ? 'inline-flex' : 'none';
+        // Update hidden inputs with file data
+        function updateLicenseInput() {
+            const input = document.getElementById('car_license_input');
+            if (licenseFile) {
+                // Convert file to base64 for form submission
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    input.value = e.target.result;
+                };
+                reader.readAsDataURL(licenseFile);
+            } else {
+                input.value = '';
+            }
         }
 
-        document.getElementById('next-btn').addEventListener('click', function() {
-            if (currentStep < totalSteps) {
-                currentStep++;
-                showStep(currentStep);
+        function updateCarImagesInput() {
+            const input = document.getElementById('car_images_input');
+            if (carImagesFiles.length > 0) {
+                // Convert files to base64 array
+                const promises = carImagesFiles.map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            resolve(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+                
+                Promise.all(promises).then(base64Files => {
+                    input.value = JSON.stringify(base64Files);
+                });
+            } else {
+                input.value = '';
+            }
+        }
+
+        // Simple form validation
+        document.getElementById('car-form').addEventListener('submit', function(e) {
+            const requiredFields = [
+                'model', 'manufacturing_year', 'chassis_number', 'engine_capacity', 'number_of_keys',
+                'purchase_date', 'insurance_expiry_date', 'expected_sale_price', 'status'
+            ];
+            
+            let isValid = true;
+            let firstInvalidField = null;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const value = field.value.trim();
+                    
+                    if (!value) {
+                        field.classList.add('border-red-500', 'error-input');
+                        isValid = false;
+                        if (!firstInvalidField) {
+                            firstInvalidField = field;
+                        }
+                    } else {
+                        field.classList.remove('border-red-500', 'error-input');
+                    }
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields before submitting.');
+                if (firstInvalidField) {
+                    firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalidField.focus();
+                }
             }
         });
 
-        document.getElementById('prev-btn').addEventListener('click', function() {
-            if (currentStep > 1) {
-                currentStep--;
-                showStep(currentStep);
+        // Real-time validation on input change
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('kt-input')) {
+                e.target.classList.remove('border-red-500', 'error-input');
             }
         });
 
-        // Initialize first step
-        showStep(1);
+        // Apply error styling to inputs with errors on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorMessages = document.querySelectorAll('.error-message');
+            errorMessages.forEach(function(errorMsg) {
+                const inputId = errorMsg.previousElementSibling?.id || 
+                               errorMsg.previousElementSibling?.previousElementSibling?.id;
+                if (inputId) {
+                    const input = document.getElementById(inputId);
+                    if (input) {
+                        input.classList.add('error-input');
+                    }
+                }
+            });
+        });
     </script>
-</body>
-</html> 
+@endsection

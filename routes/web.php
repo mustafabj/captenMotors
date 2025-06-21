@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CarController;
+use App\Http\Controllers\BulkDealController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +33,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('cars', CarController::class)->parameters(['cars' => 'car']);
     Route::post('cars/{car}/equipment-costs', [CarController::class, 'addEquipmentCost'])->name('cars.add-equipment-cost');
     Route::post('cars/{car}/update-status', [CarController::class, 'updateStatus'])->name('cars.update-status');
+    Route::delete('cars/{car}/images', [CarController::class, 'deleteImage'])->name('cars.delete-image');
+    
+    // Bulk Deal routes
+    Route::resource('bulk-deals', BulkDealController::class);
 });
 
 require __DIR__.'/auth.php';
