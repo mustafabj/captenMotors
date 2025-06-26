@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     
     // Car routes with slug-based routing
     Route::resource('cars', CarController::class)->parameters(['cars' => 'car']);
+    Route::post('cars/validate-step', [CarController::class, 'validateStep'])->name('cars.validate-step');
     Route::post('cars/{car}/equipment-costs', [CarController::class, 'addEquipmentCost'])->name('cars.add-equipment-cost');
     Route::post('cars/{car}/update-status', [CarController::class, 'updateStatus'])->name('cars.update-status');
     Route::delete('cars/{car}/images', [CarController::class, 'deleteImage'])->name('cars.delete-image');

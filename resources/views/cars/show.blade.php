@@ -1,16 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- LightGallery CSS and JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-zoom.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-thumbnail.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-autoplay.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-fullscreen.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/lightgallery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/zoom/lg-zoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/thumbnail/lg-thumbnail.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/autoplay/lg-autoplay.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/fullscreen/lg-fullscreen.min.js"></script>
+
     <div class="grid w-full space-y-5">
 
         <!--begin::Car Details Card-->
         <div class="kt-card">
             <div class="kt-card-content flex flex-col sm:flex-row items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
                 <!-- Image -->
-                <div class="kt-card flex items-center justify-center bg-accent/50 h-[90px] w-[120px] shadow-none">
-                    <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80"
-                        class="h-[90px] w-[120px] object-cover rounded" alt="Car Image">
-                </div>
+                @if ($car->getFirstMedia('car_images'))
+                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[90px] w-[120px] shadow-none">
+                        <img src="{{ $car->getFirstMedia('car_images')->getUrl() }}"
+                            class="h-[90px] w-[120px] object-cover rounded" alt="Car Image">
+                    </div>
+                @else
+                    <div class="kt-card flex items-center justify-center bg-accent/50 h-full w-[120px] shadow-none">
+                        <i class="ki-filled ki-car text-3xl text-gray-400"></i>
+                    </div>
+                @endif
 
                 <!-- Details -->
                 <div class="flex flex-col gap-2 flex-1 min-w-0">
@@ -113,7 +131,7 @@
 
             <div class="text-sm">
                 <!-- Details Tab -->
-                <div class="hidden" id="tab_1_1">
+                <div class="" id="tab_1_1">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Car Details -->
                         <div class="kt-card">
@@ -345,7 +363,7 @@
                 </div>
 
                 <!-- Financial Tab -->
-                <div class="" id="tab_1_4">
+                <div class="hidden" id="tab_1_4">
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
@@ -480,15 +498,21 @@
                         <!-- Car License Image -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Car License</h4>
+                                <h4 class="text-lg font-bold mb-6">Car License ({{ $car->getMedia('car_license')->count() }})</h4>
                             </div>
                             <div class="kt-card-content">
-                                @if($car->getFirstMedia('car_license'))
-                                    <div class="text-center">
-                                        <img src="{{ $car->getFirstMedia('car_license')->getUrl() }}" 
-                                             alt="Car License" 
-                                             class="max-w-full h-auto rounded-lg shadow-md">
-                                        <p class="text-sm text-gray-500 mt-2">License Image</p>
+                                @if($car->getMedia('car_license')->count() > 0)
+                                    <div id="car-license-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        @foreach($car->getMedia('car_license') as $license)
+                                            <div class="relative group cursor-pointer" data-src="{{ $license->getUrl() }}">
+                                                <img src="{{ $license->getUrl() }}" 
+                                                     alt="Car License" 
+                                                     class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
+                                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                    <i class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @else
                                     <div class="text-center py-12">
@@ -507,15 +531,14 @@
                             </div>
                             <div class="kt-card-content">
                                 @if($car->getMedia('car_images')->count() > 0)
-                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div id="car-images-gallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                         @foreach($car->getMedia('car_images') as $image)
-                                            <div class="relative group">
+                                            <div class="relative group cursor-pointer" data-src="{{ $image->getUrl() }}">
                                                 <img src="{{ $image->getUrl() }}" 
                                                      alt="Car Image" 
-                                                     class="w-full h-32 object-cover rounded-lg shadow-md cursor-pointer"
-                                                     onclick="openImageModal('{{ $image->getUrl() }}')">
+                                                     class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
                                                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                                    <i class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
+                                                    <i class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -535,53 +558,37 @@
         </div>
     </div>
 
-    <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative max-w-4xl w-full">
-                <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 z-10">
-                    <i class="ki-filled ki-cross"></i>
-                </button>
-                <img id="modalImage" src="" alt="Car Image" class="max-w-full h-auto rounded-lg shadow-xl">
-            </div>
-        </div>
-    </div>
-
     <!-- Add Equipment Cost Modal -->
-    <div id="addCostModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div id="addCostModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                <div class="kt-card-header border-b border-gray-200">
+                <div class="flex justify-between items-center p-6 border-b">
                     <h3 class="text-lg font-semibold">Add Equipment Cost</h3>
+                    <button onclick="closeAddCostModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="ki-filled ki-cross text-xl"></i>
+                    </button>
                 </div>
-                <form action="{{ route('cars.add-equipment-cost', $car) }}" method="POST">
+                <form action="{{ route('cars.add-equipment-cost', $car) }}" method="POST" class="p-6">
                     @csrf
-                    <div class="kt-card-content p-6 space-y-4">
+                    <div class="space-y-4">
                         <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description
-                                *</label>
-                            <input type="text" name="description" id="description" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <label for="cost_date" class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                            <input type="date" name="cost_date" id="cost_date" required class="kt-input w-full">
                         </div>
                         <div>
-                            <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Amount *</label>
-                            <input type="number" name="amount" id="amount" min="0" step="0.01" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <label for="cost_description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <input type="text" name="cost_description" id="cost_description" required class="kt-input w-full" placeholder="e.g., Oil change, Tire replacement">
                         </div>
                         <div>
-                            <label for="cost_date" class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
-                            <input type="date" name="cost_date" id="cost_date" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                            <textarea name="notes" id="notes" rows="3"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            <label for="cost_amount" class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input type="number" name="cost_amount" id="cost_amount" required min="0" step="0.01" class="kt-input w-full pl-8" placeholder="0.00">
+                            </div>
                         </div>
                     </div>
-                    <div class="kt-card-footer flex justify-end gap-2 p-6 border-t border-gray-200">
-                        <button type="button" onclick="closeAddCostModal()"
-                            class="kt-btn kt-btn-outline">Cancel</button>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeAddCostModal()" class="kt-btn kt-btn-outline">Cancel</button>
                         <button type="submit" class="kt-btn kt-btn-primary">Add Cost</button>
                     </div>
                 </form>
@@ -608,6 +615,50 @@
                     document.querySelector(targetId).classList.remove('hidden');
                 });
             });
+
+            // Initialize lightGallery for car images
+            const carImagesGallery = document.getElementById('car-images-gallery');
+            if (carImagesGallery) {
+                lightGallery(carImagesGallery, {
+                    selector: '[data-src]',
+                    plugins: [lgZoom, lgThumbnail, lgAutoplay, lgFullscreen],
+                    zoom: true,
+                    thumbnail: true,
+                    download: true,
+                    fullScreen: true,
+                    autoplay: false,
+                    showThumbByDefault: false,
+                    animateThumb: true,
+                    thumbWidth: 100,
+                    thumbHeight: 60,
+                    thumbMargin: 5,
+                    zoomFromOrigin: true,
+                    allowMediaOverlap: true,
+                    toggleThumb: true
+                });
+            }
+
+            // Initialize lightGallery for car license images
+            const carLicenseGallery = document.getElementById('car-license-gallery');
+            if (carLicenseGallery) {
+                lightGallery(carLicenseGallery, {
+                    selector: '[data-src]',
+                    plugins: [lgZoom, lgThumbnail, lgAutoplay, lgFullscreen],
+                    zoom: true,
+                    thumbnail: true,
+                    download: true,
+                    fullScreen: true,
+                    autoplay: false,
+                    showThumbByDefault: false,
+                    animateThumb: true,
+                    thumbWidth: 100,
+                    thumbHeight: 60,
+                    thumbMargin: 5,
+                    zoomFromOrigin: true,
+                    allowMediaOverlap: true,
+                    toggleThumb: true
+                });
+            }
         });
 
         // Modal functionality
@@ -626,15 +677,5 @@
                 closeAddCostModal();
             }
         });
-
-        // Image modal functionality
-        function openImageModal(imageUrl) {
-            document.getElementById('modalImage').src = imageUrl;
-            document.getElementById('imageModal').classList.remove('hidden');
-        }
-
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.add('hidden');
-        }
     </script>
 @endsection

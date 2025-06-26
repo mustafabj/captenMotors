@@ -6,6 +6,9 @@ use App\Models\Car;
 use App\Models\BulkDeal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use App\Http\Requests\CarStepRequest;
 
 class CarController extends Controller
 {
@@ -14,7 +17,7 @@ class CarController extends Controller
      */
     public function index()
     {
-        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts'])->paginate(12);
+        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])->paginate(12);
         return view('cars.index', compact('cars'));
     }
 
@@ -46,37 +49,38 @@ class CarController extends Controller
                 'engine_capacity' => 'required|string|max:50',
                 'engine_type' => 'nullable|string|max:50',
                 'purchase_date' => 'required|date',
-                'purchase_price' => 'nullable|numeric|min:0',
+                'purchase_price' => 'required|numeric|min:0',
                 'insurance_expiry_date' => 'required|date|after:purchase_date',
                 'expected_sale_price' => 'required|numeric|min:0',
                 'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
-                'car_license' => 'nullable|string',
-                'car_images_data' => 'nullable|string',
+                'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'front_chassis_right' => 'nullable|string|max:255',
+                'front_chassis_left' => 'nullable|string|max:255',
+                'rear_chassis_right' => 'nullable|string|max:255',
+                'rear_chassis_left' => 'nullable|string|max:255',
+                'transmission' => 'nullable|string|max:255',
+                'motor' => 'nullable|string|max:255',
+                'body_notes' => 'nullable|string',
+                'options' => 'nullable|array',
+                'options.*' => 'string|max:255',
             ]);
 
             return DB::transaction(function () use ($validated, $request) {
                 $car = Car::create($validated);
 
-                // Handle car license image (base64)
-                if ($request->filled('car_license')) {
-                    $base64Data = $request->car_license;
-                    if (strpos($base64Data, 'data:image/') === 0) {
-                        $car->addMediaFromBase64($base64Data)
-                            ->toMediaCollection('car_license');
-                    }
+                // Handle car license image
+                if ($request->hasFile('car_license')) {
+                    $car->addMediaFromRequest('car_license')
+                        ->toMediaCollection('car_license');
                 }
 
-                // Handle car images (base64 array)
-                if ($request->filled('car_images_data')) {
-                    $carImagesData = json_decode($request->car_images_data, true);
-                    if (is_array($carImagesData)) {
-                        foreach ($carImagesData as $base64Data) {
-                            if (strpos($base64Data, 'data:image/') === 0) {
-                                $car->addMediaFromBase64($base64Data)
-                                    ->toMediaCollection('car_images');
-                            }
-                        }
+                // Handle car images
+                if ($request->hasFile('car_images')) {
+                    foreach ($request->file('car_images') as $image) {
+                        $car->addMedia($image)
+                            ->toMediaCollection('car_images');
                     }
                 }
 
@@ -135,7 +139,10 @@ class CarController extends Controller
     public function edit(Car $car)
     {
         $car->load(['options', 'inspection', 'statusHistories', 'equipmentCosts']);
-        return view('cars.create', compact('car'));
+        $bulkDeals = BulkDeal::where('status', 'active')
+            ->withCount('cars')
+            ->get();
+        return view('cars.create', compact('car', 'bulkDeals'));
     }
 
     /**
@@ -155,61 +162,64 @@ class CarController extends Controller
                 'engine_capacity' => 'required|string|max:50',
                 'engine_type' => 'nullable|string|max:50',
                 'purchase_date' => 'required|date',
-                'purchase_price' => 'nullable|numeric|min:0',
+                'purchase_price' => 'required|numeric|min:0',
                 'insurance_expiry_date' => 'required|date',
                 'expected_sale_price' => 'required|numeric|min:0',
                 'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
-                'car_license' => 'nullable|string',
-                'car_images_data' => 'nullable|string',
+                'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
+                'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'front_chassis_right' => 'nullable|string|max:255',
+                'front_chassis_left' => 'nullable|string|max:255',
+                'rear_chassis_right' => 'nullable|string|max:255',
+                'rear_chassis_left' => 'nullable|string|max:255',
+                'transmission' => 'nullable|string|max:255',
+                'motor' => 'nullable|string|max:255',
+                'body_notes' => 'nullable|string',
+                'options' => 'nullable|array',
+                'options.*' => 'string|max:255',
             ]);
 
             return DB::transaction(function () use ($validated, $request, $car) {
                 $car->update($validated);
 
                 // Handle car license image update
-                if ($request->filled('car_license')) {
-                    $base64Data = $request->car_license;
-                    if (strpos($base64Data, 'data:image/') === 0) {
-                        $car->clearMediaCollection('car_license');
-                        $car->addMediaFromBase64($base64Data)
-                            ->toMediaCollection('car_license');
-                    }
+                if ($request->hasFile('car_license')) {
+                    $car->clearMediaCollection('car_license');
+                    $car->addMediaFromRequest('car_license')
+                        ->toMediaCollection('car_license');
                 }
 
                 // Handle car images update
-                if ($request->filled('car_images_data')) {
-                    $carImagesData = json_decode($request->car_images_data, true);
-                    if (is_array($carImagesData)) {
-                        $car->clearMediaCollection('car_images');
-                        foreach ($carImagesData as $base64Data) {
-                            if (strpos($base64Data, 'data:image/') === 0) {
-                                $car->addMediaFromBase64($base64Data)
-                                    ->toMediaCollection('car_images');
-                            }
-                        }
+                if ($request->hasFile('car_images')) {
+                    $car->clearMediaCollection('car_images');
+                    foreach ($request->file('car_images') as $image) {
+                        $car->addMedia($image)
+                            ->toMediaCollection('car_images');
                     }
                 }
 
                 // Create status history entry if status changed
-                if ($car->status !== $validated['status']) {
+                if ($car->wasChanged('status')) {
                     $car->statusHistories()->create([
                         'status' => $validated['status'],
                         'notes' => $request->status_notes ?? 'Status updated'
                     ]);
                 }
 
-                // Handle car options
-                $car->options()->delete(); // Remove existing options
+                // Update car options
                 if ($request->has('options')) {
+                    $car->options()->delete(); // Remove existing options
                     foreach ($request->options as $optionName) {
                         $car->options()->create(['name' => $optionName]);
                     }
                 }
 
-                // Handle inspection data
+                // Update inspection data
                 if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
-                    if ($car->inspection) {
-                        $car->inspection()->update([
+                    $car->inspection()->updateOrCreate(
+                        ['car_id' => $car->id],
+                        [
                             'front_chassis_right' => $request->front_chassis_right,
                             'front_chassis_left' => $request->front_chassis_left,
                             'rear_chassis_right' => $request->rear_chassis_right,
@@ -217,18 +227,8 @@ class CarController extends Controller
                             'transmission' => $request->transmission,
                             'motor' => $request->motor,
                             'body_notes' => $request->body_notes,
-                        ]);
-                    } else {
-                        $car->inspection()->create([
-                            'front_chassis_right' => $request->front_chassis_right,
-                            'front_chassis_left' => $request->front_chassis_left,
-                            'rear_chassis_right' => $request->rear_chassis_right,
-                            'rear_chassis_left' => $request->rear_chassis_left,
-                            'transmission' => $request->transmission,
-                            'motor' => $request->motor,
-                            'body_notes' => $request->body_notes,
-                        ]);
-                    }
+                        ]
+                    );
                 }
 
                 return redirect()->route('cars.show', $car)->with('success', 'Car updated successfully!');
@@ -306,5 +306,17 @@ class CarController extends Controller
         $media->delete();
 
         return redirect()->route('cars.show', $car)->with('success', 'Image deleted successfully!');
+    }
+
+    /**
+     * Validate a specific step of the car creation form.
+     */
+    public function validateStep(CarStepRequest $request)
+    {
+        // If validation fails, Laravel will automatically return a 422 response with errors
+        return response()->json([
+            'success' => true,
+            'message' => 'Step ' . $request->input('step') . ' validation passed'
+        ]);
     }
 }
