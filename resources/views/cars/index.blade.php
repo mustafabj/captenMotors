@@ -128,18 +128,22 @@
                                         ];
                                     @endphp
                                     <span class="kt-badge {{ $status['class'] }}">{{ $status['text'] }}</span>
-
-
-
                                 </div>
                             </div>
 
                             <!-- Card Body -->
                             <div class="kt-card-body p-4">
                                 <!-- Car Image Placeholder -->
-                                <div class="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                                    <i class="ki-filled ki-car text-4xl text-gray-400"></i>
-                                </div>
+                                @if ($car->getFirstMedia('car_images'))
+                                    <div class="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                                        <img alt="Car Image" class="h-full w-full object-cover rounded"
+                                            src="{{ $car->getFirstMedia('car_images')->getUrl() }}">
+                                    </div>
+                                @else
+                                    <div class="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                                        <i class="ki-filled ki-car text-4xl text-gray-400"></i>
+                                    </div>
+                                @endif
 
                                 <!-- Car Details -->
                                 <div class="space-y-3">
@@ -304,20 +308,23 @@
                                         ${{ number_format($car->expected_sale_price, 2) }}
                                     </span>
                                     <!-- Actions Dropdown -->
-                                    <div data-kt-dropdown="true" data-kt-dropdown-trigger="click" data-kt-dropdown-placement="left-start">
+                                    <div data-kt-dropdown="true" data-kt-dropdown-trigger="click"
+                                        data-kt-dropdown-placement="left-start">
                                         <button class="kt-btn kt-btn-sm kt-btn-outline" data-kt-dropdown-toggle="true">
                                             Actions
                                         </button>
                                         <div class="kt-dropdown-menu w-52" data-kt-dropdown-menu="true">
                                             <ul class="kt-dropdown-menu-sub">
                                                 <li>
-                                                    <a href="{{ route('cars.show', $car) }}" class="kt-dropdown-menu-link">
+                                                    <a href="{{ route('cars.show', $car) }}"
+                                                        class="kt-dropdown-menu-link">
                                                         <i class="ki-filled ki-search-list"></i>
                                                         View
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a href="{{ route('cars.edit', $car) }}" class="kt-dropdown-menu-link">
+                                                    <a href="{{ route('cars.edit', $car) }}"
+                                                        class="kt-dropdown-menu-link">
                                                         <i class="ki-filled ki-pencil"></i>
                                                         Edit
                                                     </a>
@@ -338,7 +345,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    
+
                                 </div>
 
                             </div>
@@ -367,13 +374,64 @@
 
         <!-- Pagination -->
         @if ($cars->count() > 0)
-            <div class="flex items-center justify-between mt-8">
-                <div class="text-sm text-gray-600">
-                    Showing {{ $cars->firstItem() ?? 0 }} to {{ $cars->lastItem() ?? 0 }} of {{ $cars->total() }} cars
+            <div class="flex flex-col md:flex-row items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-2 md:mb-0">
+                    <div class="text-sm text-gray-600">
+                        Showing {{ $cars->firstItem() ?? 0 }} to {{ $cars->lastItem() ?? 0 }} of {{ $cars->total() }} cars
+                    </div>
                 </div>
-                <div class="kt-datatable-pagination mb-4">
-                    {{ $cars->links() }}
-                </div>
+                <ol class="kt-pagination flex justify-center flex-wrap">
+                    <li class="kt-pagination-item">
+                        <a href="{{ $cars->url(1) }}" class="kt-btn kt-btn-icon kt-btn-ghost" aria-label="First Page">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-chevron-first rtl:rotate-180"
+                                aria-hidden="true">
+                                <path d="m17 18-6-6 6-6"></path>
+                                <path d="M7 6v12"></path>
+                            </svg>
+                        </a>
+                    </li>
+                    <li class="kt-pagination-item">
+                        <a href="{{ $cars->previousPageUrl() }}" class="kt-btn kt-btn-icon kt-btn-ghost"
+                            aria-label="Previous Page">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-chevron-left rtl:rotate-180" aria-hidden="true">
+                                <path d="m15 18-6-6 6-6"></path>
+                            </svg>
+                        </a>
+                    </li>
+                    @foreach ($cars->getUrlRange(1, $cars->lastPage()) as $page => $url)
+                        <li class="kt-pagination-item">
+                            <a href="{{ $url }}"
+                                class="kt-btn kt-btn-icon kt-btn-ghost {{ $page == $cars->currentPage() ? 'active' : '' }}">
+                                {{ $page }}
+                            </a>
+                        </li>
+                    @endforeach
+                    <li class="kt-pagination-item">
+                        <a href="{{ $cars->nextPageUrl() }}" class="kt-btn kt-btn-icon kt-btn-ghost" aria-label="Next Page">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-chevron-right rtl:rotate-180"
+                                aria-hidden="true">
+                                <path d="m9 18 6-6-6-6"></path>
+                            </svg>
+                        </a>
+                    </li>
+                    <li class="kt-pagination-item">
+                        <a href="{{ $cars->url($cars->lastPage()) }}" class="kt-btn kt-btn-icon kt-btn-ghost"
+                            aria-label="Last Page">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-chevron-last rtl:rotate-180" aria-hidden="true">
+                                <path d="m7 18 6-6-6-6"></path>
+                                <path d="M17 6v12"></path>
+                            </svg>
+                        </a>
+                    </li>
+                </ol>
             </div>
         @endif
     </div>

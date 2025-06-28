@@ -1,16 +1,35 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- LightGallery CSS and JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-zoom.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-thumbnail.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-autoplay.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-fullscreen.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/lightgallery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/zoom/lg-zoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/thumbnail/lg-thumbnail.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/autoplay/lg-autoplay.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/fullscreen/lg-fullscreen.min.js">
+    </script>
+
     <div class="grid w-full space-y-5">
 
         <!--begin::Car Details Card-->
         <div class="kt-card">
             <div class="kt-card-content flex flex-col sm:flex-row items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
                 <!-- Image -->
-                <div class="kt-card flex items-center justify-center bg-accent/50 h-[90px] w-[120px] shadow-none">
-                    <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80"
-                        class="h-[90px] w-[120px] object-cover rounded" alt="Car Image">
-                </div>
+                @if ($car->getFirstMedia('car_images'))
+                    <div class="kt-card flex items-center justify-center bg-accent/50 h-[90px] w-[120px] shadow-none">
+                        <img src="{{ $car->getFirstMedia('car_images')->getUrl() }}"
+                            class="h-[90px] w-[120px] object-cover rounded" alt="Car Image">
+                    </div>
+                @else
+                    <div class="kt-card flex items-center justify-center bg-accent/50 h-full w-[120px] shadow-none">
+                        <i class="ki-filled ki-car text-3xl text-gray-400"></i>
+                    </div>
+                @endif
 
                 <!-- Details -->
                 <div class="flex flex-col gap-2 flex-1 min-w-0">
@@ -113,7 +132,7 @@
 
             <div class="text-sm">
                 <!-- Details Tab -->
-                <div class="hidden" id="tab_1_1">
+                <div class="" id="tab_1_1">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Car Details -->
                         <div class="kt-card">
@@ -136,15 +155,16 @@
                                         readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <span class="text-gray-600 font-semibold block">Place of Manufacture</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->place_of_manufacture ?? 'Not specified' }}" readonly>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Engine Capacity</span>
                                     <input type="text" class="kt-input w-auto" value="{{ $car->engine_capacity }}"
                                         readonly>
                                 </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <span class="text-gray-600 font-semibold block">Place of Manufacture</span>
+                                    <input type="text" class="kt-input w-auto"
+                                        value="{{ $car->place_of_manufacture ?? 'Not specified' }}" readonly>
+                                </div>
+
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Engine Type</span>
                                     <input type="text" class="kt-input w-auto"
@@ -209,7 +229,7 @@
                                             </span>
                                         @else
                                             <span class="kt-badge kt-badge-success kt-badge-outline">
-                                                Valid for {{abs($daysUntilExpiry) }} days
+                                                Valid for {{ abs($daysUntilExpiry) }} days
                                             </span>
                                         @endif
                                     </div>
@@ -345,7 +365,7 @@
                 </div>
 
                 <!-- Financial Tab -->
-                <div class="" id="tab_1_4">
+                <div class="hidden" id="tab_1_4">
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
@@ -388,7 +408,7 @@
                                     <div class="flex justify-between items-center w-full">
                                         <h4 class="text-lg font-bold">Equipment Costs</h4>
                                         <button type="button" class="kt-btn kt-btn-sm kt-btn-primary"
-                                            onclick="openAddCostModal()">
+                                            data-kt-modal-toggle="#addCostModal">
                                             <i class="ki-filled ki-plus"></i>
                                             Add Cost
                                         </button>
@@ -397,13 +417,13 @@
                                 <div class="kt-card-content">
                                     @if ($car->equipmentCosts->count() > 0)
                                         <div class="overflow-x-auto">
-                                            <table class="w-full">
+                                            <table class="w-full" id="equipment-costs-table">
                                                 <thead>
                                                     <tr class="border-b border-gray-200">
                                                         <th class="text-left py-3 px-4 font-semibold">Description</th>
                                                         <th class="text-left py-3 px-4 font-semibold">Amount</th>
                                                         <th class="text-left py-3 px-4 font-semibold">Date</th>
-                                                        <th class="text-left py-3 px-4 font-semibold">Notes</th>
+                                                        <th class="text-left py-3 px-4 font-semibold">Added By</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -412,8 +432,10 @@
                                                             <td class="py-3 px-4">{{ $cost->description }}</td>
                                                             <td class="py-3 px-4 font-semibold">
                                                                 ${{ number_format($cost->amount, 2) }}</td>
-                                                            <td class="py-3 px-4">{{ $cost->cost_date->format('M j, Y') }}</td>
-                                                            <td class="py-3 px-4 text-gray-600">{{ $cost->notes ?? '—' }}</td>
+                                                            <td class="py-3 px-4">{{ $cost->cost_date->format('M j, Y') }}
+                                                            </td>
+                                                            <td class="py-3 px-4 text-gray-600">{{ $cost->user->name ?? '—' }}
+                                                            </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -423,7 +445,8 @@
                                         <div class="text-center py-12">
                                             <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
                                             <h4 class="text-lg font-bold text-gray-900 mb-2">No equipment costs</h4>
-                                            <p class="text-gray-600">No equipment costs have been recorded for this car.</p>
+                                            <p class="text-gray-600">No equipment costs have been recorded for this car.
+                                            </p>
                                         </div>
                                     @endif
                                 </div>
@@ -443,7 +466,7 @@
                             @if ($car->statusHistories->count() > 0)
                                 <div class="space-y-4">
                                     @foreach ($car->statusHistories->sortByDesc('created_at') as $history)
-                                        <div class="flex items-start gap-4 p-4 border border-gray-200 rounded-lg">
+                                        <div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
                                             <div class="flex-shrink-0">
                                                 @php
                                                     $statusClass =
@@ -480,15 +503,25 @@
                         <!-- Car License Image -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Car License</h4>
+                                <h4 class="text-lg font-bold mb-6">Car License
+                                    ({{ $car->getMedia('car_license')->count() }})</h4>
                             </div>
                             <div class="kt-card-content">
-                                @if($car->getFirstMedia('car_license'))
-                                    <div class="text-center">
-                                        <img src="{{ $car->getFirstMedia('car_license')->getUrl() }}" 
-                                             alt="Car License" 
-                                             class="max-w-full h-auto rounded-lg shadow-md">
-                                        <p class="text-sm text-gray-500 mt-2">License Image</p>
+                                @if ($car->getMedia('car_license')->count() > 0)
+                                    <div id="car-license-gallery"
+                                        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        @foreach ($car->getMedia('car_license') as $license)
+                                            <div class="relative group cursor-pointer"
+                                                data-src="{{ $license->getUrl() }}">
+                                                <img src="{{ $license->getUrl() }}" alt="Car License"
+                                                    class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
+                                                <div
+                                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                    <i
+                                                        class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @else
                                     <div class="text-center py-12">
@@ -503,19 +536,21 @@
                         <!-- Car Images -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Car Images ({{ $car->getMedia('car_images')->count() }})</h4>
+                                <h4 class="text-lg font-bold mb-6">Car Images
+                                    ({{ $car->getMedia('car_images')->count() }})</h4>
                             </div>
                             <div class="kt-card-content">
-                                @if($car->getMedia('car_images')->count() > 0)
-                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        @foreach($car->getMedia('car_images') as $image)
-                                            <div class="relative group">
-                                                <img src="{{ $image->getUrl() }}" 
-                                                     alt="Car Image" 
-                                                     class="w-full h-32 object-cover rounded-lg shadow-md cursor-pointer"
-                                                     onclick="openImageModal('{{ $image->getUrl() }}')">
-                                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                                    <i class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
+                                @if ($car->getMedia('car_images')->count() > 0)
+                                    <div id="car-images-gallery"
+                                        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        @foreach ($car->getMedia('car_images') as $image)
+                                            <div class="relative group cursor-pointer" data-src="{{ $image->getUrl() }}">
+                                                <img src="{{ $image->getUrl() }}" alt="Car Image"
+                                                    class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
+                                                <div
+                                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                    <i
+                                                        class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -535,56 +570,76 @@
         </div>
     </div>
 
-    <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative max-w-4xl w-full">
-                <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 z-10">
-                    <i class="ki-filled ki-cross"></i>
-                </button>
-                <img id="modalImage" src="" alt="Car Image" class="max-w-full h-auto rounded-lg shadow-xl">
-            </div>
-        </div>
-    </div>
-
     <!-- Add Equipment Cost Modal -->
-    <div id="addCostModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                <div class="kt-card-header border-b border-gray-200">
-                    <h3 class="text-lg font-semibold">Add Equipment Cost</h3>
-                </div>
-                <form action="{{ route('cars.add-equipment-cost', $car) }}" method="POST">
+    <div class="kt-modal" data-kt-modal="true" id="addCostModal">
+        <div class="kt-modal-content max-w-[500px] top-[5%]">
+            <div class="kt-modal-header">
+                <h3 class="kt-modal-title">Add Equipment Cost</h3>
+                <button type="button" class="kt-modal-close" aria-label="Close modal"
+                    data-kt-modal-dismiss="#addCostModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="kt-modal-body">
+                <form method="POST" id="addCostForm">
                     @csrf
-                    <div class="kt-card-content p-6 space-y-4">
-                        <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description
-                                *</label>
-                            <input type="text" name="description" id="description" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div class="space-y-5">
+                        <!-- Date Field -->
+                        <div class="kt-form-item">
+                            <label for="cost_date" class="kt-form-label">
+                                Date <span class="text-red-500">*</span>
+                            </label>
+                            <div class="kt-form-control">
+                                <input type="date" name="cost_date" id="cost_date" required class="kt-input w-full">
+                                <div class="kt-form-message"></div>
+                            </div>
                         </div>
-                        <div>
-                            <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Amount *</label>
-                            <input type="number" name="amount" id="amount" min="0" step="0.01" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                        <!-- Description Field -->
+                        <div class="kt-form-item">
+                            <label for="description" class="kt-form-label">
+                                Description <span class="text-red-500">*</span>
+                            </label>
+                            <div class="kt-form-control">
+                                <textarea name="description" id="description" rows="4" required class="kt-textarea w-full"
+                                    placeholder="e.g., Oil change, Tire replacement"></textarea>
+                                <div class="kt-form-message"></div>
+                            </div>
                         </div>
-                        <div>
-                            <label for="cost_date" class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
-                            <input type="date" name="cost_date" id="cost_date" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                        <!-- Amount Field -->
+                        <div class="kt-form-item">
+                            <label for="cost_amount" class="kt-form-label">
+                                Amount <span class="text-red-500">*</span>
+                            </label>
+                            <div class="kt-form-control">
+                                <input type="number" name="amount" id="cost_amount" required min="0"
+                                    step="0.01" class="kt-input w-full pl-8" placeholder="0.00">
+                                <div class="kt-form-message"></div>
+                            </div>
                         </div>
-                        <div>
-                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                            <textarea name="notes" id="notes" rows="3"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                        </div>
-                    </div>
-                    <div class="kt-card-footer flex justify-end gap-2 p-6 border-t border-gray-200">
-                        <button type="button" onclick="closeAddCostModal()"
-                            class="kt-btn kt-btn-outline">Cancel</button>
-                        <button type="submit" class="kt-btn kt-btn-primary">Add Cost</button>
                     </div>
                 </form>
+            </div>
+            <div class="kt-modal-footer">
+                <div></div>
+                <div class="flex gap-4">
+                    <button class="kt-btn kt-btn-secondary" data-kt-modal-dismiss="#addCostModal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="kt-btn kt-btn-primary" form="addCostForm" id="submitCostBtn">
+                        <span class="submit-text">Add Cost</span>
+                        <span class="loading-text hidden">
+                            <i class="ki-duotone ki-spinner fs-2 rotate"></i>
+                            Adding...
+                        </span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -608,33 +663,179 @@
                     document.querySelector(targetId).classList.remove('hidden');
                 });
             });
-        });
 
-        // Modal functionality
-        function openAddCostModal() {
-            document.getElementById('addCostModal').classList.remove('hidden');
-            document.getElementById('cost_date').value = new Date().toISOString().split('T')[0];
-        }
+            // Initialize lightGallery for car images
+            if (document.getElementById('car-images-gallery')) {
+                lightGallery(document.getElementById('car-images-gallery'), {
+                    plugins: [lgThumbnail, lgAutoplay, lgFullscreen],
+                    speed: 500,
+                    download: true,
+                    counter: true,
+                    thumbnail: true,
+                    autoplay: true,
+                    autoplayControls: true,
+                    fullscreen: true
+                });
+            }
 
-        function closeAddCostModal() {
-            document.getElementById('addCostModal').classList.add('hidden');
-        }
+            // Initialize lightGallery for car license
+            if (document.getElementById('car-license-gallery')) {
+                lightGallery(document.getElementById('car-license-gallery'), {
+                    plugins: [lgThumbnail, lgAutoplay, lgFullscreen],
+                    speed: 500,
+                    download: true,
+                    counter: true,
+                    thumbnail: true,
+                    autoplay: true,
+                    autoplayControls: true,
+                    fullscreen: true
+                });
+            }
 
-        // Close modal when clicking outside
-        document.getElementById('addCostModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeAddCostModal();
+            // AJAX Form Submission for Equipment Cost
+            document.getElementById('addCostForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const form = this;
+                const submitBtn = document.getElementById('submitCostBtn');
+                const submitText = submitBtn.querySelector('.submit-text');
+                const loadingText = submitBtn.querySelector('.loading-text');
+                
+                // Clear previous errors
+                clearFormErrors();
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitText.classList.add('hidden');
+                loadingText.classList.remove('hidden');
+                
+                // Prepare form data
+                const formData = new FormData(form);
+                
+                // Submit via AJAX
+                fetch("{{ route('cars.add-equipment-cost', $car) }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Success - add new row to table and close modal
+                        showNotification('Equipment cost added successfully!', 'success');
+                        
+                        // Add new row to the equipment costs table
+                        addEquipmentCostRow(data.cost);
+                        
+                        // Close modal
+                        const modalEl = document.querySelector('#addCostModal');
+                        const modal = KTModal.getInstance(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        // Reset form
+                        document.getElementById('addCostForm').reset();
+                    } else {
+                        // Show validation errors
+                        showFormErrors(data.errors);
+                        showNotification('Please correct the errors below.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while adding the cost.', 'error');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitText.classList.remove('hidden');
+                    loadingText.classList.add('hidden');
+                });
+            });
+
+            // Function to clear all form errors
+            function clearFormErrors() {
+                const form = document.getElementById('addCostForm');
+                const inputs = form.querySelectorAll('input, textarea');
+                const messages = form.querySelectorAll('.kt-form-message');
+                
+                inputs.forEach(input => {
+                    input.removeAttribute('aria-invalid');
+                    input.classList.remove('is-invalid');
+                });
+                
+                messages.forEach(message => {
+                    message.innerHTML = '';
+                    message.style.display = 'none';
+                });
+            }
+
+            // Function to show form errors
+            function showFormErrors(errors) {
+                const form = document.getElementById('addCostForm');
+                
+                Object.keys(errors).forEach(fieldName => {
+                    const field = form.querySelector(`[name="${fieldName}"]`);
+                    const messageDiv = field ? field.closest('.kt-form-control').querySelector('.kt-form-message') : null;
+                    
+                    if (field && messageDiv) {
+                        // Add error styling to field
+                        field.setAttribute('aria-invalid', 'true');
+                        field.classList.add('is-invalid');
+                        
+                        // Show error message
+                        messageDiv.innerHTML = `<div class="text-danger">${errors[fieldName][0]}</div>`;
+                        messageDiv.style.display = 'block';
+                    }
+                });
+            }
+
+            // Function to show notifications
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+                    type === 'error' ? 'bg-red-500 text-white' : 
+                    type === 'success' ? 'bg-green-500 text-white' : 
+                    'bg-blue-500 text-white'
+                }`;
+                notification.textContent = message;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+            }
+
+            // Function to add new equipment cost row to table
+            function addEquipmentCostRow(costData) {
+                const tableBody = document.querySelector('#equipment-costs-table tbody');
+                const emptyState = document.querySelector('.equipment .kt-card-content .text-center');
+                
+                // Remove empty state if it exists
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                
+                // Create new row
+                const newRow = document.createElement('tr');
+                newRow.className = 'border-b border-gray-200';
+                newRow.innerHTML = `
+                    <td class="py-3 px-4">${costData.description}</td>
+                    <td class="py-3 px-4 font-semibold">$${parseFloat(costData.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="py-3 px-4">${new Date(costData.cost_date).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</td>
+                    <td class="py-3 px-4 text-gray-600">${costData.user_name}</td>
+                `;
+                
+                // Add row to the beginning of the table (most recent first)
+                if (tableBody) {
+                    tableBody.insertBefore(newRow, tableBody.firstChild);
+                }
             }
         });
-
-        // Image modal functionality
-        function openImageModal(imageUrl) {
-            document.getElementById('modalImage').src = imageUrl;
-            document.getElementById('imageModal').classList.remove('hidden');
-        }
-
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.add('hidden');
-        }
     </script>
 @endsection
