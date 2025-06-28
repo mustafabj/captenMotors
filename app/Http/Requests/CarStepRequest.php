@@ -26,7 +26,7 @@ class CarStepRequest extends FormRequest
                     'vehicle_category' => ['nullable', 'string', 'max:255'],
                     'plate_number' => ['nullable', 'string', 'max:255'],
                     'purchase_date' => ['required', 'date', 'after:' . $minDate],
-                    'insurance_expiry_date' => ['required', 'date', 'after:purchase_date', 'after:' . $minDate],
+                    'insurance_expiry_date' => ['required', 'date', 'after:' . $minDate],
                 ];
                 break;
             case 2:
@@ -74,11 +74,6 @@ class CarStepRequest extends FormRequest
             $rules = [$singleField => $rules[$singleField]];
         }
 
-        // Special case: insurance_expiry_date after purchase_date (only if both are present)
-        if ($step == 1 && $this->has('insurance_expiry_date') && $this->has('purchase_date')) {
-            $rules['insurance_expiry_date'][] = 'after:purchase_date';
-        }
-
         return $rules;
     }
 
@@ -90,7 +85,7 @@ class CarStepRequest extends FormRequest
             'purchase_date.required' => 'Purchase date is required.',
             'purchase_date.after' => 'Purchase date must be after ' . $minDate . '.',
             'insurance_expiry_date.required' => 'Insurance expiry date is required.',
-            'insurance_expiry_date.after' => 'Insurance expiry date must be after the purchase date and after ' . $minDate . '.',
+            'insurance_expiry_date.after' => 'Insurance expiry date must be after ' . $minDate . '.',
             'manufacturing_year.required' => 'Manufacturing year is required.',
             'manufacturing_year.integer' => 'Manufacturing year must be a number.',
             'manufacturing_year.min' => 'Manufacturing year must be at least 1900.',

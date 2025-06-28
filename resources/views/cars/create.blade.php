@@ -34,7 +34,7 @@
         @endif
 
         <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-3">
             <div>
                 <h1 class="text-2xl font-bold">Add New Car</h1>
                 <p class="text-sm text-gray-500">Home - Car Management - Add Car</p>
@@ -87,7 +87,7 @@
         </div>
 
         <!-- Step Navigation -->
-        <div class="flex justify-between items-center mb-6" id="step-navigation">
+        <div class="flex justify-between items-center mb-3 mt-3" id="step-navigation">
             <button type="button" class="kt-btn kt-btn-outline" id="prev-btn" disabled>
                 <i class="ki-duotone ki-arrow-left fs-2"></i>
                 Previous
@@ -105,7 +105,7 @@
                     <div class="kt-card-header">
                         <h3 class="text-lg font-semibold">Car Model & Category</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-6">
+                    <div class="kt-card-content p-5 space-y-3">
                         <div>
                             <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Car Model *</label>
                             <input type="text" name="model" id="model" value="{{ old('model') }}" required
@@ -140,7 +140,7 @@
                     <div class="kt-card-header">
                         <h3 class="text-lg font-semibold">Important Dates</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-6">
+                    <div class="kt-card-content p-5 space-y-3">
                         <div>
                             <label for="purchase_date" class="block text-sm font-medium text-gray-700 mb-2">Purchase Date
                                 *</label>
@@ -171,7 +171,7 @@
                     <div class="kt-card-header">
                         <h3 class="text-lg font-semibold">Technical Specifications</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-6">
+                    <div class="kt-card-content p-5 space-y-3">
                         <div>
                             <label for="manufacturing_year"
                                 class="block text-sm font-medium text-gray-700 mb-2">Manufacturing Year *</label>
@@ -227,7 +227,7 @@
                     <div class="kt-card-header">
                         <h3 class="text-lg font-semibold">Additional Details</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-6">
+                    <div class="kt-card-content p-5 space-y-3">
                         <div>
                             <label for="number_of_keys" class="block text-sm font-medium text-gray-700 mb-2">Number of
                                 Keys *</label>
@@ -296,12 +296,11 @@
                     <div class="kt-card-header">
                         <h3 class="text-lg font-semibold">Pricing Information</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-6">
+                    <div class="kt-card-content p-5 space-y-3">
                         <div>
                             <label for="purchase_price" class="block text-sm font-medium text-gray-700 mb-2">Purchase
                                 Price *</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                                 <input type="number" name="purchase_price" id="purchase_price"
                                     value="{{ old('purchase_price') }}" min="0" step="0.01" required
                                     class="kt-input w-full pl-8">
@@ -314,7 +313,6 @@
                             <label for="expected_sale_price" class="block text-sm font-medium text-gray-700 mb-2">Expected
                                 Sale Price *</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                                 <input type="number" name="expected_sale_price" id="expected_sale_price"
                                     value="{{ old('expected_sale_price') }}" min="0" step="0.01" required
                                     class="kt-input w-full pl-8">
@@ -337,7 +335,7 @@
                     <div class="kt-card-header">
                         <h3 class="text-lg font-semibold">Status & Deal</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-6">
+                    <div class="kt-card-content p-5 space-y-3">
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Car Status
                                 *</label>
@@ -419,7 +417,8 @@
                             <input type="file" id="images-filepond" name="car_images[]" multiple
                                 accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB" data-max-files="10">
                             <!-- Hidden input for actual file submission -->
-                            <input type="file" id="images-hidden" name="car_images[]" multiple style="display: none;">
+                            <input type="file" id="images-hidden" name="car_images[]" multiple
+                                style="display: none;">
                             @error('car_images')
                                 <p class="error-message">{{ $message }}</p>
                             @enderror
@@ -976,42 +975,42 @@
                     // Debug: Check FilePond files before syncing
                     console.log('License Pond files:', licensePond.getFiles().length);
                     console.log('Images Pond files:', imagesPond.getFiles().length);
-                    
+
                     // Sync FilePond files with the form before submission
                     syncFilePondFiles();
-                    
+
                     // Use FormData to manually submit the form with files
                     const form = document.getElementById('car-form');
                     const formData = new FormData(form);
-                    
+
                     // Debug: Check what's in FormData
                     console.log('FormData entries:');
                     for (let [key, value] of formData.entries()) {
                         console.log(key, value);
                     }
-                    
+
                     // Submit using fetch instead of form.submit()
                     fetch(form.action, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        } else {
-                            return response.text();
-                        }
-                    })
-                    .then(html => {
-                        if (html) {
-                            // Replace the current page content
-                            document.documentElement.innerHTML = html;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Form submission error:', error);
-                        showNotification('An error occurred while submitting the form.', 'error');
-                    });
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.redirected) {
+                                window.location.href = response.url;
+                            } else {
+                                return response.text();
+                            }
+                        })
+                        .then(html => {
+                            if (html) {
+                                // Replace the current page content
+                                document.documentElement.innerHTML = html;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Form submission error:', error);
+                            showNotification('An error occurred while submitting the form.', 'error');
+                        });
                 } else {
                     // Show error message
                     showNotification('Please correct the errors before submitting.', 'error');
@@ -1024,7 +1023,7 @@
             // Sync license files to hidden input
             const licenseFiles = licensePond.getFiles();
             const licenseHiddenInput = document.querySelector('#license-hidden');
-            
+
             if (licenseFiles.length > 0) {
                 try {
                     // Create a new FileList-like object
@@ -1036,11 +1035,11 @@
                     console.error('Error syncing license file:', error);
                 }
             }
-            
+
             // Sync car images to hidden input
             const imageFiles = imagesPond.getFiles();
             const imageHiddenInput = document.querySelector('#images-hidden');
-            
+
             if (imageFiles.length > 0) {
                 try {
                     // Create a new FileList-like object
@@ -1054,11 +1053,11 @@
                     console.error('Error syncing image files:', error);
                 }
             }
-            
+
             // Debug: Check if files are synced to hidden inputs
             console.log('License files synced to hidden input:', licenseHiddenInput.files.length);
             console.log('Image files synced to hidden input:', imageHiddenInput.files.length);
-            
+
             // Additional debug: Check the actual files
             if (licenseHiddenInput.files.length > 0) {
                 console.log('License file details:', {
@@ -1067,7 +1066,7 @@
                     type: licenseHiddenInput.files[0].type
                 });
             }
-            
+
             if (imageHiddenInput.files.length > 0) {
                 console.log('Image files details:', Array.from(imageHiddenInput.files).map(f => ({
                     name: f.name,

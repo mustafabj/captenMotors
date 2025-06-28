@@ -17,7 +17,7 @@ class CarController extends Controller
      */
     public function index()
     {
-        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])->paginate(12);
+        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])->orderBy('id', 'desc')->paginate(12);
         return view('cars.index', compact('cars'));
     }
 
@@ -50,7 +50,7 @@ class CarController extends Controller
                 'engine_type' => 'nullable|string|max:50',
                 'purchase_date' => 'required|date',
                 'purchase_price' => 'required|numeric|min:0',
-                'insurance_expiry_date' => 'required|date|after:purchase_date',
+                'insurance_expiry_date' => 'required|date',
                 'expected_sale_price' => 'required|numeric|min:0',
                 'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
@@ -129,7 +129,7 @@ class CarController extends Controller
      */
     public function show(Car $car)
     {
-        $car->load(['options', 'inspection', 'statusHistories', 'equipmentCosts']);
+        $car->load(['options', 'inspection', 'statusHistories', 'equipmentCosts.user']);
         return view('cars.show', compact('car'));
     }
 
@@ -260,16 +260,46 @@ class CarController extends Controller
      */
     public function addEquipmentCost(Request $request, Car $car)
     {
-        $request->validate([
+        $validated = $request->validate([
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
-            'cost_date' => 'required|date',
-            'notes' => 'nullable|string'
+            'cost_date' => 'required|date'
         ]);
 
-        $car->equipmentCosts()->create($request->only(['description', 'amount', 'cost_date', 'notes']));
+        try {
+            // Add the authenticated user's ID to the validated data
+            $validated['user_id'] = auth()->id();
+            
+            $cost = $car->equipmentCosts()->create($validated);
+            $cost->load('user');
 
-        return redirect()->route('cars.show', $car)->with('success', 'Equipment cost added successfully!');
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Equipment cost added successfully!',
+                    'cost' => [
+                        'description' => $cost->description,
+                        'amount' => $cost->amount,
+                        'cost_date' => $cost->cost_date->format('Y-m-d'),
+                        'user_name' => $cost->user->name
+                    ]
+                ]);
+            }
+
+            return redirect()->route('cars.show', $car)->with('success', 'Equipment cost added successfully!');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while adding the cost.',
+                    'errors' => ['general' => ['An error occurred while adding the cost.']]
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while adding the cost.'])
+                ->withInput();
+        }
     }
 
     /**
