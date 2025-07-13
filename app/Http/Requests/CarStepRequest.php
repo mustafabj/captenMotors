@@ -26,20 +26,25 @@ class CarStepRequest extends FormRequest
                     'vehicle_category' => ['nullable', 'string', 'max:255'],
                     'plate_number' => ['nullable', 'string', 'max:255'],
                     'purchase_date' => ['required', 'date', 'after:' . $minDate],
-                    'insurance_expiry_date' => ['required', 'date', 'after:' . $minDate],
+                    'insurance_expiry_date' => ['nullable', 'date', 'after:' . $minDate],
                 ];
                 break;
             case 2:
                 $rules = [
                     'manufacturing_year' => ['required', 'integer', 'min:1900', 'max:' . (date('Y') + 1)],
-                    'chassis_number' => ['required', 'string', 'max:255', Rule::unique('cars', 'chassis_number')],
-                    'engine_capacity' => ['required', 'string', 'max:50'],
-                    'engine_type' => ['nullable', 'string', 'max:50'],
-                    'number_of_keys' => ['required', 'integer', 'min:1', 'max:10'],
+                    'engine_capacity' => ['nullable', 'string', 'max:50'],
+                    'number_of_keys' => ['nullable', 'integer', 'min:1', 'max:10'],
                     'place_of_manufacture' => ['nullable', 'string', 'max:255'],
                 ];
                 break;
             case 3:
+                $rules = [
+                    'options' => ['nullable', 'array'],
+                    'options.*' => ['string', 'max:255'],
+                    'all_options' => ['nullable', 'string'],
+                ];
+                break;
+            case 4:
                 $rules = [
                     'purchase_price' => ['required', 'numeric', 'min:0'],
                     'expected_sale_price' => ['required', 'numeric', 'min:0'],
@@ -47,21 +52,18 @@ class CarStepRequest extends FormRequest
                     'bulk_deal_id' => ['nullable', 'exists:bulk_deals,id'],
                 ];
                 break;
-            case 4:
-                // For AJAX validation, we skip file validation since files can't be sent via AJAX
-                // File validation will be handled on final form submission
-                $rules = [];
-                break;
             case 5:
                 $rules = [
-                    'front_chassis_right' => ['nullable', 'string', 'max:255'],
-                    'front_chassis_left' => ['nullable', 'string', 'max:255'],
-                    'rear_chassis_right' => ['nullable', 'string', 'max:255'],
-                    'rear_chassis_left' => ['nullable', 'string', 'max:255'],
+                    'chassis_inspection' => ['nullable', 'string'],
                     'transmission' => ['nullable', 'string', 'max:255'],
                     'motor' => ['nullable', 'string', 'max:255'],
                     'body_notes' => ['nullable', 'string'],
                 ];
+                break;
+            case 6:
+                // For AJAX validation, we skip file validation since files can't be sent via AJAX
+                // File validation will be handled on final form submission
+                $rules = [];
                 break;
         }
 
@@ -90,10 +92,6 @@ class CarStepRequest extends FormRequest
             'manufacturing_year.integer' => 'Manufacturing year must be a number.',
             'manufacturing_year.min' => 'Manufacturing year must be at least 1900.',
             'manufacturing_year.max' => 'Manufacturing year cannot be in the future.',
-            'chassis_number.required' => 'Chassis number is required.',
-            'chassis_number.unique' => 'This chassis number is already registered.',
-            'engine_capacity.required' => 'Engine capacity is required.',
-            'number_of_keys.required' => 'Number of keys is required.',
             'number_of_keys.min' => 'Number of keys must be at least 1.',
             'number_of_keys.max' => 'Number of keys cannot exceed 10.',
             'purchase_price.required' => 'Purchase price is required.',

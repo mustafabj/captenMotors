@@ -82,7 +82,7 @@
                                             <a href="{{ route('bulk-deals.edit', $deal) }}"
                                                class="inline-flex items-center px-2 py-1 rounded hover:bg-indigo-50 text-indigo-600"
                                                title="Edit">
-                                                <span class="ki-duotone ki-pencil text-indigo-500 mr-1" style="font-size: 1.25rem;"></span>
+                                                <span class="ki-duotone ki-pencil text-indigo-500 mr-1" style="font-size: 1.25rem;color: #6366f1;"></span>
                                             </a>
                                             <form action="{{ route('bulk-deals.destroy', $deal) }}" method="POST" class="inline"
                                                   onsubmit="return confirm('Are you sure you want to delete this bulk deal?')">
@@ -91,7 +91,7 @@
                                                 <button type="submit"
                                                         class="inline-flex items-center px-2 py-1 rounded hover:bg-red-50 text-red-600"
                                                         title="Delete">
-                                                    <span class="ki-duotone ki-trash text-red-500 mr-1" style="font-size: 1.25rem;"></span>
+                                                    <span class="ki-duotone ki-trash text-red-500 mr-1" style="font-size: 1.25rem; color: red;"></span>
                                                 </button>
                                             </form>
                                         </div>

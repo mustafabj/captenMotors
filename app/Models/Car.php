@@ -18,10 +18,8 @@ class Car extends Model implements HasMedia
         'manufacturing_year',
         'place_of_manufacture',
         'number_of_keys',
-        'chassis_number',
         'plate_number',
         'engine_capacity',
-        'engine_type',
         'purchase_date',
         'purchase_price',
         'insurance_expiry_date',
@@ -100,4 +98,5 @@ class Car extends Model implements HasMedia
         $this->addMediaCollection('car_images')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/jpg']);
     }
+    
 }

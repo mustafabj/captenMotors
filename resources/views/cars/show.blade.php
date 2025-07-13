@@ -1,6 +1,78 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Inline Edit Styling -->
+    <style>
+        .editable-field.edit-mode {
+            background-color: #f8f9fa;
+            border: 2px solid #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .editable-field.edit-mode:focus {
+            border-color: #0056b3;
+            box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
+        }
+        
+        .status-display {
+            display: inline-block;
+        }
+        
+        .edit-mode-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            z-index: 1000;
+            font-size: 14px;
+        }
+
+        /* Tab-specific edit mode styling */
+        .option-input, .inspection-field, .financial-field, .images-field {
+            transition: all 0.2s ease;
+        }
+
+        .option-input:focus, .inspection-field:focus, .financial-field:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .option-item {
+            transition: all 0.2s ease;
+        }
+
+        .remove-option-btn {
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .remove-option-btn:hover {
+            opacity: 1;
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Success/Error animations */
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-10px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        .notification {
+            animation: fadeInOut 5s ease-in-out;
+        }
+    </style>
+
     <!-- LightGallery CSS and JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-zoom.css">
@@ -65,10 +137,6 @@
                             <span class="text-sm text-gray-500">• {{ $car->engine_type }}</span>
                         @endif
                     </div>
-                    <div class="flex items-center gap-2">
-                        <i class="ki-filled ki-gear text-gray-400"></i>
-                        <span class="text-sm font-mono">{{ $car->chassis_number }}</span>
-                    </div>
                 </div>
 
                 <!-- Price -->
@@ -88,11 +156,27 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('cars.edit', $car) }}" class="kt-btn kt-btn-sm kt-btn-outline">
+                <div class="flex items-center gap-2" id="view-actions">
+                    <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary" onclick="enableEditMode()">
                         <i class="ki-filled ki-pencil"></i>
                         Edit
+                    </button>
+                    <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-sm kt-btn-outline">
+                        <i class="ki-filled ki-arrow-left"></i>
+                        Back
                     </a>
+                </div>
+
+                <!-- Edit Mode Actions (hidden by default) -->
+                <div class="flex items-center gap-2 hidden" id="edit-actions">
+                    <button id="save-btn" class="kt-btn kt-btn-sm kt-btn-success" onclick="saveChanges()">
+                        <i class="ki-filled ki-check"></i>
+                        Save
+                    </button>
+                    <button id="cancel-btn" class="kt-btn kt-btn-sm kt-btn-secondary" onclick="cancelEdit()">
+                        <i class="ki-filled ki-cross"></i>
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
@@ -142,37 +226,66 @@
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Model</span>
-                                    <input type="text" class="kt-input w-auto" value="{{ $car->model }}" readonly>
+                                    <input type="text" class="kt-input w-auto editable-field" 
+                                           name="model" 
+                                           value="{{ $car->model }}" 
+                                           data-original="{{ $car->model }}"
+                                           readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Vehicle Category</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->vehicle_category ?? 'Not specified' }}" readonly>
+                                    <input type="text" class="kt-input w-auto editable-field"
+                                           name="vehicle_category"
+                                           value="{{ $car->vehicle_category ?? '' }}"
+                                           data-original="{{ $car->vehicle_category ?? '' }}"
+                                           placeholder="Not specified"
+                                           readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Manufacturing Year</span>
-                                    <input type="text" class="kt-input w-auto" value="{{ $car->manufacturing_year }}"
+                                    <input type="number" class="kt-input w-auto editable-field" 
+                                           name="manufacturing_year"
+                                           value="{{ $car->manufacturing_year }}"
+                                           data-original="{{ $car->manufacturing_year }}"
+                                           min="1900" 
+                                           max="{{ date('Y') + 1 }}"
                                         readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Engine Capacity</span>
-                                    <input type="text" class="kt-input w-auto" value="{{ $car->engine_capacity }}"
+                                    <input type="text" class="kt-input w-auto editable-field" 
+                                           name="engine_capacity"
+                                           value="{{ $car->engine_capacity }}"
+                                           data-original="{{ $car->engine_capacity }}"
                                         readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Place of Manufacture</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->place_of_manufacture ?? 'Not specified' }}" readonly>
+                                    <input type="text" class="kt-input w-auto editable-field"
+                                           name="place_of_manufacture"
+                                           value="{{ $car->place_of_manufacture ?? '' }}"
+                                           data-original="{{ $car->place_of_manufacture ?? '' }}"
+                                           placeholder="Not specified"
+                                           readonly>
                                 </div>
 
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Engine Type</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->engine_type ?? 'Not specified' }}" readonly>
+                                    <input type="text" class="kt-input w-auto editable-field"
+                                           name="engine_type"
+                                           value="{{ $car->engine_type ?? '' }}"
+                                           data-original="{{ $car->engine_type ?? '' }}"
+                                           placeholder="Not specified"
+                                           readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Number of Keys</span>
-                                    <input type="text" class="kt-input w-auto" value="{{ $car->number_of_keys }}"
+                                    <input type="number" class="kt-input w-auto editable-field" 
+                                           name="number_of_keys"
+                                           value="{{ $car->number_of_keys }}"
+                                           data-original="{{ $car->number_of_keys }}"
+                                           min="1" 
+                                           max="10"
                                         readonly>
                                 </div>
                             </div>
@@ -184,18 +297,31 @@
                             </div>
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <span class="text-gray-600 font-semibold block">Chassis Number</span>
-                                    <input type="text" class="kt-input w-auto font-mono"
-                                        value="{{ $car->chassis_number }}" readonly>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Plate Number</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->plate_number ?? 'Not assigned' }}" readonly>
+                                    <input type="text" class="kt-input w-auto editable-field"
+                                           name="plate_number"
+                                           value="{{ $car->plate_number ?? '' }}"
+                                           data-original="{{ $car->plate_number ?? '' }}"
+                                           placeholder="Not assigned"
+                                           readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Status</span>
+                                    <div class="status-display">
                                     <span class="kt-badge {{ $status['class'] }}">{{ $status['text'] }}</span>
+                                    </div>
+                                    <select class="kt-select w-auto editable-field hidden" 
+                                            name="status"
+                                            data-original="{{ $car->status }}" k>
+                                        <option value="not_received" {{ $car->status === 'not_received' ? 'selected' : '' }}>Not Received</option>
+                                        <option value="paint" {{ $car->status === 'paint' ? 'selected' : '' }}>Paint</option>
+                                        <option value="upholstery" {{ $car->status === 'upholstery' ? 'selected' : '' }}>Upholstery</option>
+                                        <option value="mechanic" {{ $car->status === 'mechanic' ? 'selected' : '' }}>Mechanic</option>
+                                        <option value="electrical" {{ $car->status === 'electrical' ? 'selected' : '' }}>Electrical</option>
+                                        <option value="agency" {{ $car->status === 'agency' ? 'selected' : '' }}>Agency</option>
+                                        <option value="polish" {{ $car->status === 'polish' ? 'selected' : '' }}>Polish</option>
+                                        <option value="ready" {{ $car->status === 'ready' ? 'selected' : '' }}>Ready</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -207,8 +333,11 @@
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Insurance Expiry</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->insurance_expiry_date->format('F j, Y') }}" readonly>
+                                    <input type="date" class="kt-input w-auto editable-field"
+                                           name="insurance_expiry_date"
+                                           value="{{ $car->insurance_expiry_date->format('Y-m-d') }}"
+                                           data-original="{{ $car->insurance_expiry_date->format('Y-m-d') }}"
+                                           readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Insurance Status</span>
@@ -244,19 +373,31 @@
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Purchase Date</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->purchase_date->format('F j, Y') }}" readonly>
+                                    <input type="date" class="kt-input w-auto editable-field"
+                                           name="purchase_date"
+                                           value="{{ $car->purchase_date->format('Y-m-d') }}"
+                                           data-original="{{ $car->purchase_date->format('Y-m-d') }}"
+                                           readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Purchase Price</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="{{ $car->purchase_price ? '$' . number_format($car->purchase_price, 2) : 'Not specified' }}"
+                                    <input type="number" class="kt-input w-auto editable-field"
+                                           name="purchase_price"
+                                           value="{{ $car->purchase_price }}"
+                                           data-original="{{ $car->purchase_price }}"
+                                           min="0"
+                                           step="0.01"
                                         readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Expected Sale Price</span>
-                                    <input type="text" class="kt-input w-auto"
-                                        value="${{ number_format($car->expected_sale_price, 2) }}" readonly>
+                                    <input type="number" class="kt-input w-auto editable-field"
+                                           name="expected_sale_price"
+                                           value="{{ $car->expected_sale_price }}"
+                                           data-original="{{ $car->expected_sale_price }}"
+                                           min="0"
+                                           step="0.01"
+                                           readonly>
                                 </div>
                             </div>
                         </div>
@@ -267,9 +408,13 @@
                 <div class="hidden" id="tab_1_2">
                     <div class="kt-card">
                         <div class="kt-card-header">
+                            <div class="flex justify-between items-center w-full">
                             <h4 class="text-lg font-bold mb-6">Car Options</h4>
+                            </div>
                         </div>
                         <div class="kt-card-content">
+                            <!-- View Mode -->
+                            <div id="options-view-mode">
                             @if ($car->options->count() > 0)
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @foreach ($car->options as $option)
@@ -291,41 +436,94 @@
                                 </div>
                             @endif
                         </div>
+
+                            <!-- Edit Mode -->
+                            <div id="options-edit-mode" class="hidden">
+                                <div class="space-y-4">
+                                    <div class="options-container">
+                                        @if ($car->options->count() > 0)
+                                            @foreach ($car->options as $index => $option)
+                                                <div class="option-item flex items-center gap-2 mb-3">
+                                                    <input type="text" 
+                                                           class="kt-input flex-1 option-input" 
+                                                           value="{{ $option->name }}"
+                                                           placeholder="Enter option name">
+                                                    <button type="button" 
+                                                            class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
+                                                            onclick="removeOption(this)">
+                                                        <i class="ki-filled ki-trash"></i>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        @else
+                                            <div class="option-item flex items-center gap-2 mb-3">
+                                                <input type="text" 
+                                                       class="kt-input flex-1 option-input" 
+                                                       placeholder="Enter option name">
+                                                <button type="button" 
+                                                        class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
+                                                        onclick="removeOption(this)">
+                                                    <i class="ki-filled ki-trash"></i>
+                                                </button>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-outline"
+                                            onclick="addOptionField()">
+                                        <i class="ki-filled ki-plus"></i>
+                                        Add Option
+                                    </button>
+
+                                    <div class="flex gap-2 pt-4">
+                                        <button type="button" 
+                                                class="kt-btn kt-btn-sm kt-btn-success"
+                                                onclick="saveOptions()">
+                                            <i class="ki-filled ki-check"></i>
+                                            Save Options
+                                        </button>
+                                        <button type="button" 
+                                                class="kt-btn kt-btn-sm kt-btn-secondary"
+                                                onclick="cancelOptionsEdit()">
+                                            <i class="ki-filled ki-cross"></i>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Inspection Tab -->
                 <div class="hidden" id="tab_1_3">
-                    @if ($car->inspection)
                         <div class="kt-card">
                             <div class="kt-card-header">
+                            <div class="flex justify-between items-center w-full">
                                 <h4 class="text-lg font-bold mb-6">Inspection Details</h4>
                             </div>
+                            </div>
                             <div class="kt-card-content">
+                            <!-- View Mode -->
+                            <div id="inspection-view-mode">
+                                @if ($car->inspection)
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                     <div>
                                         <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
                                         <div class="space-y-3">
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                                <span class="text-gray-600">Front Chassis Right</span>
-                                                <input class="kt-input w-auto"
-                                                    value="{{ $car->inspection->front_chassis_right }}" readonly></input>
+                                                @if ($car->inspection->chassis_inspection)
+                                                    <div class="py-2">
+                                                        <span class="text-gray-600 block mb-2">Chassis Inspection</span>
+                                                        <div class="bg-gray-50 p-3 rounded border">
+                                                            {{ $car->inspection->chassis_inspection }}
                                             </div>
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                                <span class="text-gray-600">Front Chassis Left</span>
-                                                <input class="kt-input w-auto"
-                                                    value="{{ $car->inspection->front_chassis_left }}" readonly></input>
                                             </div>
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                                <span class="text-gray-600">Rear Chassis Right</span>
-                                                <input class="kt-input w-auto"
-                                                    value="{{ $car->inspection->rear_chassis_right }}" readonly></input>
+                                                @else
+                                                    <div class="py-2 text-gray-500 italic">
+                                                        No chassis inspection data available
                                             </div>
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                                <span class="text-gray-600">Rear Chassis Left</span>
-                                                <input class="kt-input w-auto"
-                                                    value="{{ $car->inspection->rear_chassis_left }}" readonly></input>
-                                            </div>
+                                                @endif
                                         </div>
                                     </div>
                                     <div>
@@ -333,13 +531,11 @@
                                         <div class="space-y-3">
                                             <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                                 <span class="text-gray-600">Transmission Condition</span>
-                                                <input class="kt-input w-auto"
-                                                    value="{{ $car->inspection->transmission }}" readonly></input>
+                                                    <span class="text-gray-800">{{ $car->inspection->transmission ?? 'Not specified' }}</span>
                                             </div>
                                             <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                                 <span class="text-gray-600">Motor Condition</span>
-                                                <input class="kt-input w-auto" value="{{ $car->inspection->motor }}"
-                                                    readonly></input>
+                                                    <span class="text-gray-800">{{ $car->inspection->motor ?? 'Not specified' }}</span>
                                             </div>
                                         </div>
                                         @if ($car->inspection->body_notes)
@@ -349,28 +545,92 @@
                                                     {{ $car->inspection->body_notes }}</p>
                                             </div>
                                         @endif
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     @else
-                        <div class="kt-card">
-                            <div class="kt-card-content text-center py-12">
+                                    <div class="text-center py-12">
                                 <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
                                 <h4 class="text-lg font-bold text-gray-900 mb-2">No inspection data</h4>
                                 <p class="text-gray-600">No inspection information has been recorded for this car.</p>
-                            </div>
                         </div>
                     @endif
+                            </div>
+
+                            <!-- Edit Mode -->
+                            <div id="inspection-edit-mode" class="hidden">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div>
+                                        <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
+                                        <div class="space-y-3">
+                                            <div class="kt-form-item">
+                                                <label class="kt-form-label">Chassis Inspection Notes</label>
+                                                <textarea class="kt-textarea w-full inspection-field" 
+                                                          name="chassis_inspection" 
+                                                          rows="4" 
+                                                          placeholder="Enter chassis inspection details">{{ $car->inspection->chassis_inspection ?? '' }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-md font-semibold mb-4">Mechanical Inspection</h5>
+                                        <div class="space-y-3">
+                                            <div class="kt-form-item">
+                                                <label class="kt-form-label">Transmission Condition</label>
+                                                <input type="text" 
+                                                       class="kt-input w-full inspection-field" 
+                                                       name="transmission" 
+                                                       value="{{ $car->inspection->transmission ?? '' }}"
+                                                       placeholder="Enter transmission condition">
+                                            </div>
+                                            <div class="kt-form-item">
+                                                <label class="kt-form-label">Motor Condition</label>
+                                                <input type="text" 
+                                                       class="kt-input w-full inspection-field" 
+                                                       name="motor" 
+                                                       value="{{ $car->inspection->motor ?? '' }}"
+                                                       placeholder="Enter motor condition">
+                                            </div>
+                                            <div class="kt-form-item">
+                                                <label class="kt-form-label">Body Notes</label>
+                                                <textarea class="kt-textarea w-full inspection-field" 
+                                                          name="body_notes" 
+                                                          rows="3" 
+                                                          placeholder="Enter body notes">{{ $car->inspection->body_notes ?? '' }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 pt-6">
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-success"
+                                            onclick="saveInspection()">
+                                        <i class="ki-filled ki-check"></i>
+                                        Save Inspection
+                                    </button>
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-secondary"
+                                            onclick="cancelInspectionEdit()">
+                                        <i class="ki-filled ki-cross"></i>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Financial Tab -->
                 <div class="hidden" id="tab_1_4">
                     <div class="kt-card">
                         <div class="kt-card-header">
+                            <div class="flex justify-between items-center w-full">
                             <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
+                            </div>
                         </div>
                         <div class="kt-card-content">
+                            <!-- View Mode -->
+                            <div id="financial-view-mode">
                             <div class="grid {{ $car->purchase_price ? 'grid-cols-4' : 'grid-cols-2' }} gap-6">
                                 @if ($car->purchase_price)
                                     <div class="text-center p-4 bg-green-50 rounded-lg">
@@ -402,6 +662,48 @@
                                         <div class="text-sm text-gray-600">Estimated Profit</div>
                                     </div>
                                 @endif
+                                </div>
+                            </div>
+
+                            <!-- Edit Mode -->
+                            <div id="financial-edit-mode" class="hidden">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="kt-form-item">
+                                        <label class="kt-form-label">Purchase Price</label>
+                                        <input type="number" 
+                                               class="kt-input w-full financial-field" 
+                                               name="purchase_price" 
+                                               value="{{ $car->purchase_price }}"
+                                               min="0"
+                                               step="0.01"
+                                               placeholder="0.00">
+                                    </div>
+                                    <div class="kt-form-item">
+                                        <label class="kt-form-label">Expected Sale Price</label>
+                                        <input type="number" 
+                                               class="kt-input w-full financial-field" 
+                                               name="expected_sale_price" 
+                                               value="{{ $car->expected_sale_price }}"
+                                               min="0"
+                                               step="0.01"
+                                               placeholder="0.00">
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 pt-6">
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-success"
+                                            onclick="saveFinancial()">
+                                        <i class="ki-filled ki-check"></i>
+                                        Save Financial
+                                    </button>
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-secondary"
+                                            onclick="cancelFinancialEdit()">
+                                        <i class="ki-filled ki-cross"></i>
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                             <div class="equipment mt-6">
                                 <div class="kt-card-header">
@@ -499,6 +801,15 @@
 
                 <!-- Images Tab -->
                 <div class="hidden" id="tab_1_7">
+                    <div class="kt-card">
+                        <div class="kt-card-header">
+                            <div class="flex justify-between items-center w-full">
+                                <h4 class="text-lg font-bold mb-6">Car Images</h4>
+                            </div>
+                        </div>
+                        <div class="kt-card-content">
+                            <!-- View Mode -->
+                            <div id="images-view-mode">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Car License Image -->
                         <div class="kt-card">
@@ -562,6 +873,68 @@
                                         <p class="text-gray-600">No car images have been uploaded.</p>
                                     </div>
                                 @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                            <!-- Edit Mode -->
+                            <div id="images-edit-mode" class="hidden">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <!-- Car License Upload -->
+                                    <div class="kt-card">
+                                        <div class="kt-card-header">
+                                            <h4 class="text-lg font-bold mb-6">Car License</h4>
+                                        </div>
+                                        <div class="kt-card-content">
+                                            <div class="kt-form-item">
+                                                <label class="kt-form-label">Upload License Image</label>
+                                                <input type="file" 
+                                                       class="kt-input w-full images-field" 
+                                                       name="car_license" 
+                                                       accept="image/*">
+                                                <div class="text-sm text-gray-500 mt-1">
+                                                    Accepted formats: JPEG, PNG, JPG (max 2MB)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Car Images Upload -->
+                                    <div class="kt-card">
+                                        <div class="kt-card-header">
+                                            <h4 class="text-lg font-bold mb-6">Car Images</h4>
+                                        </div>
+                                        <div class="kt-card-content">
+                                            <div class="kt-form-item">
+                                                <label class="kt-form-label">Upload Car Images</label>
+                                                <input type="file" 
+                                                       class="kt-input w-full images-field" 
+                                                       name="car_images[]" 
+                                                       accept="image/*"
+                                                       multiple>
+                                                <div class="text-sm text-gray-500 mt-1">
+                                                    Accepted formats: JPEG, PNG, JPG (max 2MB each)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 pt-6">
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-success"
+                                            onclick="saveImages()">
+                                        <i class="ki-filled ki-check"></i>
+                                        Save Images
+                                    </button>
+                                    <button type="button" 
+                                            class="kt-btn kt-btn-sm kt-btn-secondary"
+                                            onclick="cancelImagesEdit()">
+                                        <i class="ki-filled ki-cross"></i>
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -661,6 +1034,31 @@
                     // Add active class to clicked toggle and show target content
                     this.classList.add('active');
                     document.querySelector(targetId).classList.remove('hidden');
+                    
+                    // Preserve edit mode if it's enabled globally
+                    if (document.body.classList.contains('global-edit-mode')) {
+                        // Re-enable edit mode for the newly visible tab
+                        const tabId = targetId.replace('#tab_1_', '');
+                        
+                        // Map tab IDs to edit mode element names
+                        let editModeName = '';
+                        switch(tabId) {
+                            case '2': editModeName = 'options'; break;
+                            case '3': editModeName = 'inspection'; break;
+                            case '4': editModeName = 'financial'; break;
+                            case '7': editModeName = 'images'; break;
+                        }
+                        
+                        if (editModeName) {
+                            const viewMode = document.getElementById(`${editModeName}-view-mode`);
+                            const editMode = document.getElementById(`${editModeName}-edit-mode`);
+                            
+                            if (viewMode && editMode) {
+                                viewMode.classList.add('hidden');
+                                editMode.classList.remove('hidden');
+                            }
+                        }
+                    }
                 });
             });
 
@@ -813,12 +1211,32 @@
 
             // Function to add new equipment cost row to table
             function addEquipmentCostRow(costData) {
-                const tableBody = document.querySelector('#equipment-costs-table tbody');
+                let tableBody = document.querySelector('#equipment-costs-table tbody');
                 const emptyState = document.querySelector('.equipment .kt-card-content .text-center');
                 
                 // Remove empty state if it exists
                 if (emptyState) {
                     emptyState.remove();
+                }
+
+                // Check if table body exists, if not create the table structure
+                if (!tableBody) {
+                    const table = document.createElement('table');
+                    table.id = 'equipment-costs-table';
+                    table.className = 'w-full';
+                    table.innerHTML = `
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold">Description</th>
+                                <th class="text-left py-3 px-4 font-semibold">Amount</th>
+                                <th class="text-left py-3 px-4 font-semibold">Date</th>
+                                <th class="text-left py-3 px-4 font-semibold">Added By</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    `;
+                    document.querySelector('.equipment .kt-card-content').appendChild(table);
+                    tableBody = table.querySelector('tbody');
                 }
                 
                 // Create new row
@@ -832,10 +1250,17 @@
                 `;
                 
                 // Add row to the beginning of the table (most recent first)
-                if (tableBody) {
-                    tableBody.insertBefore(newRow, tableBody.firstChild);
-                }
+                tableBody.insertBefore(newRow, tableBody.firstChild);
             }
+        });
+    </script>
+
+    <!-- Car Show Inline Editing -->
+    <script src="{{ asset('js/pages/cars-show.js') }}"></script>
+    <script>
+        // Initialize car show functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            CarsShow.init({{ $car->id }}, "{{ route('cars.update-inline', $car) }}");
         });
     </script>
 @endsection

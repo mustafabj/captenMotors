@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="robots" content="follow, index" />
     <meta name="description" content="Capten Motors - Dashboard" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     <link rel="canonical" href="{{ url()->current() }}" />
     <link rel="icon" href="{{ asset('assets/media/app/favicon.ico') }}" type="image/x-icon" />
@@ -19,14 +20,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Vendor CSS -->
-    <link href="{{ asset('assets/vendors/apexcharts/apexcharts.css') }}" rel="stylesheet" />
-    <link href="{{ asset('assets/vendors/keenicons/styles.bundle.css') }}" rel="stylesheet" />
+    <link href="@versioned('assets/vendors/apexcharts/apexcharts.css')" rel="stylesheet" />
+    <link href="@versioned('assets/vendors/keenicons/styles.bundle.css')" rel="stylesheet" />
 
     <!-- Main CSS -->
-    <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet" />
+    <link href="@versioned('assets/css/styles.css')" rel="stylesheet" />
+    <link href="@versioned('css/pages/cars-form.css')" rel="stylesheet" />
+
 </head>
 
-<body class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed">
+<body class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed" data-route="{{ Route::currentRouteName() }}" data-asset-version="{{ config('assets.version', '1.0.0') }}">
     <!-- Theme Mode -->
     <script>
         const defaultThemeMode = 'light'; // light|dark|system
@@ -109,6 +112,18 @@
     <!-- Custom Widgets and Layout -->
     <script src="{{ asset('assets/js/widgets/general.js') }}"></script>
     <script src="{{ asset('assets/js/layouts/demo1.js') }}"></script>
+    
+    <!-- Application JS (Load First) -->
+    <script src="@versionedJs('app.js')"></script>
+    
+    <!-- Loader System (Load Second) -->
+    <script src="@versionedJs('config/loader.js')"></script>
+    
+    <!-- Common Components (Load Third) -->
+    <script src="@versionedJs('components/modal.js')"></script>
+    
+    <!-- Page-specific Scripts (Load Last) -->
+    @stack('scripts')
     <!-- End of Scripts -->
 </body>
 
