@@ -4,7 +4,7 @@
     <form action="{{ route('bulk-deals.store') }}" method="POST">
         @csrf
         <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-5">
             <div>
                 <h1 class="text-2xl font-bold">Create Bulk Deal</h1>
                 <p class="text-sm text-gray-500">Home - Bulk Deal Management - Create</p>
@@ -25,7 +25,7 @@
                 <div class="kt-card-header">
                     <h3 class="text-lg font-semibold">Basic Information</h3>
                 </div>
-                <div class="kt-card-content p-6 space-y-6">
+                <div class="kt-card-content p-5 space-y-5">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Deal Name *</label>
                         <input type="text" name="name" id="name" value="{{ old('name') }}" required
@@ -38,7 +38,7 @@
                     <div>
                         <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                         <textarea name="description" id="description" rows="4" 
-                            class="kt-input w-full" placeholder="Describe the bulk deal...">{{ old('description') }}</textarea>
+                            class="kt-textarea w-full" placeholder="Describe the bulk deal...">{{ old('description') }}</textarea>
                         @error('description')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -51,7 +51,7 @@
                 <div class="kt-card-header">
                     <h3 class="text-lg font-semibold">Deal Details</h3>
                 </div>
-                <div class="kt-card-content p-6 space-y-6">
+                <div class="kt-card-content p-6 space-y-5">
                     <div>
                         <label for="total_value" class="block text-sm font-medium text-gray-700 mb-2">Total Value (Optional)</label>
                         <input type="number" name="total_value" id="total_value" value="{{ old('total_value') }}" 
@@ -64,7 +64,8 @@
 
                     <div>
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                        <select name="status" id="status" required class="kt-select w-full">
+                        <select name="status" id="status" required class="kt-select"
+                        data-kt-select="true" data-kt-select-placeholder="Select Status">
                             <option value="">Select Status</option>
                             <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
                             <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>Completed</option>

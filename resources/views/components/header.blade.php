@@ -6,7 +6,7 @@
             <!-- Mobile Logo -->
             <div class="flex gap-2.5 lg:hidden items-center -ms-1">
                 <a class="shrink-0" href="html/demo1.html">
-                    <img class="max-h-[25px] w-full" src="assets/media/app/mini-logo.svg" />
+                    <img class="max-h-[25px] w-full" src="" />
                 </a>
                 <div class="flex items-center">
                     <button class="kt-btn kt-btn-icon kt-btn-ghost" data-kt-drawer-toggle="#sidebar">
@@ -106,7 +106,7 @@
                                     <span class="ms-auto kt-badge kt-badge-stroke shrink-0">
                                         English
                                         <img alt="" class="inline-block size-3.5 rounded-full"
-                                            src="assets/media/flags/united-states.svg" />
+                                            src="" />
                                     </span>
                                 </button>
                                 <div class="kt-dropdown-menu w-[180px]" data-kt-dropdown-menu="true">
@@ -115,7 +115,7 @@
                                             <a class="kt-dropdown-menu-link" href="?dir=ltr">
                                                 <span class="flex items-center gap-2">
                                                     <img alt="" class="inline-block size-4 rounded-full"
-                                                        src="assets/media/flags/united-states.svg" />
+                                                        src="" />
                                                     <span class="kt-menu-title">
                                                         English
                                                     </span>
@@ -128,7 +128,7 @@
                                             <a class="kt-dropdown-menu-link" href="?dir=rtl">
                                                 <span class="flex items-center gap-2">
                                                     <img alt="" class="inline-block size-4 rounded-full"
-                                                        src="assets/media/flags/saudi-arabia.svg" />
+                                                        src="" />
                                                     <span class="kt-menu-title">
                                                         Arabic
                                                     </span>

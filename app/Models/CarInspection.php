@@ -11,10 +11,7 @@ class CarInspection extends Model
 
     protected $fillable = [
         'car_id',
-        'front_chassis_right',
-        'front_chassis_left',
-        'rear_chassis_right',
-        'rear_chassis_left',
+        'chassis_inspection',
         'transmission',
         'motor',
         'body_notes'

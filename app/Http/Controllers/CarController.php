@@ -22,6 +22,39 @@ class CarController extends Controller
     }
 
     /**
+     * Search cars by chassis number or model via AJAX
+     */
+    public function search(Request $request)
+    {
+        $query = $request->get('search');
+        $status = $request->get('status');
+        $year = $request->get('year');
+        
+        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])
+            ->when($query, function ($q) use ($query) {
+                $q->where('model', 'like', '%' . $query . '%')
+                  ->orWhere('plate_number', 'like', '%' . $query . '%');
+            })
+            ->when($status, function ($q) use ($status) {
+                $q->where('status', $status);
+            })
+            ->when($year, function ($q) use ($year) {
+                $q->where('manufacturing_year', $year);
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(12);
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('cars.partials.car-grid', compact('cars'))->render(),
+                'pagination' => view('cars.partials.pagination', compact('cars'))->render()
+            ]);
+        }
+        
+        return view('cars.index', compact('cars'));
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
@@ -43,28 +76,24 @@ class CarController extends Controller
                 'vehicle_category' => 'nullable|string|max:255',
                 'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
                 'place_of_manufacture' => 'nullable|string|max:255',
-                'number_of_keys' => 'required|integer|min:1|max:10',
-                'chassis_number' => 'required|string|unique:cars,chassis_number',
+                'number_of_keys' => 'nullable|integer|min:1|max:10',
                 'plate_number' => 'nullable|string|unique:cars,plate_number',
-                'engine_capacity' => 'required|string|max:50',
-                'engine_type' => 'nullable|string|max:50',
+                'engine_capacity' => 'nullable|string|max:50',
                 'purchase_date' => 'required|date',
                 'purchase_price' => 'required|numeric|min:0',
-                'insurance_expiry_date' => 'required|date',
+                'insurance_expiry_date' => 'nullable|date',
                 'expected_sale_price' => 'required|numeric|min:0',
                 'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
                 'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'front_chassis_right' => 'nullable|string|max:255',
-                'front_chassis_left' => 'nullable|string|max:255',
-                'rear_chassis_right' => 'nullable|string|max:255',
-                'rear_chassis_left' => 'nullable|string|max:255',
+                'chassis_inspection' => 'nullable|string',
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
                 'options' => 'nullable|array',
                 'options.*' => 'string|max:255',
+                'all_options' => 'nullable|string',
             ]);
 
             return DB::transaction(function () use ($validated, $request) {
@@ -91,19 +120,25 @@ class CarController extends Controller
                 ]);
 
                 // Handle car options
-                if ($request->has('options')) {
+                if ($request->filled('all_options')) {
+                    // Parse the JSON string from all_options
+                    $allOptions = json_decode($request->all_options, true);
+                    if (is_array($allOptions)) {
+                        foreach ($allOptions as $optionName) {
+                            $car->options()->create(['name' => $optionName]);
+                        }
+                    }
+                } elseif ($request->has('options')) {
+                    // Fallback to the old options array if all_options is not provided
                     foreach ($request->options as $optionName) {
                         $car->options()->create(['name' => $optionName]);
                     }
                 }
 
                 // Handle inspection data
-                if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
+                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor')) {
                     $car->inspection()->create([
-                        'front_chassis_right' => $request->front_chassis_right,
-                        'front_chassis_left' => $request->front_chassis_left,
-                        'rear_chassis_right' => $request->rear_chassis_right,
-                        'rear_chassis_left' => $request->rear_chassis_left,
+                        'chassis_inspection' => $request->chassis_inspection,
                         'transmission' => $request->transmission,
                         'motor' => $request->motor,
                         'body_notes' => $request->body_notes,
@@ -156,28 +191,24 @@ class CarController extends Controller
                 'vehicle_category' => 'nullable|string|max:255',
                 'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
                 'place_of_manufacture' => 'nullable|string|max:255',
-                'number_of_keys' => 'required|integer|min:1|max:10',
-                'chassis_number' => 'required|string|unique:cars,chassis_number,' . $car->id,
+                'number_of_keys' => 'nullable|integer|min:1|max:10',
                 'plate_number' => 'nullable|string|unique:cars,plate_number,' . $car->id,
-                'engine_capacity' => 'required|string|max:50',
-                'engine_type' => 'nullable|string|max:50',
+                'engine_capacity' => 'nullable|string|max:50',
                 'purchase_date' => 'required|date',
                 'purchase_price' => 'required|numeric|min:0',
-                'insurance_expiry_date' => 'required|date',
+                'insurance_expiry_date' => 'nullable|date',
                 'expected_sale_price' => 'required|numeric|min:0',
                 'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
                 'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'front_chassis_right' => 'nullable|string|max:255',
-                'front_chassis_left' => 'nullable|string|max:255',
-                'rear_chassis_right' => 'nullable|string|max:255',
-                'rear_chassis_left' => 'nullable|string|max:255',
+                'chassis_inspection' => 'nullable|string',
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
                 'options' => 'nullable|array',
                 'options.*' => 'string|max:255',
+                'all_options' => 'nullable|string',
             ]);
 
             return DB::transaction(function () use ($validated, $request, $car) {
@@ -208,7 +239,15 @@ class CarController extends Controller
                 }
 
                 // Update car options
-                if ($request->has('options')) {
+                if ($request->filled('all_options')) {
+                    $car->options()->delete();
+                    $allOptions = json_decode($request->all_options, true);
+                    if (is_array($allOptions)) {
+                        foreach ($allOptions as $optionName) {
+                            $car->options()->create(['name' => $optionName]);
+                        }
+                    }
+                } elseif ($request->has('options')) {
                     $car->options()->delete(); // Remove existing options
                     foreach ($request->options as $optionName) {
                         $car->options()->create(['name' => $optionName]);
@@ -216,14 +255,11 @@ class CarController extends Controller
                 }
 
                 // Update inspection data
-                if ($request->filled('front_chassis_right') || $request->filled('transmission') || $request->filled('motor')) {
+                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor')) {
                     $car->inspection()->updateOrCreate(
                         ['car_id' => $car->id],
                         [
-                            'front_chassis_right' => $request->front_chassis_right,
-                            'front_chassis_left' => $request->front_chassis_left,
-                            'rear_chassis_right' => $request->rear_chassis_right,
-                            'rear_chassis_left' => $request->rear_chassis_left,
+                            'chassis_inspection' => $request->chassis_inspection,
                             'transmission' => $request->transmission,
                             'motor' => $request->motor,
                             'body_notes' => $request->body_notes,
@@ -258,8 +294,10 @@ class CarController extends Controller
     /**
      * Add equipment cost to car
      */
-    public function addEquipmentCost(Request $request, Car $car)
+    public function addEquipmentCost(Request $request, $id)
     {
+        $car = Car::findOrFail($id);
+        
         $validated = $request->validate([
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
@@ -305,8 +343,10 @@ class CarController extends Controller
     /**
      * Update car status
      */
-    public function updateStatus(Request $request, Car $car)
+    public function updateStatus(Request $request, $id)
     {
+        $car = Car::findOrFail($id);
+        
         $request->validate([
             'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
             'notes' => 'nullable|string'
@@ -326,8 +366,10 @@ class CarController extends Controller
     /**
      * Delete car image
      */
-    public function deleteImage(Request $request, Car $car)
+    public function deleteImage(Request $request, $id)
     {
+        $car = Car::findOrFail($id);
+        
         $request->validate([
             'media_id' => 'required|exists:media,id'
         ]);
@@ -348,5 +390,350 @@ class CarController extends Controller
             'success' => true,
             'message' => 'Step ' . $request->input('step') . ' validation passed'
         ]);
+    }
+
+    /**
+     * Update car via AJAX for inline editing
+     */
+    public function updateInline(Request $request, $id)
+    {
+        try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'model' => 'required|string|max:255',
+                'vehicle_category' => 'nullable|string|max:255',
+                'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+                'place_of_manufacture' => 'nullable|string|max:255',
+                'number_of_keys' => 'nullable|integer|min:1|max:10',
+                'plate_number' => 'nullable|string|unique:cars,plate_number,' . $car->id,
+                'engine_capacity' => 'nullable|string|max:50',
+                'purchase_date' => 'required|date',
+                'purchase_price' => 'required|numeric|min:0',
+                'insurance_expiry_date' => 'nullable|date',
+                'expected_sale_price' => 'required|numeric|min:0',
+                'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
+                'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
+            ]);
+
+            return DB::transaction(function () use ($validated, $request, $car) {
+                $car->update($validated);
+
+                // Create status history entry if status changed
+                if ($car->wasChanged('status')) {
+                    $car->statusHistories()->create([
+                        'status' => $validated['status'],
+                        'notes' => 'Status updated via inline edit'
+                    ]);
+                }
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Car updated successfully!',
+                        'car' => [
+                            'model' => $car->model,
+                            'vehicle_category' => $car->vehicle_category,
+                            'manufacturing_year' => $car->manufacturing_year,
+                            'place_of_manufacture' => $car->place_of_manufacture,
+                            'number_of_keys' => $car->number_of_keys,
+                            'plate_number' => $car->plate_number,
+                            'engine_capacity' => $car->engine_capacity,
+                            'purchase_date' => $car->purchase_date->format('Y-m-d'),
+                            'purchase_price' => $car->purchase_price,
+                            'insurance_expiry_date' => $car->insurance_expiry_date ? $car->insurance_expiry_date->format('Y-m-d') : null,
+                            'expected_sale_price' => $car->expected_sale_price,
+                            'status' => $car->status,
+                            'bulk_deal_id' => $car->bulk_deal_id,
+                        ]
+                    ]);
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Car updated successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please correct the errors below.',
+                    'errors' => $e->validator->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the car. Please try again.',
+                    'errors' => ['general' => ['An error occurred while updating the car.']]
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while updating the car. Please try again.'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update car options via AJAX for inline editing
+     */
+    public function updateOptions(Request $request, $id)
+    {
+        try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'options' => 'nullable|string',
+            ]);
+
+            return DB::transaction(function () use ($validated, $request, $car) {
+                // Delete existing options
+                $car->options()->delete();
+
+                // Parse options from JSON string
+                $options = [];
+                if (!empty($validated['options'])) {
+                    $options = json_decode($validated['options'], true) ?? [];
+                }
+
+                // Add new options
+                if (!empty($options)) {
+                    foreach ($options as $optionName) {
+                        if (!empty(trim($optionName))) {
+                            $car->options()->create(['name' => trim($optionName)]);
+                        }
+                    }
+                }
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Car options updated successfully!',
+                        'options' => $car->options()->pluck('name')->toArray()
+                    ]);
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Car options updated successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please correct the errors below.',
+                    'errors' => $e->validator->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the options. Please try again.',
+                    'errors' => ['general' => ['An error occurred while updating the options.']]
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while updating the options. Please try again.'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update car inspection via AJAX for inline editing
+     */
+    public function updateInspection(Request $request, $id)
+    {
+        try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'chassis_inspection' => 'nullable|string',
+                'transmission' => 'nullable|string|max:255',
+                'motor' => 'nullable|string|max:255',
+                'body_notes' => 'nullable|string',
+            ]);
+
+            return DB::transaction(function () use ($validated, $request, $car) {
+                // Update or create inspection
+                $car->inspection()->updateOrCreate(
+                    ['car_id' => $car->id],
+                    $validated
+                );
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Inspection details updated successfully!',
+                        'inspection' => $car->inspection()->first()
+                    ]);
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Inspection details updated successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please correct the errors below.',
+                    'errors' => $e->validator->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the inspection. Please try again.',
+                    'errors' => ['general' => ['An error occurred while updating the inspection.']]
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while updating the inspection. Please try again.'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update car financial information via AJAX for inline editing
+     */
+    public function updateFinancial(Request $request, $id)
+    {
+        try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'purchase_price' => 'required|numeric|min:0',
+                'expected_sale_price' => 'required|numeric|min:0',
+            ]);
+
+            return DB::transaction(function () use ($validated, $request, $car) {
+                $car->update($validated);
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Financial information updated successfully!',
+                        'financial' => [
+                            'purchase_price' => $car->purchase_price,
+                            'expected_sale_price' => $car->expected_sale_price,
+                        ]
+                    ]);
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Financial information updated successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please correct the errors below.',
+                    'errors' => $e->validator->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the financial information. Please try again.',
+                    'errors' => ['general' => ['An error occurred while updating the financial information.']]
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while updating the financial information. Please try again.'])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update car images via AJAX for inline editing
+     */
+    public function updateImages(Request $request, $id)
+    {
+        try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            ]);
+
+            return DB::transaction(function () use ($validated, $request, $car) {
+                // Handle car license image
+                if ($request->hasFile('car_license')) {
+                    // Remove existing license images
+                    $car->clearMediaCollection('car_license');
+                    // Add new license image
+                    $car->addMediaFromRequest('car_license')
+                        ->toMediaCollection('car_license');
+                }
+
+                // Handle car images
+                if ($request->hasFile('car_images')) {
+                    foreach ($request->file('car_images') as $image) {
+                        $car->addMedia($image)
+                            ->toMediaCollection('car_images');
+                    }
+                }
+
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Images updated successfully!',
+                        'images' => [
+                            'car_license_count' => $car->getMedia('car_license')->count(),
+                            'car_images_count' => $car->getMedia('car_images')->count(),
+                        ]
+                    ]);
+                }
+
+                return redirect()->route('cars.show', $car)->with('success', 'Images updated successfully!');
+            });
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please correct the errors below.',
+                    'errors' => $e->validator->errors()
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the images. Please try again.',
+                    'errors' => ['general' => ['An error occurred while updating the images.']]
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->withErrors(['general' => 'An error occurred while updating the images. Please try again.'])
+                ->withInput();
+        }
     }
 }
