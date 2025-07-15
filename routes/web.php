@@ -4,7 +4,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\BulkDealController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
+
+    
     // Car routes with slug-based routing
     Route::get('cars/search', [CarController::class, 'search'])->name('cars.search');
     Route::post('cars/validate-step', [CarController::class, 'validateStep'])->name('cars.validate-step');
@@ -52,6 +56,17 @@ Route::middleware('auth')->group(function () {
     Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
     Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
     Route::resource('users', UserController::class);
+
+    // Notification routes
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('notifications/equipment-cost/{costId}/approve', [NotificationController::class, 'approveEquipmentCost'])->name('notifications.approve-equipment-cost');
+    Route::post('notifications/equipment-cost/{costId}/reject', [NotificationController::class, 'rejectEquipmentCost'])->name('notifications.reject-equipment-cost');
 });
 
 require __DIR__.'/auth.php';
+
+// Broadcast routes for Pusher authentication
+Broadcast::routes();

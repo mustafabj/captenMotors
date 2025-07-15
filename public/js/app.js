@@ -8,7 +8,8 @@ window.App = {
     config: {
         csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
         baseUrl: window.location.origin,
-        debug: false
+        debug: false,
+        loader: null // Will be set by loader.js
     },
 
     // Utility functions
@@ -93,6 +94,45 @@ window.App = {
                     console.warn('localStorage not available');
                 }
             }
+        },
+
+        /**
+         * Show toast notification
+         */
+        showToast: function(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+                type === 'error' ? 'bg-red-500 text-white' : 
+                type === 'success' ? 'bg-green-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            toast.textContent = message;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        },
+
+        /**
+         * Format date for notifications
+         */
+        formatDate: function(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+            
+            if (diffInMinutes < 1) {
+                return 'Just now';
+            } else if (diffInMinutes < 60) {
+                return `${diffInMinutes}m ago`;
+            } else if (diffInMinutes < 1440) {
+                const hours = Math.floor(diffInMinutes / 60);
+                return `${hours}h ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
         }
     },
 
@@ -100,15 +140,26 @@ window.App = {
     pages: {},
 
     // Components
-    components: {},
+    components: {
+        notifications: null
+    },
 
     // Initialize app
     init: function() {
         this.bindCommonEvents();
+        this.initComponents();
         
         // Initialize loader after app is ready
-        if (window.App && App.config && App.config.loader) {
-            App.config.loader.init();
+        if (this.config && this.config.loader) {
+            this.config.loader.init();
+        }
+    },
+
+    // Initialize components
+    initComponents: function() {
+        // Initialize notifications component if it exists
+        if (typeof NotificationsComponent !== 'undefined') {
+            this.components.notifications = new NotificationsComponent();
         }
     },
 

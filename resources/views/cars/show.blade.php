@@ -157,7 +157,7 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2" id="view-actions">
-                    <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary" onclick="enableEditMode()">
+                    <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary">
                         <i class="ki-filled ki-pencil"></i>
                         Edit
                     </button>
@@ -169,11 +169,11 @@
 
                 <!-- Edit Mode Actions (hidden by default) -->
                 <div class="flex items-center gap-2 hidden" id="edit-actions">
-                    <button id="save-btn" class="kt-btn kt-btn-sm kt-btn-success" onclick="saveChanges()">
+                    <button id="save-btn" class="kt-btn kt-btn-sm kt-btn-success">
                         <i class="ki-filled ki-check"></i>
                         Save
                     </button>
-                    <button id="cancel-btn" class="kt-btn kt-btn-sm kt-btn-secondary" onclick="cancelEdit()">
+                    <button id="cancel-btn" class="kt-btn kt-btn-sm kt-btn-secondary">
                         <i class="ki-filled ki-cross"></i>
                         Cancel
                     </button>
@@ -448,11 +448,11 @@
                                                            class="kt-input flex-1 option-input" 
                                                            value="{{ $option->name }}"
                                                            placeholder="Enter option name">
-                                                    <button type="button" 
-                                                            class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
-                                                            onclick="removeOption(this)">
-                                                        <i class="ki-filled ki-trash"></i>
-                                                    </button>
+                                                                                                    <button type="button" 
+                                                        class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
+                                                        data-action="remove-option">
+                                                    <i class="ki-filled ki-trash"></i>
+                                                </button>
                                                 </div>
                                             @endforeach
                                         @else
@@ -462,7 +462,7 @@
                                                        placeholder="Enter option name">
                                                 <button type="button" 
                                                         class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
-                                                        onclick="removeOption(this)">
+                                                        data-action="remove-option">
                                                     <i class="ki-filled ki-trash"></i>
                                                 </button>
                                             </div>
@@ -471,7 +471,7 @@
                                     
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-outline"
-                                            onclick="addOptionField()">
+                                            data-action="add-option-field">
                                         <i class="ki-filled ki-plus"></i>
                                         Add Option
                                     </button>
@@ -479,13 +479,13 @@
                                     <div class="flex gap-2 pt-4">
                                         <button type="button" 
                                                 class="kt-btn kt-btn-sm kt-btn-success"
-                                                onclick="saveOptions()">
+                                                data-action="save-options">
                                             <i class="ki-filled ki-check"></i>
                                             Save Options
                                         </button>
                                         <button type="button" 
                                                 class="kt-btn kt-btn-sm kt-btn-secondary"
-                                                onclick="cancelOptionsEdit()">
+                                                data-action="cancel-options-edit">
                                             <i class="ki-filled ki-cross"></i>
                                             Cancel
                                         </button>
@@ -604,13 +604,13 @@
                                 <div class="flex gap-2 pt-6">
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-success"
-                                            onclick="saveInspection()">
+                                            data-action="save-inspection">
                                         <i class="ki-filled ki-check"></i>
                                         Save Inspection
                                     </button>
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-secondary"
-                                            onclick="cancelInspectionEdit()">
+                                            data-action="cancel-inspection-edit">
                                         <i class="ki-filled ki-cross"></i>
                                         Cancel
                                     </button>
@@ -693,13 +693,13 @@
                                 <div class="flex gap-2 pt-6">
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-success"
-                                            onclick="saveFinancial()">
+                                            data-action="save-financial">
                                         <i class="ki-filled ki-check"></i>
                                         Save Financial
                                     </button>
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-secondary"
-                                            onclick="cancelFinancialEdit()">
+                                            data-action="cancel-financial-edit">
                                         <i class="ki-filled ki-cross"></i>
                                         Cancel
                                     </button>
@@ -726,6 +726,7 @@
                                                         <th class="text-left py-3 px-4 font-semibold">Amount</th>
                                                         <th class="text-left py-3 px-4 font-semibold">Date</th>
                                                         <th class="text-left py-3 px-4 font-semibold">Added By</th>
+                                                        <th class="text-left py-3 px-4 font-semibold">Status</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -737,6 +738,11 @@
                                                             <td class="py-3 px-4">{{ $cost->cost_date->format('M j, Y') }}
                                                             </td>
                                                             <td class="py-3 px-4 text-gray-600">{{ $cost->user->name ?? '—' }}
+                                                            </td>
+                                                            <td class="py-3 px-4">
+                                                                <span class="kt-badge {{ $cost->getStatusBadgeClass() }}">
+                                                                    {{ $cost->getStatusText() }}
+                                                                </span>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -924,13 +930,13 @@
                                 <div class="flex gap-2 pt-6">
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-success"
-                                            onclick="saveImages()">
+                                            data-action="save-images">
                                         <i class="ki-filled ki-check"></i>
                                         Save Images
                                     </button>
                                     <button type="button" 
                                             class="kt-btn kt-btn-sm kt-btn-secondary"
-                                            onclick="cancelImagesEdit()">
+                                            data-action="cancel-images-edit">
                                         <i class="ki-filled ki-cross"></i>
                                         Cancel
                                     </button>
@@ -1017,250 +1023,10 @@
         </div>
     </div>
 
-    <script>
-        // Tab functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabToggles = document.querySelectorAll('[data-kt-tab-toggle]');
-            const tabContents = document.querySelectorAll('[id^="tab_1_"]');
-
-            tabToggles.forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const targetId = this.getAttribute('data-kt-tab-toggle');
-
-                    // Remove active class from all toggles and hide all contents
-                    tabToggles.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.add('hidden'));
-
-                    // Add active class to clicked toggle and show target content
-                    this.classList.add('active');
-                    document.querySelector(targetId).classList.remove('hidden');
-                    
-                    // Preserve edit mode if it's enabled globally
-                    if (document.body.classList.contains('global-edit-mode')) {
-                        // Re-enable edit mode for the newly visible tab
-                        const tabId = targetId.replace('#tab_1_', '');
-                        
-                        // Map tab IDs to edit mode element names
-                        let editModeName = '';
-                        switch(tabId) {
-                            case '2': editModeName = 'options'; break;
-                            case '3': editModeName = 'inspection'; break;
-                            case '4': editModeName = 'financial'; break;
-                            case '7': editModeName = 'images'; break;
-                        }
-                        
-                        if (editModeName) {
-                            const viewMode = document.getElementById(`${editModeName}-view-mode`);
-                            const editMode = document.getElementById(`${editModeName}-edit-mode`);
-                            
-                            if (viewMode && editMode) {
-                                viewMode.classList.add('hidden');
-                                editMode.classList.remove('hidden');
-                            }
-                        }
-                    }
-                });
-            });
-
-            // Initialize lightGallery for car images
-            if (document.getElementById('car-images-gallery')) {
-                lightGallery(document.getElementById('car-images-gallery'), {
-                    plugins: [lgThumbnail, lgAutoplay, lgFullscreen],
-                    speed: 500,
-                    download: true,
-                    counter: true,
-                    thumbnail: true,
-                    autoplay: true,
-                    autoplayControls: true,
-                    fullscreen: true
-                });
-            }
-
-            // Initialize lightGallery for car license
-            if (document.getElementById('car-license-gallery')) {
-                lightGallery(document.getElementById('car-license-gallery'), {
-                    plugins: [lgThumbnail, lgAutoplay, lgFullscreen],
-                    speed: 500,
-                    download: true,
-                    counter: true,
-                    thumbnail: true,
-                    autoplay: true,
-                    autoplayControls: true,
-                    fullscreen: true
-                });
-            }
-
-            // AJAX Form Submission for Equipment Cost
-            document.getElementById('addCostForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const form = this;
-                const submitBtn = document.getElementById('submitCostBtn');
-                const submitText = submitBtn.querySelector('.submit-text');
-                const loadingText = submitBtn.querySelector('.loading-text');
-                
-                // Clear previous errors
-                clearFormErrors();
-                
-                // Show loading state
-                submitBtn.disabled = true;
-                submitText.classList.add('hidden');
-                loadingText.classList.remove('hidden');
-                
-                // Prepare form data
-                const formData = new FormData(form);
-                
-                // Submit via AJAX
-                fetch("{{ route('cars.add-equipment-cost', $car) }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Success - add new row to table and close modal
-                        showNotification('Equipment cost added successfully!', 'success');
-                        
-                        // Add new row to the equipment costs table
-                        addEquipmentCostRow(data.cost);
-                        
-                        // Close modal
-                        const modalEl = document.querySelector('#addCostModal');
-                        const modal = KTModal.getInstance(modalEl);
-                        if (modal) {
-                            modal.hide();
-                        }
-                        
-                        // Reset form
-                        document.getElementById('addCostForm').reset();
-                    } else {
-                        // Show validation errors
-                        showFormErrors(data.errors);
-                        showNotification('Please correct the errors below.', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('An error occurred while adding the cost.', 'error');
-                })
-                .finally(() => {
-                    // Reset button state
-                    submitBtn.disabled = false;
-                    submitText.classList.remove('hidden');
-                    loadingText.classList.add('hidden');
-                });
-            });
-
-            // Function to clear all form errors
-            function clearFormErrors() {
-                const form = document.getElementById('addCostForm');
-                const inputs = form.querySelectorAll('input, textarea');
-                const messages = form.querySelectorAll('.kt-form-message');
-                
-                inputs.forEach(input => {
-                    input.removeAttribute('aria-invalid');
-                    input.classList.remove('is-invalid');
-                });
-                
-                messages.forEach(message => {
-                    message.innerHTML = '';
-                    message.style.display = 'none';
-                });
-            }
-
-            // Function to show form errors
-            function showFormErrors(errors) {
-                const form = document.getElementById('addCostForm');
-                
-                Object.keys(errors).forEach(fieldName => {
-                    const field = form.querySelector(`[name="${fieldName}"]`);
-                    const messageDiv = field ? field.closest('.kt-form-control').querySelector('.kt-form-message') : null;
-                    
-                    if (field && messageDiv) {
-                        // Add error styling to field
-                        field.setAttribute('aria-invalid', 'true');
-                        field.classList.add('is-invalid');
-                        
-                        // Show error message
-                        messageDiv.innerHTML = `<div class="text-danger">${errors[fieldName][0]}</div>`;
-                        messageDiv.style.display = 'block';
-                    }
-                });
-            }
-
-            // Function to show notifications
-            function showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-                    type === 'error' ? 'bg-red-500 text-white' : 
-                    type === 'success' ? 'bg-green-500 text-white' : 
-                    'bg-blue-500 text-white'
-                }`;
-                notification.textContent = message;
-
-                document.body.appendChild(notification);
-
-                setTimeout(() => {
-                    notification.remove();
-                }, 5000);
-            }
-
-            // Function to add new equipment cost row to table
-            function addEquipmentCostRow(costData) {
-                let tableBody = document.querySelector('#equipment-costs-table tbody');
-                const emptyState = document.querySelector('.equipment .kt-card-content .text-center');
-                
-                // Remove empty state if it exists
-                if (emptyState) {
-                    emptyState.remove();
-                }
-
-                // Check if table body exists, if not create the table structure
-                if (!tableBody) {
-                    const table = document.createElement('table');
-                    table.id = 'equipment-costs-table';
-                    table.className = 'w-full';
-                    table.innerHTML = `
-                        <thead>
-                            <tr class="border-b border-gray-200">
-                                <th class="text-left py-3 px-4 font-semibold">Description</th>
-                                <th class="text-left py-3 px-4 font-semibold">Amount</th>
-                                <th class="text-left py-3 px-4 font-semibold">Date</th>
-                                <th class="text-left py-3 px-4 font-semibold">Added By</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    `;
-                    document.querySelector('.equipment .kt-card-content').appendChild(table);
-                    tableBody = table.querySelector('tbody');
-                }
-                
-                // Create new row
-                const newRow = document.createElement('tr');
-                newRow.className = 'border-b border-gray-200';
-                newRow.innerHTML = `
-                    <td class="py-3 px-4">${costData.description}</td>
-                    <td class="py-3 px-4 font-semibold">$${parseFloat(costData.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td class="py-3 px-4">${new Date(costData.cost_date).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</td>
-                    <td class="py-3 px-4 text-gray-600">${costData.user_name}</td>
-                `;
-                
-                // Add row to the beginning of the table (most recent first)
-                tableBody.insertBefore(newRow, tableBody.firstChild);
-            }
-        });
-    </script>
-
-    <!-- Car Show Inline Editing -->
-    <script src="{{ asset('js/pages/cars-show.js') }}"></script>
-    <script>
-        // Initialize car show functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            CarsShow.init({{ $car->id }}, "{{ route('cars.update-inline', $car) }}");
-        });
-    </script>
+    <!-- Add data attributes for JavaScript initialization -->
+    <div id="car-data" 
+         data-car-id="{{ $car->id }}" 
+         data-update-url="{{ route('cars.update-inline', $car) }}"
+         data-equipment-cost-url="{{ route('cars.add-equipment-cost', $car->id) }}"
+         style="display: none;"></div>
 @endsection

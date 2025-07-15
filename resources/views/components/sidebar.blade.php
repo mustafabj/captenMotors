@@ -3,13 +3,13 @@
        data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
        <div class="kt-sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0"
            id="sidebar_header">
-           <a class="dark:hidden" href="html/demo1.html">
+           <a class="dark:hidden" href="{{ route('home') }}">
                <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/default-logo.svg') }}" />
                <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
            </a>
-           <a class="hidden dark:block" href="html/demo1.html">
-               <img class="default-logo min-h-[22px] max-w-none" src="assets/media/app/default-logo-dark.svg" />
-               <img class="small-logo min-h-[22px] max-w-none" src="assets/media/app/mini-logo.svg" />
+           <a class="hidden dark:block" href="{{ route('home') }}">
+               <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/default-logo-dark.svg') }}" />
+               <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
            </a>
            <button
                class="kt-btn kt-btn-outline kt-btn-icon size-[30px] absolute start-full top-2/4 -translate-x-2/4 -translate-y-2/4 rtl:translate-x-2/4"
@@ -96,6 +96,18 @@
                                    <span
                                        class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
                                        Users
+                                   </span>
+                               </a>
+                           </div>
+                           <div class="kt-menu-item {{ request()->is('notifications*') ? 'active' : '' }}">
+                               <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                   href="{{ route('notifications.index') }}" tabindex="0">
+                                   <span
+                                       class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary">
+                                   </span>
+                                   <span
+                                       class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+                                       Notifications
                                    </span>
                                </a>
                            </div>

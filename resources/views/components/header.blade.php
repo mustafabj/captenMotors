@@ -46,11 +46,31 @@
                     data-kt-drawer="true" data-kt-drawer-container="body" id="notifications_drawer">
                     <div class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
                         id="notifications_header">
-                        Notifications
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
-                            <i class="ki-filled ki-cross">
-                            </i>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <span>Notifications</span>
+                            <span id="notification-count" class="kt-badge kt-badge-sm kt-badge-primary hidden">0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" id="mark-all-read-btn">
+                                Mark all read
+                            </button>
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
+                                <i class="ki-filled ki-cross"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4">
+                        <div id="notifications-list" class="space-y-3">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                        <div id="notifications-loading" class="text-center py-8">
+                            <i class="ki-duotone ki-spinner fs-2 rotate"></i>
+                            <p class="text-gray-500 mt-2">Loading notifications...</p>
+                        </div>
+                        <div id="notifications-empty" class="text-center py-8 hidden">
+                            <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-500">No notifications</p>
+                        </div>
                     </div>
                 </div>
                 <!--End of Notifications Drawer-->

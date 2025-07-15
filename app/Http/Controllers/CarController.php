@@ -308,23 +308,53 @@ class CarController extends Controller
             // Add the authenticated user's ID to the validated data
             $validated['user_id'] = auth()->id();
             
+            // Set status based on user role
+            $user = auth()->user();
+            if ($user->isAdmin()) {
+                $validated['status'] = 'approved'; // Admin can approve immediately
+            } else {
+                $validated['status'] = 'pending'; // Regular users need approval
+            }
+            
             $cost = $car->equipmentCosts()->create($validated);
             $cost->load('user');
+
+            // If user is not admin, send notification to admins
+            if (!$user->isAdmin()) {
+                try {
+                    event(new \App\Events\EquipmentCostApprovalRequested($car, $cost, $user));
+                    \Log::info('Equipment cost approval event dispatched successfully', [
+                        'car_id' => $car->id,
+                        'cost_id' => $cost->id,
+                        'user_id' => $user->id
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to dispatch equipment cost approval event', [
+                        'error' => $e->getMessage(),
+                        'car_id' => $car->id,
+                        'cost_id' => $cost->id,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Equipment cost added successfully!',
+                    'message' => $user->isAdmin() ? 'Equipment cost added successfully!' : 'Equipment cost request submitted and pending approval!',
                     'cost' => [
                         'description' => $cost->description,
                         'amount' => $cost->amount,
                         'cost_date' => $cost->cost_date->format('Y-m-d'),
-                        'user_name' => $cost->user->name
+                        'user_name' => $cost->user->name,
+                        'status' => $cost->status
                     ]
                 ]);
             }
 
-            return redirect()->route('cars.show', $car)->with('success', 'Equipment cost added successfully!');
+            return redirect()->route('cars.show', $car)->with('success', 
+                $user->isAdmin() ? 'Equipment cost added successfully!' : 'Equipment cost request submitted and pending approval!'
+            );
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json([
