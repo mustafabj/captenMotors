@@ -30,7 +30,8 @@ return new class extends Migration
                 'electrical',
                 'agency',
                 'polish',
-                'ready'
+                'ready',
+                'sold'
             ])->default('not_received');
             $table->timestamps();
         });

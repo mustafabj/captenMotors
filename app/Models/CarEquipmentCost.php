@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CarEquipmentCost extends Model
@@ -27,6 +28,7 @@ class CarEquipmentCost extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_TRANSFERRED = 'transferred';
 
     public function car()
     {
@@ -36,6 +38,11 @@ class CarEquipmentCost extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(EquipmentCostNotification::class);
     }
 
     /**
@@ -63,6 +70,14 @@ class CarEquipmentCost extends Model
     }
 
     /**
+     * Check if the cost is transferred
+     */
+    public function isTransferred()
+    {
+        return $this->status === self::STATUS_TRANSFERRED;
+    }
+
+    /**
      * Get status badge class
      */
     public function getStatusBadgeClass()
@@ -72,6 +87,8 @@ class CarEquipmentCost extends Model
                 return 'kt-badge-success';
             case self::STATUS_REJECTED:
                 return 'kt-badge-danger';
+            case self::STATUS_TRANSFERRED:
+                return 'kt-badge-info';
             case self::STATUS_PENDING:
             default:
                 return 'kt-badge-warning';
@@ -88,6 +105,8 @@ class CarEquipmentCost extends Model
                 return 'Approved';
             case self::STATUS_REJECTED:
                 return 'Rejected';
+            case self::STATUS_TRANSFERRED:
+                return 'Transferred';
             case self::STATUS_PENDING:
             default:
                 return 'Pending';

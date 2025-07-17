@@ -84,9 +84,29 @@ class Car extends Model implements HasMedia
         return $this->hasMany(CarEquipmentCost::class);
     }
 
+    public function equipmentCostNotifications()
+    {
+        return $this->hasMany(EquipmentCostNotification::class);
+    }
+
+    public function otherCosts()
+    {
+        return $this->hasMany(OtherCost::class);
+    }
+
     public function bulkDeal()
     {
         return $this->belongsTo(BulkDeal::class);
+    }
+
+    public function soldCar()
+    {
+        return $this->hasOne(SoldCar::class);
+    }
+
+    public function isSold()
+    {
+        return $this->status === 'sold' || $this->soldCar()->exists();
     }
 
     public function registerMediaCollections(): void

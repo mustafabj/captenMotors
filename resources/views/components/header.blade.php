@@ -59,17 +59,9 @@
                             </button>
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-4">
+                    <div class="flex-1  p-4" style="overflow-y: auto;">
                         <div id="notifications-list" class="space-y-3">
                             <!-- Notifications will be loaded here -->
-                        </div>
-                        <div id="notifications-loading" class="text-center py-8">
-                            <i class="ki-duotone ki-spinner fs-2 rotate"></i>
-                            <p class="text-gray-500 mt-2">Loading notifications...</p>
-                        </div>
-                        <div id="notifications-empty" class="text-center py-8 hidden">
-                            <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                            <p class="text-gray-500">No notifications</p>
                         </div>
                     </div>
                 </div>

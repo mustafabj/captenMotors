@@ -8,16 +8,16 @@
             border: 2px solid #007bff;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
-        
+
         .editable-field.edit-mode:focus {
             border-color: #0056b3;
             box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
         }
-        
+
         .status-display {
             display: inline-block;
         }
-        
+
         .edit-mode-indicator {
             position: fixed;
             top: 20px;
@@ -32,11 +32,16 @@
         }
 
         /* Tab-specific edit mode styling */
-        .option-input, .inspection-field, .financial-field, .images-field {
+        .option-input,
+        .inspection-field,
+        .financial-field,
+        .images-field {
             transition: all 0.2s ease;
         }
 
-        .option-input:focus, .inspection-field:focus, .financial-field:focus {
+        .option-input:focus,
+        .inspection-field:focus,
+        .financial-field:focus {
             border-color: #007bff;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
@@ -62,10 +67,25 @@
 
         /* Success/Error animations */
         @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(-10px); }
-            10% { opacity: 1; transform: translateY(0); }
-            90% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-10px); }
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            10% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            90% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
         }
 
         .notification {
@@ -157,10 +177,18 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2" id="view-actions">
-                    <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary">
-                        <i class="ki-filled ki-pencil"></i>
-                        Edit
-                    </button>
+                    @if (auth()->user()->isAdmin())
+                        <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary">
+                            <i class="ki-filled ki-pencil"></i>
+                            Edit
+                        </button>
+                        @if (!$car->isSold())
+                            <button class="kt-btn kt-btn-sm kt-btn-success"
+                                onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
+                                <i class="ki-filled ki-dollar"></i> Mark as Sold
+                            </button>
+                        @endif
+                    @endif
                     <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-sm kt-btn-outline">
                         <i class="ki-filled ki-arrow-left"></i>
                         Back
@@ -226,67 +254,49 @@
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Model</span>
-                                    <input type="text" class="kt-input w-auto editable-field" 
-                                           name="model" 
-                                           value="{{ $car->model }}" 
-                                           data-original="{{ $car->model }}"
-                                           readonly>
+                                    <input type="text" class="kt-input w-auto editable-field" name="model"
+                                        value="{{ $car->model }}" data-original="{{ $car->model }}" readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Vehicle Category</span>
-                                    <input type="text" class="kt-input w-auto editable-field"
-                                           name="vehicle_category"
-                                           value="{{ $car->vehicle_category ?? '' }}"
-                                           data-original="{{ $car->vehicle_category ?? '' }}"
-                                           placeholder="Not specified"
-                                           readonly>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <span class="text-gray-600 font-semibold block">Manufacturing Year</span>
-                                    <input type="number" class="kt-input w-auto editable-field" 
-                                           name="manufacturing_year"
-                                           value="{{ $car->manufacturing_year }}"
-                                           data-original="{{ $car->manufacturing_year }}"
-                                           min="1900" 
-                                           max="{{ date('Y') + 1 }}"
+                                    <input type="text" class="kt-input w-auto editable-field" name="vehicle_category"
+                                        value="{{ $car->vehicle_category ?? '' }}"
+                                        data-original="{{ $car->vehicle_category ?? '' }}" placeholder="Not specified"
                                         readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                    <span class="text-gray-600 font-semibold block">Manufacturing Year</span>
+                                    <input type="number" class="kt-input w-auto editable-field" name="manufacturing_year"
+                                        value="{{ $car->manufacturing_year }}"
+                                        data-original="{{ $car->manufacturing_year }}" min="1900"
+                                        max="{{ date('Y') + 1 }}" readonly>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Engine Capacity</span>
-                                    <input type="text" class="kt-input w-auto editable-field" 
-                                           name="engine_capacity"
-                                           value="{{ $car->engine_capacity }}"
-                                           data-original="{{ $car->engine_capacity }}"
+                                    <input type="text" class="kt-input w-auto editable-field" name="engine_capacity"
+                                        value="{{ $car->engine_capacity }}" data-original="{{ $car->engine_capacity }}"
                                         readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Place of Manufacture</span>
                                     <input type="text" class="kt-input w-auto editable-field"
-                                           name="place_of_manufacture"
-                                           value="{{ $car->place_of_manufacture ?? '' }}"
-                                           data-original="{{ $car->place_of_manufacture ?? '' }}"
-                                           placeholder="Not specified"
-                                           readonly>
+                                        name="place_of_manufacture" value="{{ $car->place_of_manufacture ?? '' }}"
+                                        data-original="{{ $car->place_of_manufacture ?? '' }}"
+                                        placeholder="Not specified" readonly>
                                 </div>
 
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Engine Type</span>
-                                    <input type="text" class="kt-input w-auto editable-field"
-                                           name="engine_type"
-                                           value="{{ $car->engine_type ?? '' }}"
-                                           data-original="{{ $car->engine_type ?? '' }}"
-                                           placeholder="Not specified"
-                                           readonly>
+                                    <input type="text" class="kt-input w-auto editable-field" name="engine_type"
+                                        value="{{ $car->engine_type ?? '' }}"
+                                        data-original="{{ $car->engine_type ?? '' }}" placeholder="Not specified"
+                                        readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Number of Keys</span>
-                                    <input type="number" class="kt-input w-auto editable-field" 
-                                           name="number_of_keys"
-                                           value="{{ $car->number_of_keys }}"
-                                           data-original="{{ $car->number_of_keys }}"
-                                           min="1" 
-                                           max="10"
-                                        readonly>
+                                    <input type="number" class="kt-input w-auto editable-field" name="number_of_keys"
+                                        value="{{ $car->number_of_keys }}" data-original="{{ $car->number_of_keys }}"
+                                        min="1" max="10" readonly>
                                 </div>
                             </div>
                         </div>
@@ -298,29 +308,34 @@
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Plate Number</span>
-                                    <input type="text" class="kt-input w-auto editable-field"
-                                           name="plate_number"
-                                           value="{{ $car->plate_number ?? '' }}"
-                                           data-original="{{ $car->plate_number ?? '' }}"
-                                           placeholder="Not assigned"
-                                           readonly>
+                                    <input type="text" class="kt-input w-auto editable-field" name="plate_number"
+                                        value="{{ $car->plate_number ?? '' }}"
+                                        data-original="{{ $car->plate_number ?? '' }}" placeholder="Not assigned"
+                                        readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Status</span>
                                     <div class="status-display">
-                                    <span class="kt-badge {{ $status['class'] }}">{{ $status['text'] }}</span>
+                                        <span class="kt-badge {{ $status['class'] }}">{{ $status['text'] }}</span>
                                     </div>
-                                    <select class="kt-select w-auto editable-field hidden" 
-                                            name="status"
-                                            data-original="{{ $car->status }}" k>
-                                        <option value="not_received" {{ $car->status === 'not_received' ? 'selected' : '' }}>Not Received</option>
-                                        <option value="paint" {{ $car->status === 'paint' ? 'selected' : '' }}>Paint</option>
-                                        <option value="upholstery" {{ $car->status === 'upholstery' ? 'selected' : '' }}>Upholstery</option>
-                                        <option value="mechanic" {{ $car->status === 'mechanic' ? 'selected' : '' }}>Mechanic</option>
-                                        <option value="electrical" {{ $car->status === 'electrical' ? 'selected' : '' }}>Electrical</option>
-                                        <option value="agency" {{ $car->status === 'agency' ? 'selected' : '' }}>Agency</option>
-                                        <option value="polish" {{ $car->status === 'polish' ? 'selected' : '' }}>Polish</option>
-                                        <option value="ready" {{ $car->status === 'ready' ? 'selected' : '' }}>Ready</option>
+                                    <select class="kt-select w-auto editable-field hidden" name="status"
+                                        data-original="{{ $car->status }}" k>
+                                        <option value="not_received"
+                                            {{ $car->status === 'not_received' ? 'selected' : '' }}>Not Received</option>
+                                        <option value="paint" {{ $car->status === 'paint' ? 'selected' : '' }}>Paint
+                                        </option>
+                                        <option value="upholstery" {{ $car->status === 'upholstery' ? 'selected' : '' }}>
+                                            Upholstery</option>
+                                        <option value="mechanic" {{ $car->status === 'mechanic' ? 'selected' : '' }}>
+                                            Mechanic</option>
+                                        <option value="electrical" {{ $car->status === 'electrical' ? 'selected' : '' }}>
+                                            Electrical</option>
+                                        <option value="agency" {{ $car->status === 'agency' ? 'selected' : '' }}>Agency
+                                        </option>
+                                        <option value="polish" {{ $car->status === 'polish' ? 'selected' : '' }}>Polish
+                                        </option>
+                                        <option value="ready" {{ $car->status === 'ready' ? 'selected' : '' }}>Ready
+                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -334,10 +349,9 @@
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Insurance Expiry</span>
                                     <input type="date" class="kt-input w-auto editable-field"
-                                           name="insurance_expiry_date"
-                                           value="{{ $car->insurance_expiry_date->format('Y-m-d') }}"
-                                           data-original="{{ $car->insurance_expiry_date->format('Y-m-d') }}"
-                                           readonly>
+                                        name="insurance_expiry_date"
+                                        value="{{ $car->insurance_expiry_date->format('Y-m-d') }}"
+                                        data-original="{{ $car->insurance_expiry_date->format('Y-m-d') }}" readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Insurance Status</span>
@@ -373,31 +387,22 @@
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Purchase Date</span>
-                                    <input type="date" class="kt-input w-auto editable-field"
-                                           name="purchase_date"
-                                           value="{{ $car->purchase_date->format('Y-m-d') }}"
-                                           data-original="{{ $car->purchase_date->format('Y-m-d') }}"
-                                           readonly>
+                                    <input type="date" class="kt-input w-auto editable-field" name="purchase_date"
+                                        value="{{ $car->purchase_date->format('Y-m-d') }}"
+                                        data-original="{{ $car->purchase_date->format('Y-m-d') }}" readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Purchase Price</span>
-                                    <input type="number" class="kt-input w-auto editable-field"
-                                           name="purchase_price"
-                                           value="{{ $car->purchase_price }}"
-                                           data-original="{{ $car->purchase_price }}"
-                                           min="0"
-                                           step="0.01"
-                                        readonly>
+                                    <input type="number" class="kt-input w-auto editable-field" name="purchase_price"
+                                        value="{{ $car->purchase_price }}" data-original="{{ $car->purchase_price }}"
+                                        min="0" step="0.01" readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Expected Sale Price</span>
                                     <input type="number" class="kt-input w-auto editable-field"
-                                           name="expected_sale_price"
-                                           value="{{ $car->expected_sale_price }}"
-                                           data-original="{{ $car->expected_sale_price }}"
-                                           min="0"
-                                           step="0.01"
-                                           readonly>
+                                        name="expected_sale_price" value="{{ $car->expected_sale_price }}"
+                                        data-original="{{ $car->expected_sale_price }}" min="0" step="0.01"
+                                        readonly>
                                 </div>
                             </div>
                         </div>
@@ -409,33 +414,35 @@
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
-                            <h4 class="text-lg font-bold mb-6">Car Options</h4>
+                                <h4 class="text-lg font-bold mb-6">Car Options</h4>
                             </div>
                         </div>
                         <div class="kt-card-content">
                             <!-- View Mode -->
                             <div id="options-view-mode">
-                            @if ($car->options->count() > 0)
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    @foreach ($car->options as $option)
-                                        <div class="kt-card bg-green-50 border border-green-200">
-                                            <div class="kt-card-body p-4">
-                                                <div class="flex items-center">
-                                                    <i class="ki-filled ki-check-circle text-green-500 text-xl me-3"></i>
-                                                    <span class="text-gray-800 font-semibold">{{ $option->name }}</span>
+                                @if ($car->options->count() > 0)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        @foreach ($car->options as $option)
+                                            <div class="kt-card bg-green-50 border border-green-200">
+                                                <div class="kt-card-body p-4">
+                                                    <div class="flex items-center">
+                                                        <i
+                                                            class="ki-filled ki-check-circle text-green-500 text-xl me-3"></i>
+                                                        <span
+                                                            class="text-gray-800 font-semibold">{{ $option->name }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="text-center py-12">
-                                    <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">No options</h4>
-                                    <p class="text-gray-600">No options have been added to this car yet.</p>
-                                </div>
-                            @endif
-                        </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-12">
+                                        <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
+                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No options</h4>
+                                        <p class="text-gray-600">No options have been added to this car yet.</p>
+                                    </div>
+                                @endif
+                            </div>
 
                             <!-- Edit Mode -->
                             <div id="options-edit-mode" class="hidden">
@@ -444,48 +451,42 @@
                                         @if ($car->options->count() > 0)
                                             @foreach ($car->options as $index => $option)
                                                 <div class="option-item flex items-center gap-2 mb-3">
-                                                    <input type="text" 
-                                                           class="kt-input flex-1 option-input" 
-                                                           value="{{ $option->name }}"
-                                                           placeholder="Enter option name">
-                                                                                                    <button type="button" 
+                                                    <input type="text" class="kt-input flex-1 option-input"
+                                                        value="{{ $option->name }}" placeholder="Enter option name">
+                                                    <button type="button"
                                                         class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
                                                         data-action="remove-option">
-                                                    <i class="ki-filled ki-trash"></i>
-                                                </button>
+                                                        <i class="ki-filled ki-trash"></i>
+                                                    </button>
                                                 </div>
                                             @endforeach
                                         @else
                                             <div class="option-item flex items-center gap-2 mb-3">
-                                                <input type="text" 
-                                                       class="kt-input flex-1 option-input" 
-                                                       placeholder="Enter option name">
-                                                <button type="button" 
-                                                        class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
-                                                        data-action="remove-option">
+                                                <input type="text" class="kt-input flex-1 option-input"
+                                                    placeholder="Enter option name">
+                                                <button type="button"
+                                                    class="kt-btn kt-btn-sm kt-btn-danger remove-option-btn"
+                                                    data-action="remove-option">
                                                     <i class="ki-filled ki-trash"></i>
                                                 </button>
                                             </div>
                                         @endif
                                     </div>
-                                    
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-outline"
-                                            data-action="add-option-field">
+
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-outline"
+                                        data-action="add-option-field">
                                         <i class="ki-filled ki-plus"></i>
                                         Add Option
                                     </button>
 
                                     <div class="flex gap-2 pt-4">
-                                        <button type="button" 
-                                                class="kt-btn kt-btn-sm kt-btn-success"
-                                                data-action="save-options">
+                                        <button type="button" class="kt-btn kt-btn-sm kt-btn-success"
+                                            data-action="save-options">
                                             <i class="ki-filled ki-check"></i>
                                             Save Options
                                         </button>
-                                        <button type="button" 
-                                                class="kt-btn kt-btn-sm kt-btn-secondary"
-                                                data-action="cancel-options-edit">
+                                        <button type="button" class="kt-btn kt-btn-sm kt-btn-secondary"
+                                            data-action="cancel-options-edit">
                                             <i class="ki-filled ki-cross"></i>
                                             Cancel
                                         </button>
@@ -498,62 +499,67 @@
 
                 <!-- Inspection Tab -->
                 <div class="hidden" id="tab_1_3">
-                        <div class="kt-card">
-                            <div class="kt-card-header">
+                    <div class="kt-card">
+                        <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
                                 <h4 class="text-lg font-bold mb-6">Inspection Details</h4>
                             </div>
-                            </div>
-                            <div class="kt-card-content">
+                        </div>
+                        <div class="kt-card-content">
                             <!-- View Mode -->
                             <div id="inspection-view-mode">
                                 @if ($car->inspection)
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    <div>
-                                        <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
-                                        <div class="space-y-3">
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <div>
+                                            <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
+                                            <div class="space-y-3">
                                                 @if ($car->inspection->chassis_inspection)
                                                     <div class="py-2">
                                                         <span class="text-gray-600 block mb-2">Chassis Inspection</span>
                                                         <div class="bg-gray-50 p-3 rounded border">
                                                             {{ $car->inspection->chassis_inspection }}
-                                            </div>
-                                            </div>
+                                                        </div>
+                                                    </div>
                                                 @else
                                                     <div class="py-2 text-gray-500 italic">
                                                         No chassis inspection data available
-                                            </div>
+                                                    </div>
                                                 @endif
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h5 class="text-md font-semibold mb-4">Mechanical Inspection</h5>
+                                            <div class="space-y-3">
+                                                <div
+                                                    class="flex justify-between items-center py-2 border-b border-gray-200">
+                                                    <span class="text-gray-600">Transmission Condition</span>
+                                                    <span
+                                                        class="text-gray-800">{{ $car->inspection->transmission ?? 'Not specified' }}</span>
+                                                </div>
+                                                <div
+                                                    class="flex justify-between items-center py-2 border-b border-gray-200">
+                                                    <span class="text-gray-600">Motor Condition</span>
+                                                    <span
+                                                        class="text-gray-800">{{ $car->inspection->motor ?? 'Not specified' }}</span>
+                                                </div>
+                                            </div>
+                                            @if ($car->inspection->body_notes)
+                                                <div class="mt-6">
+                                                    <h6 class="text-sm font-semibold mb-2">Body Notes</h6>
+                                                    <p class="text-gray-700 bg-gray-50 p-3 rounded">
+                                                        {{ $car->inspection->body_notes }}</p>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
-                                    <div>
-                                        <h5 class="text-md font-semibold mb-4">Mechanical Inspection</h5>
-                                        <div class="space-y-3">
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                                <span class="text-gray-600">Transmission Condition</span>
-                                                    <span class="text-gray-800">{{ $car->inspection->transmission ?? 'Not specified' }}</span>
-                                            </div>
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                                <span class="text-gray-600">Motor Condition</span>
-                                                    <span class="text-gray-800">{{ $car->inspection->motor ?? 'Not specified' }}</span>
-                                            </div>
-                                        </div>
-                                        @if ($car->inspection->body_notes)
-                                            <div class="mt-6">
-                                                <h6 class="text-sm font-semibold mb-2">Body Notes</h6>
-                                                <p class="text-gray-700 bg-gray-50 p-3 rounded">
-                                                    {{ $car->inspection->body_notes }}</p>
-                                            </div>
-                                        @endif
-                            </div>
-                        </div>
-                    @else
+                                @else
                                     <div class="text-center py-12">
-                                <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                                <h4 class="text-lg font-bold text-gray-900 mb-2">No inspection data</h4>
-                                <p class="text-gray-600">No inspection information has been recorded for this car.</p>
-                        </div>
-                    @endif
+                                        <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
+                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No inspection data</h4>
+                                        <p class="text-gray-600">No inspection information has been recorded for this car.
+                                        </p>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Edit Mode -->
@@ -564,10 +570,8 @@
                                         <div class="space-y-3">
                                             <div class="kt-form-item">
                                                 <label class="kt-form-label">Chassis Inspection Notes</label>
-                                                <textarea class="kt-textarea w-full inspection-field" 
-                                                          name="chassis_inspection" 
-                                                          rows="4" 
-                                                          placeholder="Enter chassis inspection details">{{ $car->inspection->chassis_inspection ?? '' }}</textarea>
+                                                <textarea class="kt-textarea w-full inspection-field" name="chassis_inspection" rows="4"
+                                                    placeholder="Enter chassis inspection details">{{ $car->inspection->chassis_inspection ?? '' }}</textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -576,41 +580,34 @@
                                         <div class="space-y-3">
                                             <div class="kt-form-item">
                                                 <label class="kt-form-label">Transmission Condition</label>
-                                                <input type="text" 
-                                                       class="kt-input w-full inspection-field" 
-                                                       name="transmission" 
-                                                       value="{{ $car->inspection->transmission ?? '' }}"
-                                                       placeholder="Enter transmission condition">
+                                                <input type="text" class="kt-input w-full inspection-field"
+                                                    name="transmission"
+                                                    value="{{ $car->inspection->transmission ?? '' }}"
+                                                    placeholder="Enter transmission condition">
                                             </div>
                                             <div class="kt-form-item">
                                                 <label class="kt-form-label">Motor Condition</label>
-                                                <input type="text" 
-                                                       class="kt-input w-full inspection-field" 
-                                                       name="motor" 
-                                                       value="{{ $car->inspection->motor ?? '' }}"
-                                                       placeholder="Enter motor condition">
+                                                <input type="text" class="kt-input w-full inspection-field"
+                                                    name="motor" value="{{ $car->inspection->motor ?? '' }}"
+                                                    placeholder="Enter motor condition">
                                             </div>
                                             <div class="kt-form-item">
                                                 <label class="kt-form-label">Body Notes</label>
-                                                <textarea class="kt-textarea w-full inspection-field" 
-                                                          name="body_notes" 
-                                                          rows="3" 
-                                                          placeholder="Enter body notes">{{ $car->inspection->body_notes ?? '' }}</textarea>
+                                                <textarea class="kt-textarea w-full inspection-field" name="body_notes" rows="3"
+                                                    placeholder="Enter body notes">{{ $car->inspection->body_notes ?? '' }}</textarea>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex gap-2 pt-6">
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-success"
-                                            data-action="save-inspection">
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-success"
+                                        data-action="save-inspection">
                                         <i class="ki-filled ki-check"></i>
                                         Save Inspection
                                     </button>
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-secondary"
-                                            data-action="cancel-inspection-edit">
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-secondary"
+                                        data-action="cancel-inspection-edit">
                                         <i class="ki-filled ki-cross"></i>
                                         Cancel
                                     </button>
@@ -625,43 +622,44 @@
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
-                            <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
+                                <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
                             </div>
                         </div>
                         <div class="kt-card-content">
                             <!-- View Mode -->
                             <div id="financial-view-mode">
-                            <div class="grid {{ $car->purchase_price ? 'grid-cols-4' : 'grid-cols-2' }} gap-6">
-                                @if ($car->purchase_price)
-                                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                                        <div class="text-2xl font-bold text-green-600">
-                                            ${{ number_format($car->purchase_price, 2) }}</div>
-                                        <div class="text-sm text-gray-600">Purchase Price</div>
+                                <div class="grid {{ $car->purchase_price ? 'grid-cols-4' : 'grid-cols-2' }} gap-6">
+                                    @if ($car->purchase_price)
+                                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                                            <div class="text-2xl font-bold text-green-600">
+                                                ${{ number_format($car->purchase_price, 2) }}</div>
+                                            <div class="text-sm text-gray-600">Purchase Price</div>
+                                        </div>
+                                    @endif
+                                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                        <div class="text-2xl font-bold text-blue-600">
+                                            ${{ number_format($car->expected_sale_price, 2) }}</div>
+                                        <div class="text-sm text-gray-600">Expected Sale Price</div>
                                     </div>
-                                @endif
-                                <div class="text-center p-4 bg-blue-50 rounded-lg">
-                                    <div class="text-2xl font-bold text-blue-600">
-                                        ${{ number_format($car->expected_sale_price, 2) }}</div>
-                                    <div class="text-sm text-gray-600">Expected Sale Price</div>
-                                </div>
-                                @php
-                                    $totalCosts = $car->equipmentCosts->sum('amount');
-                                    $profit = $car->expected_sale_price - ($car->purchase_price ?? 0) - $totalCosts;
-                                @endphp
-                                <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                                    <div class="text-2xl font-bold text-yellow-600">${{ number_format($totalCosts, 2) }}
+                                    @php
+                                        $totalCosts = $car->equipmentCosts->sum('amount');
+                                        $profit = $car->expected_sale_price - ($car->purchase_price ?? 0) - $totalCosts;
+                                    @endphp
+                                    <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                                        <div class="text-2xl font-bold text-yellow-600">
+                                            ${{ number_format($totalCosts, 2) }}
+                                        </div>
+                                        <div class="text-sm text-gray-600">Total Equipment Costs</div>
                                     </div>
-                                    <div class="text-sm text-gray-600">Total Equipment Costs</div>
-                                </div>
-                                @if ($car->purchase_price)
-                                    <div
-                                        class="text-center p-4 {{ $profit >= 0 ? 'bg-green-50' : 'bg-red-50' }} rounded-lg">
+                                    @if ($car->purchase_price)
                                         <div
-                                            class="text-2xl font-bold {{ $profit >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                            ${{ number_format($profit, 2) }}</div>
-                                        <div class="text-sm text-gray-600">Estimated Profit</div>
-                                    </div>
-                                @endif
+                                            class="text-center p-4 {{ $profit >= 0 ? 'bg-green-50' : 'bg-red-50' }} rounded-lg">
+                                            <div
+                                                class="text-2xl font-bold {{ $profit >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                                ${{ number_format($profit, 2) }}</div>
+                                            <div class="text-sm text-gray-600">Estimated Profit</div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -670,36 +668,26 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div class="kt-form-item">
                                         <label class="kt-form-label">Purchase Price</label>
-                                        <input type="number" 
-                                               class="kt-input w-full financial-field" 
-                                               name="purchase_price" 
-                                               value="{{ $car->purchase_price }}"
-                                               min="0"
-                                               step="0.01"
-                                               placeholder="0.00">
+                                        <input type="number" class="kt-input w-full financial-field"
+                                            name="purchase_price" value="{{ $car->purchase_price }}" min="0"
+                                            step="0.01" placeholder="0.00">
                                     </div>
                                     <div class="kt-form-item">
                                         <label class="kt-form-label">Expected Sale Price</label>
-                                        <input type="number" 
-                                               class="kt-input w-full financial-field" 
-                                               name="expected_sale_price" 
-                                               value="{{ $car->expected_sale_price }}"
-                                               min="0"
-                                               step="0.01"
-                                               placeholder="0.00">
+                                        <input type="number" class="kt-input w-full financial-field"
+                                            name="expected_sale_price" value="{{ $car->expected_sale_price }}"
+                                            min="0" step="0.01" placeholder="0.00">
                                     </div>
                                 </div>
 
                                 <div class="flex gap-2 pt-6">
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-success"
-                                            data-action="save-financial">
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-success"
+                                        data-action="save-financial">
                                         <i class="ki-filled ki-check"></i>
                                         Save Financial
                                     </button>
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-secondary"
-                                            data-action="cancel-financial-edit">
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-secondary"
+                                        data-action="cancel-financial-edit">
                                         <i class="ki-filled ki-cross"></i>
                                         Cancel
                                     </button>
@@ -737,7 +725,8 @@
                                                                 ${{ number_format($cost->amount, 2) }}</td>
                                                             <td class="py-3 px-4">{{ $cost->cost_date->format('M j, Y') }}
                                                             </td>
-                                                            <td class="py-3 px-4 text-gray-600">{{ $cost->user->name ?? '—' }}
+                                                            <td class="py-3 px-4 text-gray-600">
+                                                                {{ $cost->user->name ?? '—' }}
                                                             </td>
                                                             <td class="py-3 px-4">
                                                                 <span class="kt-badge {{ $cost->getStatusBadgeClass() }}">
@@ -816,73 +805,74 @@
                         <div class="kt-card-content">
                             <!-- View Mode -->
                             <div id="images-view-mode">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- Car License Image -->
-                        <div class="kt-card">
-                            <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Car License
-                                    ({{ $car->getMedia('car_license')->count() }})</h4>
-                            </div>
-                            <div class="kt-card-content">
-                                @if ($car->getMedia('car_license')->count() > 0)
-                                    <div id="car-license-gallery"
-                                        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                        @foreach ($car->getMedia('car_license') as $license)
-                                            <div class="relative group cursor-pointer"
-                                                data-src="{{ $license->getUrl() }}">
-                                                <img src="{{ $license->getUrl() }}" alt="Car License"
-                                                    class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
-                                                <div
-                                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                                    <i
-                                                        class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <!-- Car License Image -->
+                                    <div class="kt-card">
+                                        <div class="kt-card-header">
+                                            <h4 class="text-lg font-bold mb-6">Car License
+                                                ({{ $car->getMedia('car_license')->count() }})</h4>
+                                        </div>
+                                        <div class="kt-card-content">
+                                            @if ($car->getMedia('car_license')->count() > 0)
+                                                <div id="car-license-gallery"
+                                                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                    @foreach ($car->getMedia('car_license') as $license)
+                                                        <div class="relative group cursor-pointer"
+                                                            data-src="{{ $license->getUrl() }}">
+                                                            <img src="{{ $license->getUrl() }}" alt="Car License"
+                                                                class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
+                                                            <div
+                                                                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                                <i
+                                                                    class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
-                                            </div>
-                                        @endforeach
+                                            @else
+                                                <div class="text-center py-12">
+                                                    <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
+                                                    <h4 class="text-lg font-bold text-gray-900 mb-2">No License Image</h4>
+                                                    <p class="text-gray-600">No car license image has been uploaded.</p>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
-                                @else
-                                    <div class="text-center py-12">
-                                        <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
-                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No License Image</h4>
-                                        <p class="text-gray-600">No car license image has been uploaded.</p>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
 
-                        <!-- Car Images -->
-                        <div class="kt-card">
-                            <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Car Images
-                                    ({{ $car->getMedia('car_images')->count() }})</h4>
-                            </div>
-                            <div class="kt-card-content">
-                                @if ($car->getMedia('car_images')->count() > 0)
-                                    <div id="car-images-gallery"
-                                        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                        @foreach ($car->getMedia('car_images') as $image)
-                                            <div class="relative group cursor-pointer" data-src="{{ $image->getUrl() }}">
-                                                <img src="{{ $image->getUrl() }}" alt="Car Image"
-                                                    class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
-                                                <div
-                                                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                                    <i
-                                                        class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
+                                    <!-- Car Images -->
+                                    <div class="kt-card">
+                                        <div class="kt-card-header">
+                                            <h4 class="text-lg font-bold mb-6">Car Images
+                                                ({{ $car->getMedia('car_images')->count() }})</h4>
+                                        </div>
+                                        <div class="kt-card-content">
+                                            @if ($car->getMedia('car_images')->count() > 0)
+                                                <div id="car-images-gallery"
+                                                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                    @foreach ($car->getMedia('car_images') as $image)
+                                                        <div class="relative group cursor-pointer"
+                                                            data-src="{{ $image->getUrl() }}">
+                                                            <img src="{{ $image->getUrl() }}" alt="Car Image"
+                                                                class="w-full h-32 object-cover rounded-lg shadow-md transition-transform duration-200 group-hover:scale-105">
+                                                            <div
+                                                                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                                <i
+                                                                    class="ki-filled ki-eye text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xl"></i>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
-                                            </div>
-                                        @endforeach
+                                            @else
+                                                <div class="text-center py-12">
+                                                    <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
+                                                    <h4 class="text-lg font-bold text-gray-900 mb-2">No Car Images</h4>
+                                                    <p class="text-gray-600">No car images have been uploaded.</p>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
-                                @else
-                                    <div class="text-center py-12">
-                                        <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
-                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No Car Images</h4>
-                                        <p class="text-gray-600">No car images have been uploaded.</p>
-                                    </div>
-                                @endif
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
                             <!-- Edit Mode -->
                             <div id="images-edit-mode" class="hidden">
@@ -895,10 +885,8 @@
                                         <div class="kt-card-content">
                                             <div class="kt-form-item">
                                                 <label class="kt-form-label">Upload License Image</label>
-                                                <input type="file" 
-                                                       class="kt-input w-full images-field" 
-                                                       name="car_license" 
-                                                       accept="image/*">
+                                                <input type="file" class="kt-input w-full images-field"
+                                                    name="car_license" accept="image/*">
                                                 <div class="text-sm text-gray-500 mt-1">
                                                     Accepted formats: JPEG, PNG, JPG (max 2MB)
                                                 </div>
@@ -914,11 +902,8 @@
                                         <div class="kt-card-content">
                                             <div class="kt-form-item">
                                                 <label class="kt-form-label">Upload Car Images</label>
-                                                <input type="file" 
-                                                       class="kt-input w-full images-field" 
-                                                       name="car_images[]" 
-                                                       accept="image/*"
-                                                       multiple>
+                                                <input type="file" class="kt-input w-full images-field"
+                                                    name="car_images[]" accept="image/*" multiple>
                                                 <div class="text-sm text-gray-500 mt-1">
                                                     Accepted formats: JPEG, PNG, JPG (max 2MB each)
                                                 </div>
@@ -928,15 +913,13 @@
                                 </div>
 
                                 <div class="flex gap-2 pt-6">
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-success"
-                                            data-action="save-images">
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-success"
+                                        data-action="save-images">
                                         <i class="ki-filled ki-check"></i>
                                         Save Images
                                     </button>
-                                    <button type="button" 
-                                            class="kt-btn kt-btn-sm kt-btn-secondary"
-                                            data-action="cancel-images-edit">
+                                    <button type="button" class="kt-btn kt-btn-sm kt-btn-secondary"
+                                        data-action="cancel-images-edit">
                                         <i class="ki-filled ki-cross"></i>
                                         Cancel
                                     </button>
@@ -1024,9 +1007,66 @@
     </div>
 
     <!-- Add data attributes for JavaScript initialization -->
-    <div id="car-data" 
-         data-car-id="{{ $car->id }}" 
-         data-update-url="{{ route('cars.update-inline', $car) }}"
-         data-equipment-cost-url="{{ route('cars.add-equipment-cost', $car->id) }}"
-         style="display: none;"></div>
+    <div id="car-data" data-car-id="{{ $car->id }}" data-update-url="{{ route('cars.update-inline', $car) }}"
+        data-equipment-cost-url="{{ route('cars.add-equipment-cost', $car->id) }}" style="display: none;"></div>
+
+    <!-- Sell Car Modal -->
+    <div id="sellCarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+            <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
+                onclick="closeSellModal()">&times;</button>
+            <h3 class="text-lg font-bold mb-4">Sell Car: <span id="sellCarModel"></span></h3>
+            <form id="sellCarForm" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="car_id" id="sellCarId">
+                <div class="mb-3">
+                    <label for="sale_price" class="kt-label">Sale Price *</label>
+                    <input type="number" name="sale_price" id="sale_price" class="kt-input w-full" required
+                        min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label for="payment_method" class="kt-label">Payment Method *</label>
+                    <select name="payment_method" id="payment_method" class="kt-select w-full" required
+                        onchange="togglePaymentFields()">
+                        <option value="cash">Cash</option>
+                        <option value="check">Check</option>
+                        <option value="separated">Separated</option>
+                    </select>
+                </div>
+                <div class="mb-3 hidden" id="separatedFields">
+                    <label for="paid_amount" class="kt-label">Paid Amount</label>
+                    <input type="number" name="paid_amount" id="paid_amount" class="kt-input w-full" min="0"
+                        step="0.01">
+                    <label for="remaining_amount" class="kt-label mt-2">Remaining Amount</label>
+                    <input type="number" name="remaining_amount" id="remaining_amount" class="kt-input w-full"
+                        min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label for="attachment" class="kt-label">Attachment</label>
+                    <input type="file" name="attachment" id="attachment" class="kt-input w-full">
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" class="kt-btn kt-btn-outline" onclick="closeSellModal()">Cancel</button>
+                    <button type="submit" class="kt-btn kt-btn-primary">Confirm Sale</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function openSellModal(carId, carModel) {
+            document.getElementById('sellCarId').value = carId;
+            document.getElementById('sellCarModel').textContent = carModel;
+            document.getElementById('sellCarForm').action = '/cars/' + carId + '/sell';
+            document.getElementById('sellCarModal').classList.remove('hidden');
+        }
+
+        function closeSellModal() {
+            document.getElementById('sellCarModal').classList.add('hidden');
+        }
+
+        function togglePaymentFields() {
+            var method = document.getElementById('payment_method').value;
+            document.getElementById('separatedFields').classList.toggle('hidden', method !== 'separated');
+        }
+    </script>
 @endsection

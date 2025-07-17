@@ -99,20 +99,32 @@ window.App = {
         /**
          * Show toast notification
          */
-        showToast: function(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-                type === 'error' ? 'bg-red-500 text-white' : 
-                type === 'success' ? 'bg-green-500 text-white' : 
-                'bg-blue-500 text-white'
-            }`;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
+        showToast: function(message, type = 'primary') {
+            // Map our types to KTToast variants
+            let variant = 'primary';
+            switch (type) {
+                case 'success':
+                    variant = 'success';
+                    break;
+                case 'error':
+                    variant = 'destructive';
+                    break;
+                case 'warning':
+                    variant = 'warning';
+                    break;
+                default:
+                    variant = 'primary';
+            }
+            
+            // Use KTToast if available, fallback to console
+            if (typeof KTToast !== 'undefined') {
+                KTToast.show({
+                    message: message,
+                    variant: variant,
+                });
+            } else {
+                console.log(`[${variant.toUpperCase()}] ${message}`);
+            }
         },
 
         /**

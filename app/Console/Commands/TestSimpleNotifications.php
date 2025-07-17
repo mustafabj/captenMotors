@@ -7,30 +7,29 @@ use App\Models\User;
 use App\Models\Car;
 use App\Models\CarEquipmentCost;
 use App\Models\Notification;
-use App\Events\EquipmentCostApprovalRequested;
 
-class TestNotificationSystem extends Command
+class TestSimpleNotifications extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'test:notifications {--user-id=} {--car-id=}';
+    protected $signature = 'test:simple-notifications {--user-id=} {--car-id=}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Test the notification system by creating sample notifications';
+    protected $description = 'Test the simple notification system';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Testing Notification System...');
+        $this->info('Testing Simple Notification System...');
 
         // Get or create test data
         $user = $this->getTestUser();
@@ -56,8 +55,8 @@ class TestNotificationSystem extends Command
 
         $this->info("✓ Created notification ID: {$notification->id}");
 
-        // Test 2: Create an equipment cost and trigger approval request
-        $this->info("\n2. Testing equipment cost approval request...");
+        // Test 2: Create an equipment cost
+        $this->info("\n2. Testing equipment cost creation...");
         
         $cost = CarEquipmentCost::create([
             'car_id' => $car->id,
@@ -70,17 +69,16 @@ class TestNotificationSystem extends Command
 
         $this->info("✓ Created equipment cost ID: {$cost->id}");
 
-        // Test 3: Trigger the event (this would normally happen when a non-admin adds a cost)
-        $this->info("\n3. Testing event dispatch...");
-        
-        try {
-            event(new EquipmentCostApprovalRequested($car, $cost, $user));
-            $this->info("✓ Event dispatched successfully");
-        } catch (\Exception $e) {
-            $this->error("✗ Event dispatch failed: " . $e->getMessage());
+        // Test 3: Test admin functionality
+        $this->info("\n3. Testing admin functionality...");
+        $adminUsers = User::role('admin')->get();
+        $this->info("✓ Found " . $adminUsers->count() . " admin users");
+
+        foreach ($adminUsers as $admin) {
+            $this->info("  - Admin: {$admin->name} (ID: {$admin->id})");
         }
 
-        // Test 4: Check notification count
+        // Test 4: Test notification counts
         $this->info("\n4. Checking notification counts...");
         $totalNotifications = $user->notifications()->count();
         $unreadNotifications = $user->unreadNotifications()->count();
@@ -88,22 +86,13 @@ class TestNotificationSystem extends Command
         $this->info("✓ Total notifications: {$totalNotifications}");
         $this->info("✓ Unread notifications: {$unreadNotifications}");
 
-        // Test 5: Test admin functionality
-        $this->info("\n5. Testing admin functionality...");
-        $adminUsers = User::getAdmins();
-        $this->info("✓ Found " . $adminUsers->count() . " admin users");
-
-        foreach ($adminUsers as $admin) {
-            $this->info("  - Admin: {$admin->name} (ID: {$admin->id})");
-        }
-
-        // Test 6: Test equipment cost status methods
-        $this->info("\n6. Testing equipment cost status methods...");
+        // Test 5: Test equipment cost status methods
+        $this->info("\n5. Testing equipment cost status methods...");
         $this->info("✓ Cost status: " . $cost->getStatusText());
         $this->info("✓ Is pending: " . ($cost->isPending() ? 'Yes' : 'No'));
         $this->info("✓ Badge class: " . $cost->getStatusBadgeClass());
 
-        $this->info("\n✅ Notification system test completed successfully!");
+        $this->info("\n✅ Simple notification system test completed successfully!");
         $this->info("\nTo test the full system:");
         $this->info("1. Visit a car show page");
         $this->info("2. Add an equipment cost as a non-admin user");
@@ -134,4 +123,4 @@ class TestNotificationSystem extends Command
 
         return Car::first();
     }
-}
+} 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Notification;
+use App\Models\EquipmentCostNotification;
 use App\Models\CarEquipmentCost;
 use App\Models\Car;
 use Illuminate\Support\Facades\Auth;
@@ -16,24 +17,44 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $notifications = $user->notifications()
+        
+        // Get both regular notifications and equipment cost notifications
+        $regularNotifications = $user->notifications()
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
+            
+        $equipmentCostNotifications = $user->equipmentCostNotifications()
+            ->with(['car', 'carEquipmentCost', 'requestedByUser'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Combine and sort by created_at
+        $allNotifications = $regularNotifications->concat($equipmentCostNotifications)
+            ->sortByDesc('created_at')
+            ->values();
+        
+        // Manual pagination
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 15);
+        $offset = ($page - 1) * $perPage;
+        $paginatedNotifications = $allNotifications->slice($offset, $perPage);
+        
+        $totalUnread = $user->unreadNotifications()->count() + $user->unreadEquipmentCostNotifications()->count();
 
         if ($request->ajax()) {
             return response()->json([
-                'notifications' => $notifications->items(),
-                'unread_count' => $user->unreadNotifications()->count(),
+                'notifications' => $paginatedNotifications->values(),
+                'unread_count' => $totalUnread,
                 'pagination' => [
-                    'current_page' => $notifications->currentPage(),
-                    'last_page' => $notifications->lastPage(),
-                    'per_page' => $notifications->perPage(),
-                    'total' => $notifications->total()
+                    'current_page' => $page,
+                    'last_page' => ceil($allNotifications->count() / $perPage),
+                    'per_page' => $perPage,
+                    'total' => $allNotifications->count()
                 ]
             ]);
         }
 
-        return view('notifications.index', compact('notifications'));
+        return view('notifications.index', compact('paginatedNotifications'));
     }
 
     /**
@@ -41,16 +62,26 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, $id)
     {
-        $notification = Notification::where('user_id', Auth::id())
-            ->findOrFail($id);
-
-        $notification->markAsRead();
+        $user = Auth::user();
+        
+        // Try to find in regular notifications first
+        $notification = Notification::where('user_id', $user->id)
+            ->find($id);
+            
+        if (!$notification) {
+            // Try to find in equipment cost notifications
+            $notification = EquipmentCostNotification::where('notified_user_id', $user->id)
+                ->findOrFail($id);
+            $notification->markAsRead();
+        } else {
+            $notification->markAsRead();
+        }
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Notification marked as read',
-                'unread_count' => Auth::user()->unreadNotifications()->count()
+                'unread_count' => $user->unreadNotifications()->count() + $user->unreadEquipmentCostNotifications()->count()
             ]);
         }
 
@@ -62,7 +93,16 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
-        Auth::user()->unreadNotifications()->update(['read_at' => now()]);
+        $user = Auth::user();
+        
+        // Mark all regular notifications as read
+        $user->unreadNotifications()->update(['read_at' => now()]);
+        
+        // Mark all equipment cost notifications as read
+        $user->unreadEquipmentCostNotifications()->update([
+            'status' => 'read',
+            'read_at' => now()
+        ]);
 
         if ($request->ajax()) {
             return response()->json([
@@ -80,91 +120,13 @@ class NotificationController extends Controller
      */
     public function unreadCount()
     {
-        $count = Auth::user()->unreadNotifications()->count();
+        $user = Auth::user();
+        $count = $user->unreadNotifications()->count() + $user->unreadEquipmentCostNotifications()->count();
         
         return response()->json([
             'count' => $count
         ]);
     }
 
-    /**
-     * Approve equipment cost
-     */
-    public function approveEquipmentCost(Request $request, $costId)
-    {
-        $cost = CarEquipmentCost::findOrFail($costId);
-        
-        // Check if user is admin
-        if (!Auth::user()->isAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized action'
-            ], 403);
-        }
 
-        // Update cost status to approved
-        $cost->update(['status' => 'approved']);
-
-        // Create notification for the user who requested the cost
-        if ($cost->user_id !== Auth::id()) {
-            Notification::create([
-                'user_id' => $cost->user_id,
-                'type' => 'equipment_cost_approved',
-                'title' => 'Equipment Cost Approved',
-                'message' => "Your equipment cost request for {$cost->description} has been approved by " . Auth::user()->name,
-                'data' => [
-                    'car_id' => $cost->car_id,
-                    'cost_id' => $cost->id,
-                    'approved_by' => Auth::user()->name
-                ]
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Equipment cost approved successfully'
-        ]);
-    }
-
-    /**
-     * Reject equipment cost
-     */
-    public function rejectEquipmentCost(Request $request, $costId)
-    {
-        $cost = CarEquipmentCost::findOrFail($costId);
-        
-        // Check if user is admin
-        if (!Auth::user()->isAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized action'
-            ], 403);
-        }
-
-        $reason = $request->input('reason', 'No reason provided');
-
-        // Update cost status to rejected
-        $cost->update(['status' => 'rejected']);
-
-        // Create notification for the user who requested the cost
-        if ($cost->user_id !== Auth::id()) {
-            Notification::create([
-                'user_id' => $cost->user_id,
-                'type' => 'equipment_cost_rejected',
-                'title' => 'Equipment Cost Rejected',
-                'message' => "Your equipment cost request for {$cost->description} has been rejected. Reason: {$reason}",
-                'data' => [
-                    'car_id' => $cost->car_id,
-                    'cost_id' => $cost->id,
-                    'rejected_by' => Auth::user()->name,
-                    'reason' => $reason
-                ]
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Equipment cost rejected successfully'
-        ]);
-    }
 }

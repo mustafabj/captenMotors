@@ -56,11 +56,35 @@ class User extends Authenticatable
     }
 
     /**
+     * Get equipment cost notifications where user is notified
+     */
+    public function equipmentCostNotifications()
+    {
+        return $this->hasMany(EquipmentCostNotification::class, 'notified_user_id');
+    }
+
+    /**
+     * Get equipment cost notifications where user requested
+     */
+    public function requestedEquipmentCostNotifications()
+    {
+        return $this->hasMany(EquipmentCostNotification::class, 'requested_by_user_id');
+    }
+
+    /**
      * Get unread notifications for the user
      */
     public function unreadNotifications()
     {
         return $this->notifications()->unread();
+    }
+
+    /**
+     * Get unread equipment cost notifications for the user
+     */
+    public function unreadEquipmentCostNotifications()
+    {
+        return $this->equipmentCostNotifications()->unread();
     }
 
     /**

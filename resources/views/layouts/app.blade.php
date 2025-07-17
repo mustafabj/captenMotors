@@ -10,8 +10,8 @@
     <meta name="description" content="Capten Motors - Dashboard" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="user-id" content="{{ auth()->id() }}" />
-    <meta name="pusher-key" content="{{ config('broadcasting.connections.pusher.key', 'your-pusher-key') }}" />
-    <meta name="pusher-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster', 'mt1') }}" />
+    <meta name="pusher-key" content="{{ config('broadcasting.connections.pusher.key') }}" />
+    <meta name="pusher-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster') }}" />
 
     <link rel="canonical" href="{{ url()->current() }}" />
     <link rel="icon" href="{{ asset('assets/media/app/favicon.ico') }}" type="image/x-icon" />

@@ -5,8 +5,11 @@ use App\Http\Controllers\CarController;
 use App\Http\Controllers\BulkDealController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\EquipmentCostNotificationController;
+use App\Http\Controllers\OtherCostController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\SoldCarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,11 +65,25 @@ Route::middleware('auth')->group(function () {
     Route::post('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
-    Route::post('notifications/equipment-cost/{costId}/approve', [NotificationController::class, 'approveEquipmentCost'])->name('notifications.approve-equipment-cost');
-    Route::post('notifications/equipment-cost/{costId}/reject', [NotificationController::class, 'rejectEquipmentCost'])->name('notifications.reject-equipment-cost');
+
+    // Equipment Cost Notification routes
+    Route::get('equipment-cost-notifications', [EquipmentCostNotificationController::class, 'index'])->name('equipment-cost-notifications.index');
+    Route::get('equipment-cost-notifications/{id}', [EquipmentCostNotificationController::class, 'show'])->name('equipment-cost-notifications.show');
+    Route::post('equipment-cost-notifications/{id}/mark-read', [EquipmentCostNotificationController::class, 'markAsRead'])->name('equipment-cost-notifications.mark-read');
+    Route::post('equipment-cost-notifications/mark-all-read', [EquipmentCostNotificationController::class, 'markAllAsRead'])->name('equipment-cost-notifications.mark-all-read');
+    Route::get('equipment-cost-notifications/unread-count', [EquipmentCostNotificationController::class, 'unreadCount'])->name('equipment-cost-notifications.unread-count');
+    Route::post('equipment-cost-notifications/equipment-cost/{costId}/approve', [EquipmentCostNotificationController::class, 'approveEquipmentCost'])->name('equipment-cost-notifications.approve-equipment-cost');
+    Route::post('equipment-cost-notifications/equipment-cost/{costId}/reject', [EquipmentCostNotificationController::class, 'rejectEquipmentCost'])->name('equipment-cost-notifications.reject-equipment-cost');
+    Route::post('equipment-cost-notifications/equipment-cost/{costId}/transfer', [EquipmentCostNotificationController::class, 'transferEquipmentCost'])->name('equipment-cost-notifications.transfer-equipment-cost');
+    Route::delete('equipment-cost-notifications/{id}', [EquipmentCostNotificationController::class, 'destroy'])->name('equipment-cost-notifications.destroy');
+
+    // Other Costs routes
+    Route::resource('other-costs', OtherCostController::class);
+    Route::post('other-costs/transfer-from-equipment-cost/{equipmentCostId}', [OtherCostController::class, 'transferFromEquipmentCost'])->name('other-costs.transfer-from-equipment-cost');
+
+    // Sold Cars routes
+    Route::resource('sold-cars', SoldCarController::class)->only(['index', 'store']);
+    Route::post('cars/{car}/sell', [SoldCarController::class, 'store'])->name('cars.sell');
 });
 
 require __DIR__.'/auth.php';
-
-// Broadcast routes for Pusher authentication
-Broadcast::routes();

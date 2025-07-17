@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Car;
 use App\Models\BulkDeal;
+use App\Models\User;
+use App\Models\EquipmentCostNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -306,10 +308,10 @@ class CarController extends Controller
 
         try {
             // Add the authenticated user's ID to the validated data
-            $validated['user_id'] = auth()->id();
+            $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
             
             // Set status based on user role
-            $user = auth()->user();
+            $user = \Illuminate\Support\Facades\Auth::user();
             if ($user->isAdmin()) {
                 $validated['status'] = 'approved'; // Admin can approve immediately
             } else {
@@ -319,23 +321,9 @@ class CarController extends Controller
             $cost = $car->equipmentCosts()->create($validated);
             $cost->load('user');
 
-            // If user is not admin, send notification to admins
+            // If user is not admin, create notifications for all admins
             if (!$user->isAdmin()) {
-                try {
-                    event(new \App\Events\EquipmentCostApprovalRequested($car, $cost, $user));
-                    \Log::info('Equipment cost approval event dispatched successfully', [
-                        'car_id' => $car->id,
-                        'cost_id' => $cost->id,
-                        'user_id' => $user->id
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::error('Failed to dispatch equipment cost approval event', [
-                        'error' => $e->getMessage(),
-                        'car_id' => $car->id,
-                        'cost_id' => $cost->id,
-                        'user_id' => $user->id
-                    ]);
-                }
+                $this->createApprovalNotifications($car, $cost, $user);
             }
 
             if ($request->ajax()) {
@@ -692,6 +680,34 @@ class CarController extends Controller
             return redirect()->back()
                 ->withErrors(['general' => 'An error occurred while updating the financial information. Please try again.'])
                 ->withInput();
+        }
+    }
+
+    /**
+     * Create approval notifications for admins
+     */
+    private function createApprovalNotifications($car, $cost, $user)
+    {
+        try {
+            // Get all admin users
+            $adminUsers = User::role('admin')->get();
+            
+            foreach ($adminUsers as $admin) {
+                EquipmentCostNotification::createApprovalRequest($car, $cost, $user, $admin);
+            }
+            
+            Log::info('Equipment cost approval notifications created successfully', [
+                'car_id' => $car->id,
+                'cost_id' => $cost->id,
+                'admin_count' => $adminUsers->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to create equipment cost approval notifications', [
+                'error' => $e->getMessage(),
+                'car_id' => $car->id,
+                'cost_id' => $cost->id
+            ]);
         }
     }
 
