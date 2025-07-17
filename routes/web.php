@@ -10,6 +10,7 @@ use App\Http\Controllers\OtherCostController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\SoldCarController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +85,18 @@ Route::middleware('auth')->group(function () {
     // Sold Cars routes
     Route::resource('sold-cars', SoldCarController::class)->only(['index', 'store']);
     Route::post('cars/{car}/sell', [SoldCarController::class, 'store'])->name('cars.sell');
+
+    // Store Capital routes (admin only)
+    Route::get('store-capital', [\App\Http\Controllers\StoreCapitalController::class, 'index'])->name('store-capital.index');
+    Route::get('store-capital/create', [\App\Http\Controllers\StoreCapitalController::class, 'create'])->name('store-capital.create');
+    Route::post('store-capital', [\App\Http\Controllers\StoreCapitalController::class, 'store'])->name('store-capital.store');
+
+    // Reports section (admin only)
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/profit-loss', [ReportController::class, 'profitLoss'])->name('profit-loss');
+        Route::get('/inventory-valuation', [ReportController::class, 'inventoryValuation'])->name('inventory-valuation');
+        Route::get('/equipment-cost-summary', [ReportController::class, 'equipmentCostSummary'])->name('equipment-cost-summary');
+    });
 });
 
 require __DIR__.'/auth.php';

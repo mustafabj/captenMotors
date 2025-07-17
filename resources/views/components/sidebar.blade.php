@@ -8,7 +8,8 @@
                <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
            </a>
            <a class="hidden dark:block" href="{{ route('home') }}">
-               <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/default-logo-dark.svg') }}" />
+               <img class="default-logo min-h-[22px] max-w-none"
+                   src="{{ asset('assets/media/app/default-logo-dark.svg') }}" />
                <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
            </a>
            <button
@@ -123,7 +124,7 @@
                                    </span>
                                </a>
                            </div>
-                           <div class="kt-menu-item {{ request()->is('notifications*') ? 'active' : '' }}">
+                           {{-- <div class="kt-menu-item {{ request()->is('notifications*') ? 'active' : '' }}">
                                <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
                                    href="{{ route('notifications.index') }}" tabindex="0">
                                    <span
@@ -134,25 +135,38 @@
                                        Notifications
                                    </span>
                                </a>
-                           </div>
+                           </div> --}}
+                           @if (auth()->user() && auth()->user()->hasRole('admin'))
+                               <div class="kt-menu-item {{ request()->is('store-capital*') ? 'active' : '' }}">
+                                   <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                       href="{{ route('store-capital.index') }}" tabindex="0">
+                                       <span
+                                           class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                       <span
+                                           class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+                                           Store Capital
+                                       </span>
+                                   </a>
+                               </div>
+                           @endif
                        </div>
                    </div>
                    <div class="kt-menu-item pt-2.25 pb-px">
                        <span
                            class="kt-menu-heading uppercase text-xs font-medium text-muted-foreground ps-[10px] pe-[10px]">
-                           User
+                           Reports
                        </span>
                    </div>
                    <div class="kt-menu-item" data-kt-menu-item-toggle="accordion" data-kt-menu-item-trigger="click">
                        <div class="kt-menu-link flex items-center grow cursor-pointer border border-transparent gap-[10px] ps-[10px] pe-[10px] py-[6px]"
                            tabindex="0">
                            <span class="kt-menu-icon items-start text-muted-foreground w-[20px]">
-                               <i class="ki-filled ki-profile-circle text-lg">
+                               <i class="ki-filled ki-tablet-text-up text-lg">
                                </i>
                            </span>
                            <span
                                class="kt-menu-title text-sm font-medium text-foreground kt-menu-item-active:text-primary kt-menu-link-hover:!text-primary">
-                               Public Profile
+                               Reports
                            </span>
                            <span
                                class="kt-menu-arrow text-muted-foreground w-[20px] shrink-0 justify-end ms-1 me-[-10px]">
@@ -165,6 +179,46 @@
                                    </i>
                                </span>
                            </span>
+                       </div>
+                       <div
+                           class="kt-menu-accordion show gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
+                           @if (auth()->user() && auth()->user()->hasRole('admin'))
+                               <div class="kt-menu-item {{ request()->is('reports/profit-loss*') ? 'active' : '' }}">
+                                   <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                       href="{{ route('reports.profit-loss') }}" tabindex="0">
+                                       <span
+                                           class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                       <span
+                                           class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+                                           Profit & Loss
+                                       </span>
+                                   </a>
+                               </div>
+                               <div
+                                   class="kt-menu-item {{ request()->is('reports/inventory-valuation*') ? 'active' : '' }}">
+                                   <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                       href="{{ route('reports.inventory-valuation') }}" tabindex="0">
+                                       <span
+                                           class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                       <span
+                                           class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+                                           Inventory Valuation
+                                       </span>
+                                   </a>
+                               </div>
+                               <div
+                                   class="kt-menu-item {{ request()->is('reports/equipment-cost-summary*') ? 'active' : '' }}">
+                                   <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
+                                       href="{{ route('reports.equipment-cost-summary') }}" tabindex="0">
+                                       <span
+                                           class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary"></span>
+                                       <span
+                                           class="kt-menu-title text-2sm font-normal text-foreground kt-menu-item-active:text-primary kt-menu-item-active:font-semibold kt-menu-link-hover:!text-primary">
+                                           Equipment Costs
+                                       </span>
+                                   </a>
+                               </div>
+                           @endif
                        </div>
                    </div>
                </div>

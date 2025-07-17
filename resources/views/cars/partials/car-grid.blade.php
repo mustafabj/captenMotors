@@ -107,11 +107,11 @@
                                 </div>
                             </div>
                         </div>
-                        @if(!$car->isSold())
+                        {{-- @if(!$car->isSold())
                             <button class="kt-btn kt-btn-sm kt-btn-success" onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
                                 <i class="ki-filled ki-dollar"></i> Mark as Sold
                             </button>
-                        @endif
+                        @endif --}}
                     </div>
 
                     <!-- Card Footer -->
@@ -267,11 +267,11 @@
                                     </ul>
                                 </div>
                             </div>
-                            @if($car->isSold())
+                            {{-- @if($car->isSold())
                                 <button class="kt-btn kt-btn-sm kt-btn-success" onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
                                     <i class="ki-filled ki-dollar"></i> Mark as Sold
                                 </button>
-                            @endif
+                            @endif --}}
                         </div>
 
                     </div>
