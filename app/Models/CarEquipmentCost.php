@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CarEquipmentCost extends Model
@@ -14,13 +15,20 @@ class CarEquipmentCost extends Model
         'user_id',
         'description',
         'amount',
-        'cost_date'
+        'cost_date',
+        'status'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'cost_date' => 'date'
     ];
+
+    // Status constants
+    const STATUS_PENDING = 'pending';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_TRANSFERRED = 'transferred';
 
     public function car()
     {
@@ -30,5 +38,78 @@ class CarEquipmentCost extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(EquipmentCostNotification::class);
+    }
+
+    /**
+     * Check if the cost is pending approval
+     */
+    public function isPending()
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if the cost is approved
+     */
+    public function isApproved()
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    /**
+     * Check if the cost is rejected
+     */
+    public function isRejected()
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    /**
+     * Check if the cost is transferred
+     */
+    public function isTransferred()
+    {
+        return $this->status === self::STATUS_TRANSFERRED;
+    }
+
+    /**
+     * Get status badge class
+     */
+    public function getStatusBadgeClass()
+    {
+        switch ($this->status) {
+            case self::STATUS_APPROVED:
+                return 'kt-badge-success';
+            case self::STATUS_REJECTED:
+                return 'kt-badge-danger';
+            case self::STATUS_TRANSFERRED:
+                return 'kt-badge-info';
+            case self::STATUS_PENDING:
+            default:
+                return 'kt-badge-warning';
+        }
+    }
+
+    /**
+     * Get status text
+     */
+    public function getStatusText()
+    {
+        switch ($this->status) {
+            case self::STATUS_APPROVED:
+                return 'Approved';
+            case self::STATUS_REJECTED:
+                return 'Rejected';
+            case self::STATUS_TRANSFERRED:
+                return 'Transferred';
+            case self::STATUS_PENDING:
+            default:
+                return 'Pending';
+        }
     }
 } 

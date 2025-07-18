@@ -46,4 +46,68 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get all notifications for the user
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Get equipment cost notifications where user is notified
+     */
+    public function equipmentCostNotifications()
+    {
+        return $this->hasMany(EquipmentCostNotification::class, 'notified_user_id');
+    }
+
+    /**
+     * Get equipment cost notifications where user requested
+     */
+    public function requestedEquipmentCostNotifications()
+    {
+        return $this->hasMany(EquipmentCostNotification::class, 'requested_by_user_id');
+    }
+
+    /**
+     * Get unread notifications for the user
+     */
+    public function unreadNotifications()
+    {
+        return $this->notifications()->unread();
+    }
+
+    /**
+     * Get unread equipment cost notifications for the user
+     */
+    public function unreadEquipmentCostNotifications()
+    {
+        return $this->equipmentCostNotifications()->unread();
+    }
+
+    /**
+     * Get read notifications for the user
+     */
+    public function readNotifications()
+    {
+        return $this->notifications()->read();
+    }
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Get all admin users
+     */
+    public static function getAdmins()
+    {
+        return static::role('admin')->get();
+    }
 }

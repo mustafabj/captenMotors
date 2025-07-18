@@ -46,11 +46,23 @@
                     data-kt-drawer="true" data-kt-drawer-container="body" id="notifications_drawer">
                     <div class="flex items-center justify-between gap-2.5 text-sm text-mono font-semibold px-5 py-2.5 border-b border-b-border"
                         id="notifications_header">
-                        Notifications
-                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
-                            <i class="ki-filled ki-cross">
-                            </i>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <span>Notifications</span>
+                            <span id="notification-count" class="kt-badge kt-badge-sm kt-badge-primary hidden">0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="kt-btn kt-btn-sm kt-btn-outline" id="mark-all-read-btn">
+                                Mark all read
+                            </button>
+                            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-dim shrink-0" data-kt-drawer-dismiss="true">
+                                <i class="ki-filled ki-cross"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1  p-4" style="overflow-y: auto;">
+                        <div id="notifications-list" class="space-y-3">
+                            <!-- Notifications will be loaded here -->
+                        </div>
                     </div>
                 </div>
                 <!--End of Notifications Drawer-->

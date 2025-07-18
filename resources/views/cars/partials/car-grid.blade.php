@@ -107,6 +107,11 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- @if(!$car->isSold())
+                            <button class="kt-btn kt-btn-sm kt-btn-success" onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
+                                <i class="ki-filled ki-dollar"></i> Mark as Sold
+                            </button>
+                        @endif --}}
                     </div>
 
                     <!-- Card Footer -->
@@ -262,7 +267,11 @@
                                     </ul>
                                 </div>
                             </div>
-
+                            {{-- @if($car->isSold())
+                                <button class="kt-btn kt-btn-sm kt-btn-success" onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
+                                    <i class="ki-filled ki-dollar"></i> Mark as Sold
+                                </button>
+                            @endif --}}
                         </div>
 
                     </div>
@@ -287,4 +296,55 @@
             </div>
         </div>
     @endif
-</div> 
+</div>
+<div id="sellCarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+        <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onclick="closeSellModal()">&times;</button>
+        <h3 class="text-lg font-bold mb-4">Sell Car: <span id="sellCarModel"></span></h3>
+        <form id="sellCarForm" method="POST" enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="car_id" id="sellCarId">
+            <div class="mb-3">
+                <label for="sale_price" class="kt-label">Sale Price *</label>
+                <input type="number" name="sale_price" id="sale_price" class="kt-input w-full" required min="0" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label for="payment_method" class="kt-label">Payment Method *</label>
+                <select name="payment_method" id="payment_method" class="kt-select w-full" required onchange="togglePaymentFields()">
+                    <option value="cash">Cash</option>
+                    <option value="check">Check</option>
+                    <option value="separated">Separated</option>
+                </select>
+            </div>
+            <div class="mb-3 hidden" id="separatedFields">
+                <label for="paid_amount" class="kt-label">Paid Amount</label>
+                <input type="number" name="paid_amount" id="paid_amount" class="kt-input w-full" min="0" step="0.01">
+                <label for="remaining_amount" class="kt-label mt-2">Remaining Amount</label>
+                <input type="number" name="remaining_amount" id="remaining_amount" class="kt-input w-full" min="0" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label for="attachment" class="kt-label">Attachment</label>
+                <input type="file" name="attachment" id="attachment" class="kt-input w-full">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" class="kt-btn kt-btn-outline" onclick="closeSellModal()">Cancel</button>
+                <button type="submit" class="kt-btn kt-btn-primary">Confirm Sale</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function openSellModal(carId, carModel) {
+    document.getElementById('sellCarId').value = carId;
+    document.getElementById('sellCarModel').textContent = carModel;
+    document.getElementById('sellCarForm').action = '/cars/' + carId + '/sell';
+    document.getElementById('sellCarModal').classList.remove('hidden');
+}
+function closeSellModal() {
+    document.getElementById('sellCarModal').classList.add('hidden');
+}
+function togglePaymentFields() {
+    var method = document.getElementById('payment_method').value;
+    document.getElementById('separatedFields').classList.toggle('hidden', method !== 'separated');
+}
+</script> 

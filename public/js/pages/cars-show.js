@@ -3,6 +3,11 @@
  * Handles inline editing functionality for car details
  */
 
+
+
+
+
+    // Initialize the cars show functionality
 App.pages.carsShow = {
     // Configuration
     config: {
@@ -32,6 +37,9 @@ App.pages.carsShow = {
         
         this.storeOriginalValues();
         this.bindEvents();
+                    this.initTabs();
+        this.initLightGallery();
+        this.initEquipmentCostForm();
     },
 
     // Store original values for reset functionality
@@ -44,26 +52,153 @@ App.pages.carsShow = {
         });
     },
 
-    // Bind event listeners
-    bindEvents: function() {
-        // Edit button click
-        const editBtn = document.getElementById('edit-btn');
-        if (editBtn) {
-            editBtn.addEventListener('click', () => this.enableEditMode());
-        }
+        // Initialize tab functionality
+        initTabs: function() {
+            const tabToggles = document.querySelectorAll('[data-kt-tab-toggle]');
+            const tabContents = document.querySelectorAll('[id^="tab_1_"]');
 
-        // Save button click
-        const saveBtn = document.getElementById('save-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveChanges());
-        }
+            tabToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-kt-tab-toggle');
 
-        // Cancel button click
-        const cancelBtn = document.getElementById('cancel-btn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.cancelEdit());
-        }
+                    // Remove active class from all toggles and hide all contents
+                    tabToggles.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.add('hidden'));
 
+                    // Add active class to clicked toggle and show target content
+                    this.classList.add('active');
+                    document.querySelector(targetId).classList.remove('hidden');
+                    
+                    // Preserve edit mode if it's enabled globally
+                    if (document.body.classList.contains('global-edit-mode')) {
+                        // Re-enable edit mode for the newly visible tab
+                        const tabId = targetId.replace('#tab_1_', '');
+                        
+                        // Map tab IDs to edit mode element names
+                        let editModeName = '';
+                        switch(tabId) {
+                            case '2': editModeName = 'options'; break;
+                            case '3': editModeName = 'inspection'; break;
+                            case '4': editModeName = 'financial'; break;
+                            case '7': editModeName = 'images'; break;
+                        }
+                        
+                        if (editModeName) {
+                            const viewMode = document.getElementById(`${editModeName}-view-mode`);
+                            const editMode = document.getElementById(`${editModeName}-edit-mode`);
+                            
+                            if (viewMode && editMode) {
+                                viewMode.classList.add('hidden');
+                                editMode.classList.remove('hidden');
+                            }
+                        }
+                    }
+                });
+            });
+        },
+
+        // Initialize LightGallery
+        initLightGallery: function() {
+            // Initialize lightGallery for car images
+            if (document.getElementById('car-images-gallery')) {
+                lightGallery(document.getElementById('car-images-gallery'), {
+                    plugins: [lgThumbnail, lgAutoplay, lgFullscreen],
+                    speed: 500,
+                    download: true,
+                    counter: true,
+                    thumbnail: true,
+                    autoplay: true,
+                    autoplayControls: true,
+                    fullscreen: true
+                });
+            }
+
+            // Initialize lightGallery for car license
+            if (document.getElementById('car-license-gallery')) {
+                lightGallery(document.getElementById('car-license-gallery'), {
+                    plugins: [lgThumbnail, lgAutoplay, lgFullscreen],
+                    speed: 500,
+                    download: true,
+                    counter: true,
+                    thumbnail: true,
+                    autoplay: true,
+                    autoplayControls: true,
+                    fullscreen: true
+                });
+            }
+        },
+
+        // Initialize equipment cost form
+        initEquipmentCostForm: function() {
+            const form = document.getElementById('addCostForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('submitCostBtn');
+                const submitText = submitBtn.querySelector('.submit-text');
+                const loadingText = submitBtn.querySelector('.loading-text');
+                
+                // Clear previous errors
+                App.pages.carsShow.clearFormErrors();
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitText.classList.add('hidden');
+                loadingText.classList.remove('hidden');
+                
+                // Prepare form data
+                const formData = new FormData(form);
+                
+                // Submit via AJAX
+                fetch(App.pages.carsShow.config.equipmentCostUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Success - add new row to table and close modal
+                        App.utils.showToast('Equipment cost added successfully!', 'success');
+                        
+                        // Add new row to the equipment costs table
+                        App.pages.carsShow.addEquipmentCostRow(data.cost);
+                        
+                        // Close modal
+                        const modalEl = document.querySelector('#addCostModal');
+                        const modal = KTModal.getInstance(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        // Reset form
+                        form.reset();
+                    } else {
+                        // Show validation errors
+                        App.pages.carsShow.showFormErrors(data.errors);
+                        App.utils.showToast('Please correct the errors below.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    App.utils.showToast('An error occurred while adding the cost.', 'error');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitText.classList.remove('hidden');
+                    loadingText.classList.add('hidden');
+                });
+            });
+        },
+
+        // Bind event listeners
+        bindEvents: function() {
         // Listen for Escape key to cancel edit
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.config.isEditMode) {
@@ -77,8 +212,11 @@ App.pages.carsShow = {
         this.config.isEditMode = true;
         
         // Hide view actions, show edit actions
-        document.getElementById('view-actions').classList.add('hidden');
-        document.getElementById('edit-actions').classList.remove('hidden');
+            const viewActions = document.getElementById('view-actions');
+            const editActions = document.getElementById('edit-actions');
+            
+            if (viewActions) viewActions.classList.add('hidden');
+            if (editActions) editActions.classList.remove('hidden');
         
         // Show edit mode indicator
         this.showEditModeIndicator();
@@ -92,14 +230,13 @@ App.pages.carsShow = {
             // Show select fields, hide status display
             if (field.name === 'status') {
                 field.classList.remove('hidden');
-                document.querySelector('.status-display').classList.add('hidden');
+                    const statusDisplay = document.querySelector('.status-display');
+                    if (statusDisplay) statusDisplay.classList.add('hidden');
             }
         });
         
         // Enable edit mode for all tabs
         this.enableAllTabEditModes();
-        
-
     },
 
     // Enable edit mode for all tabs
@@ -192,15 +329,15 @@ App.pages.carsShow = {
         .then(results => {
             const allSuccess = results.every(result => result.success);
             if (allSuccess) {
-                this.showNotification('All changes saved successfully!', 'success');
+                    App.utils.showToast('All changes saved successfully!', 'success');
                 this.disableEditMode();
             } else {
-                this.showNotification('Some changes could not be saved. Please check the errors.', 'error');
+                    App.utils.showToast('Some changes could not be saved. Please check the errors.', 'error');
             }
         })
         .catch(error => {
             console.error('Save error:', error);
-            this.showNotification('An error occurred while saving. Please try again.', 'error');
+                App.utils.showToast('An error occurred while saving. Please try again.', 'error');
         })
         .finally(() => {
             // Reset button state
@@ -247,56 +384,166 @@ App.pages.carsShow = {
         if (data.car.status) {
             this.updateStatusDisplay(data.car.status);
         }
-        
-        // Exit edit mode
-        this.disableEditMode();
-        
-        // Show success message
-        this.showNotification(data.message, 'success');
-        
+        },
 
-    },
+        // Update status display
+        updateStatusDisplay: function(newStatus) {
+            const statusConfig = {
+                'not_received': ['kt-badge-warning', 'Not Received'],
+                'paint': ['kt-badge-info', 'Paint'],
+                'upholstery': ['kt-badge-primary', 'Upholstery'],
+                'mechanic': ['kt-badge-warning', 'Mechanic'],
+                'electrical': ['kt-badge-warning', 'Electrical'],
+                'agency': ['kt-badge-info', 'Agency'],
+                'polish': ['kt-badge-primary', 'Polish'],
+                'ready': ['kt-badge-success', 'Ready'],
+            };
+            
+            const [badgeClass, badgeText] = statusConfig[newStatus] || ['kt-badge-secondary', 'Unknown'];
+            const statusDisplay = document.querySelector('.status-display');
+            if (statusDisplay) {
+                statusDisplay.innerHTML = `<span class="kt-badge ${badgeClass}">${badgeText}</span>`;
+            }
+        },
 
-    // Handle save error
-    handleSaveError: function(data) {
-        if (data.errors) {
-            // Show field-specific errors
-            Object.keys(data.errors).forEach(fieldName => {
-                const field = document.querySelector(`[name="${fieldName}"]`);
-                if (field) {
-                    field.classList.add('border-red-500');
-                    // Remove error styling after 3 seconds
-                    setTimeout(() => {
-                        field.classList.remove('border-red-500');
-                    }, 3000);
+        // Save options
+        saveOptions: function() {
+            const options = [];
+            const optionInputs = document.querySelectorAll('#options-edit-mode .option-input');
+            
+            optionInputs.forEach(input => {
+                const value = input.value.trim();
+                if (value) {
+                    options.push(value);
                 }
             });
-        }
-        
-        this.showNotification(data.message || 'Please correct the errors and try again.', 'error');
+
+            return fetch(this.config.optionsUpdateUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ options: options })
+            })
+            .then(response => response.json());
+        },
+
+        // Save inspection
+        saveInspection: function() {
+            const formData = new FormData();
+            const inspectionFields = document.querySelectorAll('#inspection-edit-mode .inspection-field');
+            
+            inspectionFields.forEach(field => {
+                formData.append(field.name, field.value);
+            });
+
+            return fetch(this.config.inspectionUpdateUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json());
+        },
+
+        // Save financial
+        saveFinancial: function() {
+            const formData = new FormData();
+            const financialFields = document.querySelectorAll('#financial-edit-mode .financial-field');
+            
+            financialFields.forEach(field => {
+                formData.append(field.name, field.value);
+            });
+
+            return fetch(this.config.financialUpdateUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json());
+        },
+
+        // Save images
+        saveImages: function() {
+            const formData = new FormData();
+            const imageFields = document.querySelectorAll('#images-edit-mode .images-field');
+            
+            imageFields.forEach(field => {
+                if (field.files.length > 0) {
+                    if (field.name === 'car_images[]') {
+                        // Multiple files
+                        for (let i = 0; i < field.files.length; i++) {
+                            formData.append('car_images[]', field.files[i]);
+                        }
+                    } else {
+                        // Single file
+                        formData.append(field.name, field.files[0]);
+                    }
+                }
+            });
+
+            return fetch(this.config.imagesUpdateUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json());
     },
 
     // Cancel edit mode
     cancelEdit: function() {
-        // Reset all fields to original values
+            this.config.isEditMode = false;
+            
+            // Hide edit actions, show view actions
+            document.getElementById('view-actions').classList.remove('hidden');
+            document.getElementById('edit-actions').classList.add('hidden');
+            
+            // Hide edit mode indicator
+            this.hideEditModeIndicator();
+            
+            // Reset all editable fields to original values
         const editableFields = document.querySelectorAll('.editable-field');
         editableFields.forEach(field => {
             const fieldName = field.getAttribute('name');
             const originalValue = this.config.originalValues[fieldName];
+                
+                if (originalValue !== undefined) {
             field.value = originalValue;
-        });
-        
-        // Exit edit mode
-        this.disableEditMode();
-        
-
+                }
+                
+                field.setAttribute('readonly', 'readonly');
+                field.classList.remove('edit-mode');
+                
+                // Hide select fields, show status display
+                if (field.name === 'status') {
+                    field.classList.add('hidden');
+                    document.querySelector('.status-display').classList.remove('hidden');
+                }
+            });
+            
+            // Disable edit mode for all tabs
+            this.disableAllTabEditModes();
     },
 
     // Disable edit mode
     disableEditMode: function() {
         this.config.isEditMode = false;
         
-        // Show view actions, hide edit actions
+            // Hide edit actions, show view actions
         document.getElementById('view-actions').classList.remove('hidden');
         document.getElementById('edit-actions').classList.add('hidden');
         
@@ -307,7 +554,7 @@ App.pages.carsShow = {
         const editableFields = document.querySelectorAll('.editable-field');
         editableFields.forEach(field => {
             field.setAttribute('readonly', 'readonly');
-            field.classList.remove('edit-mode', 'border-red-500');
+                field.classList.remove('edit-mode');
             
             // Hide select fields, show status display
             if (field.name === 'status') {
@@ -320,39 +567,12 @@ App.pages.carsShow = {
         this.disableAllTabEditModes();
     },
 
-    // Update status display
-    updateStatusDisplay: function(status) {
-        const statusConfig = {
-            'not_received': { class: 'kt-badge-warning', text: 'Not Received' },
-            'paint': { class: 'kt-badge-info', text: 'Paint' },
-            'upholstery': { class: 'kt-badge-primary', text: 'Upholstery' },
-            'mechanic': { class: 'kt-badge-warning', text: 'Mechanic' },
-            'electrical': { class: 'kt-badge-warning', text: 'Electrical' },
-            'agency': { class: 'kt-badge-info', text: 'Agency' },
-            'polish': { class: 'kt-badge-primary', text: 'Polish' },
-            'ready': { class: 'kt-badge-success', text: 'Ready' }
-        };
-        
-        const statusBadge = document.querySelector('.status-display .kt-badge');
-        const config = statusConfig[status] || { class: 'kt-badge-secondary', text: 'Unknown' };
-        
-        if (statusBadge) {
-            statusBadge.className = `kt-badge ${config.class}`;
-            statusBadge.textContent = config.text;
-        }
-    },
-
     // Show edit mode indicator
     showEditModeIndicator: function() {
         const indicator = document.createElement('div');
-        indicator.id = 'edit-mode-indicator';
         indicator.className = 'edit-mode-indicator';
-        indicator.innerHTML = `
-            <div class="flex items-center">
-                <i class="ki-filled ki-pencil mr-2"></i>
-                <span>Edit Mode - Press ESC to cancel</span>
-            </div>
-        `;
+            indicator.textContent = 'Edit Mode Active';
+            indicator.id = 'edit-mode-indicator';
         document.body.appendChild(indicator);
     },
 
@@ -364,375 +584,127 @@ App.pages.carsShow = {
         }
     },
 
-    // Show notification
-    showNotification: function(message, type = 'info') {
-        const notification = document.createElement('div');
-        const bgClass = type === 'error' ? 'bg-red-500' : 
-                       type === 'success' ? 'bg-green-500' : 
-                       'bg-blue-500';
-        
-        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${bgClass} text-white max-w-md`;
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <i class="ki-filled ki-${type === 'error' ? 'cross-circle' : type === 'success' ? 'check-circle' : 'information-5'} mr-2"></i>
-                <span>${message}</span>
-            </div>
-        `;
-
-        document.body.appendChild(notification);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            notification.remove();
-        }, 5000);
-    },
-
-    // ===== OPTIONS EDITING =====
-    
-    // Enable options edit mode
-    enableOptionsEdit: function() {
-        document.getElementById('options-view-mode').classList.add('hidden');
-        document.getElementById('options-edit-mode').classList.remove('hidden');
-        document.querySelector('.options-edit-btn').classList.add('hidden');
-    },
-
-    // Save options
-    saveOptions: function() {
-        const options = [];
-        document.querySelectorAll('.option-input').forEach(input => {
-            const value = input.value.trim();
-            if (value) {
-                options.push(value);
-            }
-        });
-
-        const formData = new FormData();
-        formData.append('options', JSON.stringify(options));
-
-        return fetch(this.config.optionsUpdateUrl, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': this.config.csrfToken,
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.updateOptionsView(data.options);
-            }
-            return data;
-        });
-    },
-
-    // Cancel options edit
-    cancelOptionsEdit: function() {
-        document.getElementById('options-view-mode').classList.remove('hidden');
-        document.getElementById('options-edit-mode').classList.add('hidden');
-        document.querySelector('.options-edit-btn').classList.remove('hidden');
-    },
-
-    // Update options view
-    updateOptionsView: function(options) {
-        const viewMode = document.getElementById('options-view-mode');
-        
-        if (options.length > 0) {
-            const optionsHtml = options.map(option => `
-                <div class="kt-card bg-green-50 border border-green-200">
-                    <div class="kt-card-body p-4">
-                        <div class="flex items-center">
-                            <i class="ki-filled ki-check-circle text-green-500 text-xl me-3"></i>
-                            <span class="text-gray-800 font-semibold">${option}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+        // Clear form errors
+        clearFormErrors: function() {
+            const form = document.getElementById('addCostForm');
+            if (!form) return;
             
-            viewMode.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${optionsHtml}</div>`;
-        } else {
-            viewMode.innerHTML = `
-                <div class="text-center py-12">
-                    <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                    <h4 class="text-lg font-bold text-gray-900 mb-2">No options</h4>
-                    <p class="text-gray-600">No options have been added to this car yet.</p>
-                </div>
+            const inputs = form.querySelectorAll('input, textarea');
+            const messages = form.querySelectorAll('.kt-form-message');
+            
+            inputs.forEach(input => {
+                input.removeAttribute('aria-invalid');
+                input.classList.remove('is-invalid');
+            });
+            
+            messages.forEach(message => {
+                message.innerHTML = '';
+                message.style.display = 'none';
+        });
+    },
+
+        // Show form errors
+        showFormErrors: function(errors) {
+            if (!errors || typeof errors !== 'object') {
+                console.warn('No errors object provided to showFormErrors');
+                return;
+            }
+            
+            const form = document.getElementById('addCostForm');
+            if (!form) {
+                console.warn('Form not found');
+                return;
+            }
+            
+            Object.keys(errors).forEach(fieldName => {
+                const field = form.querySelector(`[name="${fieldName}"]`);
+                const messageDiv = field ? field.closest('.kt-form-control')?.querySelector('.kt-form-message') : null;
+                
+                if (field && messageDiv) {
+                    // Add error styling to field
+                    field.setAttribute('aria-invalid', 'true');
+                    field.classList.add('is-invalid');
+                    
+                    // Show error message
+                    messageDiv.innerHTML = `<div class="text-danger">${errors[fieldName][0]}</div>`;
+                    messageDiv.style.display = 'block';
+                }
+        });
+    },
+
+        // Add equipment cost row to table
+        addEquipmentCostRow: function(costData) {
+            let tableBody = document.querySelector('#equipment-costs-table tbody');
+            const emptyState = document.querySelector('.equipment .kt-card-content .text-center');
+            
+            // Remove empty state if it exists
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            // Check if table body exists, if not create the table structure
+            if (!tableBody) {
+                const table = document.createElement('table');
+                table.id = 'equipment-costs-table';
+                table.className = 'w-full';
+                table.innerHTML = `
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold">Description</th>
+                            <th class="text-left py-3 px-4 font-semibold">Amount</th>
+                            <th class="text-left py-3 px-4 font-semibold">Date</th>
+                            <th class="text-left py-3 px-4 font-semibold">Added By</th>
+                            <th class="text-left py-3 px-4 font-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `;
+                document.querySelector('.equipment .kt-card-content').appendChild(table);
+                tableBody = table.querySelector('tbody');
+            }
+            
+            // Create new row
+            const newRow = document.createElement('tr');
+            newRow.className = 'border-b border-gray-200';
+            newRow.innerHTML = `
+                <td class="py-3 px-4">${costData.description}</td>
+                <td class="py-3 px-4 font-semibold">$${parseFloat(costData.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="py-3 px-4">${new Date(costData.cost_date).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</td>
+                <td class="py-3 px-4 text-gray-600">${costData.user_name}</td>
+                <td class="py-3 px-4">
+                    <span class="kt-badge kt-badge-warning">Pending</span>
+                </td>
             `;
-        }
-    },
-
-    // ===== INSPECTION EDITING =====
-    
-    // Enable inspection edit mode
-    enableInspectionEdit: function() {
-        document.getElementById('inspection-view-mode').classList.add('hidden');
-        document.getElementById('inspection-edit-mode').classList.remove('hidden');
-        document.querySelector('.inspection-edit-btn').classList.add('hidden');
-    },
-
-    // Save inspection
-    saveInspection: function() {
-        const formData = new FormData();
-        document.querySelectorAll('.inspection-field').forEach(field => {
-            formData.append(field.name, field.value);
-        });
-
-        return fetch(this.config.inspectionUpdateUrl, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': this.config.csrfToken,
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.updateInspectionView(data.inspection);
-            }
-            return data;
-        });
-    },
-
-    // Cancel inspection edit
-    cancelInspectionEdit: function() {
-        document.getElementById('inspection-view-mode').classList.remove('hidden');
-        document.getElementById('inspection-edit-mode').classList.add('hidden');
-        document.querySelector('.inspection-edit-btn').classList.remove('hidden');
-    },
-
-    // Update inspection view
-    updateInspectionView: function(inspection) {
-        const viewMode = document.getElementById('inspection-view-mode');
-        
-        if (inspection) {
-            const chassisHtml = inspection.chassis_inspection ? 
-                `<div class="py-2">
-                    <span class="text-gray-600 block mb-2">Chassis Inspection</span>
-                    <div class="bg-gray-50 p-3 rounded border">${inspection.chassis_inspection}</div>
-                </div>` : 
-                `<div class="py-2 text-gray-500 italic">No chassis inspection data available</div>`;
-
-            const bodyNotesHtml = inspection.body_notes ? 
-                `<div class="mt-6">
-                    <h6 class="text-sm font-semibold mb-2">Body Notes</h6>
-                    <p class="text-gray-700 bg-gray-50 p-3 rounded">${inspection.body_notes}</p>
-                </div>` : '';
-
-            viewMode.innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div>
-                        <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
-                        <div class="space-y-3">${chassisHtml}</div>
-                    </div>
-                    <div>
-                        <h5 class="text-md font-semibold mb-4">Mechanical Inspection</h5>
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                <span class="text-gray-600">Transmission Condition</span>
-                                <span class="text-gray-800">${inspection.transmission || 'Not specified'}</span>
-                            </div>
-                            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                <span class="text-gray-600">Motor Condition</span>
-                                <span class="text-gray-800">${inspection.motor || 'Not specified'}</span>
-                            </div>
-                        </div>${bodyNotesHtml}
-                    </div>
-                </div>
-            `;
-        } else {
-            viewMode.innerHTML = `
-                <div class="text-center py-12">
-                    <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                    <h4 class="text-lg font-bold text-gray-900 mb-2">No inspection data</h4>
-                    <p class="text-gray-600">No inspection information has been recorded for this car.</p>
-                </div>
-            `;
-        }
-    },
-
-    // ===== FINANCIAL EDITING =====
-    
-    // Enable financial edit mode
-    enableFinancialEdit: function() {
-        document.getElementById('financial-view-mode').classList.add('hidden');
-        document.getElementById('financial-edit-mode').classList.remove('hidden');
-        document.querySelector('.financial-edit-btn').classList.add('hidden');
-    },
-
-    // Save financial
-    saveFinancial: function() {
-        const formData = new FormData();
-        document.querySelectorAll('.financial-field').forEach(field => {
-            formData.append(field.name, field.value);
-        });
-
-        return fetch(this.config.financialUpdateUrl, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': this.config.csrfToken,
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.updateFinancialView(data.financial);
-            }
-            return data;
-        });
-    },
-
-    // Cancel financial edit
-    cancelFinancialEdit: function() {
-        document.getElementById('financial-view-mode').classList.remove('hidden');
-        document.getElementById('financial-edit-mode').classList.add('hidden');
-        document.querySelector('.financial-edit-btn').classList.remove('hidden');
-    },
-
-    // Update financial view
-    updateFinancialView: function(financial) {
-        const viewMode = document.getElementById('financial-view-mode');
-        const purchasePrice = parseFloat(financial.purchase_price);
-        const expectedSalePrice = parseFloat(financial.expected_sale_price);
-        
-        // Get total costs from equipment costs table
-        const costRows = document.querySelectorAll('#equipment-costs-table tbody tr');
-        let totalCosts = 0;
-        costRows.forEach(row => {
-            const amountCell = row.querySelector('td:nth-child(2)');
-            if (amountCell) {
-                const amountText = amountCell.textContent.replace('$', '').replace(',', '');
-                totalCosts += parseFloat(amountText) || 0;
-            }
-        });
-        
-        const profit = expectedSalePrice - purchasePrice - totalCosts;
-        const gridCols = purchasePrice ? 'grid-cols-4' : 'grid-cols-2';
-        
-        const purchasePriceHtml = purchasePrice ? 
-            `<div class="text-center p-4 bg-green-50 rounded-lg">
-                <div class="text-2xl font-bold text-green-600">$${purchasePrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                <div class="text-sm text-gray-600">Purchase Price</div>
-            </div>` : '';
-
-        const profitHtml = purchasePrice ? 
-            `<div class="text-center p-4 ${profit >= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
-                <div class="text-2xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}">$${profit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                <div class="text-sm text-gray-600">Estimated Profit</div>
-            </div>` : '';
-
-        viewMode.innerHTML = `
-            <div class="grid ${gridCols} gap-6">
-                ${purchasePriceHtml}
-                <div class="text-center p-4 bg-blue-50 rounded-lg">
-                    <div class="text-2xl font-bold text-blue-600">$${expectedSalePrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="text-sm text-gray-600">Expected Sale Price</div>
-                </div>
-                <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                    <div class="text-2xl font-bold text-yellow-600">$${totalCosts.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="text-sm text-gray-600">Total Equipment Costs</div>
-                </div>
-                ${profitHtml}
-            </div>
-        `;
-    },
-
-    // ===== IMAGES EDITING =====
-    
-    // Enable images edit mode
-    enableImagesEdit: function() {
-        document.getElementById('images-view-mode').classList.add('hidden');
-        document.getElementById('images-edit-mode').classList.remove('hidden');
-        document.querySelector('.images-edit-btn').classList.add('hidden');
-    },
-
-    // Save images
-    saveImages: function() {
-        const formData = new FormData();
-        const licenseFile = document.querySelector('input[name="car_license"]').files[0];
-        const imageFiles = document.querySelector('input[name="car_images[]"]').files;
-        
-        if (licenseFile) {
-            formData.append('car_license', licenseFile);
-        }
-        
-        for (let i = 0; i < imageFiles.length; i++) {
-            formData.append('car_images[]', imageFiles[i]);
-        }
-
-        fetch(this.config.imagesUpdateUrl, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': this.config.csrfToken,
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.cancelImagesEdit();
-                this.showNotification(data.message, 'success');
-                // Reload the page to show updated images
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Error updating images', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Images save error:', error);
-            this.showNotification('An error occurred while saving images', 'error');
-        });
-    },
-
-    // Cancel images edit
-    cancelImagesEdit: function() {
-        document.getElementById('images-view-mode').classList.remove('hidden');
-        document.getElementById('images-edit-mode').classList.add('hidden');
-        document.querySelector('.images-edit-btn').classList.remove('hidden');
-        
-        // Clear file inputs
-        document.querySelector('input[name="car_license"]').value = '';
-        document.querySelector('input[name="car_images[]"]').value = '';
+            
+            // Add row to the beginning of the table (most recent first)
+            tableBody.insertBefore(newRow, tableBody.firstChild);
     }
 };
 
 // Global functions for inline event handlers
 window.enableEditMode = function() {
+        if (App.pages.carsShow) {
     App.pages.carsShow.enableEditMode();
+        }
 };
 
 window.saveChanges = function() {
+        if (App.pages.carsShow) {
     App.pages.carsShow.saveChanges();
+        }
 };
 
 window.cancelEdit = function() {
+        if (App.pages.carsShow) {
     App.pages.carsShow.cancelEdit();
+        }
 };
 
 // Options functions
-window.enableOptionsEdit = function() {
-    App.pages.carsShow.enableOptionsEdit();
-};
-
-window.saveOptions = function() {
-    App.pages.carsShow.saveOptions();
-};
-
-window.cancelOptionsEdit = function() {
-    App.pages.carsShow.cancelOptionsEdit();
-};
-
 window.addOptionField = function() {
     const container = document.querySelector('.options-container');
+        if (!container) return;
+        
     const newOption = document.createElement('div');
     newOption.className = 'option-item flex items-center gap-2 mb-3';
     newOption.innerHTML = `
@@ -747,6 +719,8 @@ window.addOptionField = function() {
 window.removeOption = function(button) {
     const optionItem = button.closest('.option-item');
     const container = document.querySelector('.options-container');
+        
+        if (!optionItem || !container) return;
     
     // Don't remove if it's the last option item
     if (container.children.length > 1) {
@@ -757,52 +731,186 @@ window.removeOption = function(button) {
     }
 };
 
-// Inspection functions
-window.enableInspectionEdit = function() {
-    App.pages.carsShow.enableInspectionEdit();
-};
+    // Options save/cancel functions
+    window.saveOptions = function() {
+        if (App.pages.carsShow) {
+            App.pages.carsShow.saveOptions()
+                .then(data => {
+                    if (data.success) {
+                        App.utils.showToast('Options saved successfully!', 'success');
+                        // Refresh the page to show updated options
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        App.utils.showToast('Error saving options', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    App.utils.showToast('An error occurred while saving options', 'error');
+                });
+        }
+    };
 
+    window.cancelOptionsEdit = function() {
+        document.getElementById('options-view-mode').classList.remove('hidden');
+        document.getElementById('options-edit-mode').classList.add('hidden');
+    };
+
+    // Inspection save/cancel functions
 window.saveInspection = function() {
-    App.pages.carsShow.saveInspection();
+        if (App.pages.carsShow) {
+            App.pages.carsShow.saveInspection()
+                .then(data => {
+                    if (data.success) {
+                        App.utils.showToast('Inspection saved successfully!', 'success');
+                        // Refresh the page to show updated inspection
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        App.utils.showToast('Error saving inspection', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    App.utils.showToast('An error occurred while saving inspection', 'error');
+                });
+        }
 };
 
 window.cancelInspectionEdit = function() {
-    App.pages.carsShow.cancelInspectionEdit();
-};
+        document.getElementById('inspection-view-mode').classList.remove('hidden');
+        document.getElementById('inspection-edit-mode').classList.add('hidden');
+    };
 
-// Financial functions
-window.enableFinancialEdit = function() {
-    App.pages.carsShow.enableFinancialEdit();
-};
-
+    // Financial save/cancel functions
 window.saveFinancial = function() {
-    App.pages.carsShow.saveFinancial();
+        if (App.pages.carsShow) {
+            App.pages.carsShow.saveFinancial()
+                .then(data => {
+                    if (data.success) {
+                        App.utils.showToast('Financial information saved successfully!', 'success');
+                        // Refresh the page to show updated financial info
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        App.utils.showToast('Error saving financial information', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    App.utils.showToast('An error occurred while saving financial information', 'error');
+                });
+        }
 };
 
 window.cancelFinancialEdit = function() {
-    App.pages.carsShow.cancelFinancialEdit();
-};
+        document.getElementById('financial-view-mode').classList.remove('hidden');
+        document.getElementById('financial-edit-mode').classList.add('hidden');
+    };
 
-// Images functions
-window.enableImagesEdit = function() {
-    App.pages.carsShow.enableImagesEdit();
-};
-
+    // Images save/cancel functions
 window.saveImages = function() {
-    App.pages.carsShow.saveImages();
+        if (App.pages.carsShow) {
+            App.pages.carsShow.saveImages()
+                .then(data => {
+                    if (data.success) {
+                        App.utils.showToast('Images saved successfully!', 'success');
+                        // Refresh the page to show updated images
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        App.utils.showToast('Error saving images', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    App.utils.showToast('An error occurred while saving images', 'error');
+                });
+        }
 };
 
 window.cancelImagesEdit = function() {
-    App.pages.carsShow.cancelImagesEdit();
-};
+        document.getElementById('images-view-mode').classList.remove('hidden');
+        document.getElementById('images-edit-mode').classList.add('hidden');
+        
+        // Clear file inputs
+        const fileInputs = document.querySelectorAll('#images-edit-mode input[type="file"]');
+        fileInputs.forEach(input => {
+            input.value = '';
+        });
+    };
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're on the cars show page
-    const carId = document.querySelector('[data-car-id]')?.getAttribute('data-car-id');
-    const updateUrl = document.querySelector('[data-update-url]')?.getAttribute('data-update-url');
+    // Event delegation for all buttons
+    document.addEventListener('click', function(e) {
+        // Handle data-action buttons
+        const actionBtn = e.target.closest('[data-action]');
+        if (actionBtn) {
+            const action = actionBtn.getAttribute('data-action');
+            switch (action) {
+                case 'add-option-field':
+                    window.addOptionField();
+                    break;
+                case 'remove-option':
+                    window.removeOption(actionBtn);
+                    break;
+                case 'save-options':
+                    window.saveOptions();
+                    break;
+                case 'cancel-options-edit':
+                    window.cancelOptionsEdit();
+                    break;
+                case 'save-inspection':
+                    window.saveInspection();
+                    break;
+                case 'cancel-inspection-edit':
+                    window.cancelInspectionEdit();
+                    break;
+                case 'save-financial':
+                    window.saveFinancial();
+                    break;
+                case 'cancel-financial-edit':
+                    window.cancelFinancialEdit();
+                    break;
+                case 'save-images':
+                    window.saveImages();
+                    break;
+                case 'cancel-images-edit':
+                    window.cancelImagesEdit();
+                    break;
+            }
+            return;
+        }
+
+        // Handle edit mode buttons
+        const editBtn = e.target.closest('#edit-btn');
+        if (editBtn && App.pages.carsShow) {
+            App.pages.carsShow.enableEditMode();
+            return;
+        }
+
+        const saveBtn = e.target.closest('#save-btn');
+        if (saveBtn && App.pages.carsShow) {
+            App.pages.carsShow.saveChanges();
+            return;
+        }
+
+        const cancelBtn = e.target.closest('#cancel-btn');
+        if (cancelBtn && App.pages.carsShow) {
+            App.pages.carsShow.cancelEdit();
+            return;
+        }
+    });
+
+        // Initialize if we have the required data
+    const carDataElement = document.getElementById('car-data');
+    
+    if (carDataElement) {
+        const carId = carDataElement.getAttribute('data-car-id');
+        const updateUrl = carDataElement.getAttribute('data-update-url');
+        const equipmentCostUrl = carDataElement.getAttribute('data-equipment-cost-url');
     
     if (carId && updateUrl) {
         App.pages.carsShow.init(carId, updateUrl);
+            // Set the equipment cost URL in the config
+            if (equipmentCostUrl) {
+                App.pages.carsShow.config.equipmentCostUrl = equipmentCostUrl;
     }
-}); 
+        }
+    } 

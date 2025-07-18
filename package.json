@@ -19,6 +19,7 @@
         "vite": "^6.2.4"
     },
     "dependencies": {
-        "@tailwindcss/postcss": "^4.1.11"
+        "@tailwindcss/postcss": "^4.1.11",
+        "pusher-js": "^8.4.0"
     }
 }

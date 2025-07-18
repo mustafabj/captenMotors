@@ -9,6 +9,9 @@
     <meta name="robots" content="follow, index" />
     <meta name="description" content="Capten Motors - Dashboard" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <meta name="user-id" content="{{ auth()->id() }}" />
+    <meta name="pusher-key" content="{{ config('broadcasting.connections.pusher.key') }}" />
+    <meta name="pusher-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster') }}" />
 
     <link rel="canonical" href="{{ url()->current() }}" />
     <link rel="icon" href="{{ asset('assets/media/app/favicon.ico') }}" type="image/x-icon" />
@@ -108,6 +111,7 @@
     <!-- Vendor JS -->
     <script src="{{ asset('assets/vendors/ktui/ktui.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/apexcharts/apexcharts.min.js') }}"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
     <!-- Custom Widgets and Layout -->
     <script src="{{ asset('assets/js/widgets/general.js') }}"></script>
@@ -121,6 +125,7 @@
     
     <!-- Common Components (Load Third) -->
     <script src="@versionedJs('components/modal.js')"></script>
+    <script src="@versionedJs('components/notifications.js')"></script>
     
     <!-- Page-specific Scripts (Load Last) -->
     @stack('scripts')
