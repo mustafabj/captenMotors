@@ -22,11 +22,14 @@
                                             </a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('cars.edit', $car) }}" class="kt-dropdown-menu-link">
-                                                <i class="ki-filled ki-pencil"></i>
-                                                Edit
-                                            </a>
+                                            <button type="button" class="kt-dropdown-menu-link w-full text-left"
+                                                    data-kt-modal-toggle="#addEquipmentModal"
+                                                    onclick="openAddEquipmentModal({{ $car->id }}, '{{ $car->model }}')">
+                                                <i class="ki-filled ki-plus"></i>
+                                                Add Equipment
+                                            </button>
                                         </li>
+                                        @if(auth()->user()->hasRole('admin'))
                                         <li>
                                             <form action="{{ route('cars.destroy', $car) }}" method="POST"
                                                 class="inline"
@@ -40,6 +43,7 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endif
                                     </ul>
                                 </div>
 
@@ -101,10 +105,16 @@
                                     <i class="ki-filled ki-key text-gray-400"></i>
                                     <span class="text-sm">{{ $car->number_of_keys ?? 0 }} keys</span>
                                 </div>
+                                @if(auth()->user()->hasRole('admin'))
                                 <div class="text-right">
                                     <div class="text-lg font-bold text-green-600">
                                         ${{ number_format($car->expected_sale_price, 2) }}</div>
                                 </div>
+                                @else
+                                <div class="text-right">
+                                    <span class="kt-badge {{ $status['class'] }}">{{ $status['text'] }}</span>
+                                </div>
+                                @endif
                             </div>
                         </div>
                         {{-- @if(!$car->isSold())
@@ -245,13 +255,6 @@
                                             </a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('cars.edit', $car) }}"
-                                                class="kt-dropdown-menu-link">
-                                                <i class="ki-filled ki-pencil"></i>
-                                                Edit
-                                            </a>
-                                        </li>
-                                        <li>
                                             <form action="{{ route('cars.destroy', $car) }}" method="POST"
                                                 class="inline"
                                                 onsubmit="return confirm('Are you sure you want to delete this car?')">
@@ -333,6 +336,81 @@
         </form>
     </div>
 </div>
+
+<!-- Add Equipment Cost Modal -->
+<div class="kt-modal" data-kt-modal="true" id="addEquipmentModal">
+    <div class="kt-modal-content max-w-[500px] top-[5%]">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title">Add Equipment Cost - <span id="equipmentCarModel"></span></h3>
+            <button type="button" class="kt-modal-close" aria-label="Close modal"
+                data-kt-modal-dismiss="#addEquipmentModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="kt-modal-body">
+            <form method="POST" id="addEquipmentForm">
+                @csrf
+                <div class="space-y-5">
+                    <!-- Date Field -->
+                    <div class="kt-form-item">
+                        <label for="equipment_cost_date" class="kt-form-label">
+                            Date <span class="text-red-500">*</span>
+                        </label>
+                        <div class="kt-form-control">
+                            <input type="date" name="cost_date" id="equipment_cost_date" required class="kt-input w-full">
+                            <div class="kt-form-message"></div>
+                        </div>
+                    </div>
+
+                    <!-- Description Field -->
+                    <div class="kt-form-item">
+                        <label for="equipment_description" class="kt-form-label">
+                            Description <span class="text-red-500">*</span>
+                        </label>
+                        <div class="kt-form-control">
+                            <textarea name="description" id="equipment_description" rows="4" required class="kt-textarea w-full"
+                                placeholder="e.g., Oil change, Tire replacement"></textarea>
+                            <div class="kt-form-message"></div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Field -->
+                    <div class="kt-form-item">
+                        <label for="equipment_cost_amount" class="kt-form-label">
+                            Amount <span class="text-red-500">*</span>
+                        </label>
+                        <div class="kt-form-control">
+                            <input type="number" name="amount" id="equipment_cost_amount" required min="0"
+                                step="0.01" class="kt-input w-full pl-8" placeholder="0.00">
+                            <div class="kt-form-message"></div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="kt-modal-footer">
+            <div></div>
+            <div class="flex gap-4">
+                <button class="kt-btn kt-btn-secondary" data-kt-modal-dismiss="#addEquipmentModal">
+                    Cancel
+                </button>
+                <button type="submit" class="kt-btn kt-btn-primary" form="addEquipmentForm" id="submitEquipmentBtn">
+                    <span class="submit-text">Add Cost</span>
+                    <span class="loading-text hidden">
+                        <i class="ki-duotone ki-spinner fs-2 rotate"></i>
+                        Adding...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function openSellModal(carId, carModel) {
     document.getElementById('sellCarId').value = carId;
@@ -346,5 +424,182 @@ function closeSellModal() {
 function togglePaymentFields() {
     var method = document.getElementById('payment_method').value;
     document.getElementById('separatedFields').classList.toggle('hidden', method !== 'separated');
+}
+
+// Add Equipment Modal Functions
+function openAddEquipmentModal(carId, carModel) {
+    document.getElementById('equipmentCarModel').textContent = carModel;
+    document.getElementById('addEquipmentForm').action = '/cars/' + carId + '/equipment-costs';
+    
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('equipment_cost_date').value = today;
+    
+    // Clear form
+    document.getElementById('addEquipmentForm').reset();
+    document.getElementById('equipment_cost_date').value = today;
+    
+    // Clear any previous errors
+    clearEquipmentFormErrors();
+    
+    // Use KtUI modal methods
+    const modal = document.getElementById('addEquipmentModal');
+    if (window.KTModal) {
+        const modalInstance = KTModal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.show();
+        }
+    }
+}
+
+// Handle equipment cost form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const equipmentForm = document.getElementById('addEquipmentForm');
+    if (equipmentForm) {
+        equipmentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitEquipmentBtn');
+            const submitText = submitBtn.querySelector('.submit-text');
+            const loadingText = submitBtn.querySelector('.loading-text');
+            
+            // Clear previous errors
+            clearEquipmentFormErrors();
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            loadingText.classList.remove('hidden');
+            
+            // Prepare form data
+            const formData = new FormData(equipmentForm);
+            
+            // Submit via AJAX
+            fetch(equipmentForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success - show toast and close modal
+                    showToast('Equipment cost added successfully!', 'success');
+                    
+                    // Close modal
+                    const modalEl = document.querySelector('#addEquipmentModal');
+                    const modal = KTModal.getInstance(modalEl);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Reset form
+                    equipmentForm.reset();
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('equipment_cost_date').value = today;
+                } else {
+                    // Show validation errors
+                    showEquipmentFormErrors(data.errors);
+                    showToast('Please correct the errors below.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while adding the cost.', 'error');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                loadingText.classList.add('hidden');
+            });
+        });
+    }
+});
+
+// Clear equipment form errors
+function clearEquipmentFormErrors() {
+    const form = document.getElementById('addEquipmentForm');
+    if (!form) return;
+    
+    const inputs = form.querySelectorAll('input, textarea');
+    const messages = form.querySelectorAll('.kt-form-message');
+    
+    inputs.forEach(input => {
+        input.removeAttribute('aria-invalid');
+        input.classList.remove('is-invalid');
+    });
+    
+    messages.forEach(message => {
+        message.innerHTML = '';
+        message.style.display = 'none';
+    });
+}
+
+// Show equipment form errors
+function showEquipmentFormErrors(errors) {
+    if (!errors || typeof errors !== 'object') {
+        console.warn('No errors object provided to showEquipmentFormErrors');
+        return;
+    }
+    
+    const form = document.getElementById('addEquipmentForm');
+    if (!form) {
+        console.warn('Equipment form not found');
+        return;
+    }
+    
+    Object.keys(errors).forEach(fieldName => {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        const messageDiv = field ? field.closest('.kt-form-control')?.querySelector('.kt-form-message') : null;
+        
+        if (field && messageDiv) {
+            // Add error styling to field
+            field.setAttribute('aria-invalid', 'true');
+            field.classList.add('is-invalid');
+            
+            // Show error message
+            messageDiv.innerHTML = `<div class="text-danger">${errors[fieldName][0]}</div>`;
+            messageDiv.style.display = 'block';
+        }
+    });
+}
+
+// Simple toast notification function
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white font-medium transition-all duration-300 transform translate-x-full`;
+    
+    // Set background color based on type
+    switch(type) {
+        case 'success':
+            toast.classList.add('bg-green-500');
+            break;
+        case 'error':
+            toast.classList.add('bg-red-500');
+            break;
+        default:
+            toast.classList.add('bg-blue-500');
+    }
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, 3000);
 }
 </script> 

@@ -141,6 +141,7 @@
                                 'agency' => ['class' => 'kt-badge-info', 'text' => 'Agency'],
                                 'polish' => ['class' => 'kt-badge-primary', 'text' => 'Polish'],
                                 'ready' => ['class' => 'kt-badge-success', 'text' => 'Ready'],
+                                'sold' => ['class' => 'kt-badge-danger', 'text' => 'Sold'],
                             ];
                             $status = $statusConfig[$car->status] ?? [
                                 'class' => 'kt-badge-secondary',
@@ -159,6 +160,7 @@
                     </div>
                 </div>
 
+                @if(auth()->user()->hasRole('admin'))
                 <!-- Price -->
                 <div class="flex flex-col items-end gap-1">
                     <div class="text-lg font-bold text-gray-900">
@@ -174,6 +176,16 @@
                         <span class="text-sm">{{ $car->number_of_keys }} keys</span>
                     </div>
                 </div>
+                @else
+                <!-- Car Status -->
+                <div class="flex flex-col items-end gap-1">
+                    <span class="kt-badge kt-badge-lg {{ $status['class'] }}">{{ $status['text'] }}</span>
+                    <div class="flex items-center gap-2">
+                        <i class="ki-filled ki-key text-gray-400"></i>
+                        <span class="text-sm">{{ $car->number_of_keys }} keys</span>
+                    </div>
+                </div>
+                @endif
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2" id="view-actions">
@@ -184,6 +196,7 @@
                         </button>
                         @if (!$car->isSold())
                             <button class="kt-btn kt-btn-sm kt-btn-success"
+                                data-kt-modal-toggle="#sellCarModal"
                                 onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
                                 <i class="ki-filled ki-dollar"></i> Mark as Sold
                             </button>
@@ -350,12 +363,13 @@
                                     <span class="text-gray-600 font-semibold block">Insurance Expiry</span>
                                     <input type="date" class="kt-input w-auto editable-field"
                                         name="insurance_expiry_date"
-                                        value="{{ $car->insurance_expiry_date->format('Y-m-d') }}"
-                                        data-original="{{ $car->insurance_expiry_date->format('Y-m-d') }}" readonly>
+                                        value="{{ $car->insurance_expiry_date ? $car->insurance_expiry_date->format('Y-m-d') : '' }}"
+                                        data-original="{{ $car->insurance_expiry_date ? $car->insurance_expiry_date->format('Y-m-d') : '' }}" readonly>
                                 </div>
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                                     <span class="text-gray-600 font-semibold block">Insurance Status</span>
                                     <div>
+                                        @if (isset($car->insurance_expiry_date))
                                         @php
                                             $daysUntilExpiry = (int) $car->insurance_expiry_date->diffInDays(
                                                 now(),
@@ -373,6 +387,11 @@
                                         @else
                                             <span class="kt-badge kt-badge-success kt-badge-outline">
                                                 Valid for {{ abs($daysUntilExpiry) }} days
+                                            </span>
+                                            @endif
+                                        @else
+                                            <span class="kt-badge kt-badge-success kt-badge-outline">
+                                                No insurance information available
                                             </span>
                                         @endif
                                     </div>
@@ -516,7 +535,7 @@
                                                 @if ($car->inspection->chassis_inspection)
                                                     <div class="py-2">
                                                         <span class="text-gray-600 block mb-2">Chassis Inspection</span>
-                                                        <div class="bg-gray-50 p-3 rounded border">
+                                                        <div class="bg-gray-50 p-3 rounded ">
                                                             {{ $car->inspection->chassis_inspection }}
                                                         </div>
                                                     </div>
@@ -620,6 +639,7 @@
                 <!-- Financial Tab -->
                 <div class="hidden" id="tab_1_4">
                     <div class="kt-card">
+                        @if(auth()->user()->hasRole('admin'))
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
                                 <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
@@ -693,6 +713,7 @@
                                     </button>
                                 </div>
                             </div>
+                            @endif
                             <div class="equipment mt-6">
                                 <div class="kt-card-header">
                                     <div class="flex justify-between items-center w-full">
@@ -705,7 +726,13 @@
                                     </div>
                                 </div>
                                 <div class="kt-card-content">
-                                    @if ($car->equipmentCosts->count() > 0)
+                                    @php
+                                        // Filter equipment costs based on user role
+                                        $equipmentCosts = auth()->user()->hasRole('admin') 
+                                            ? $car->equipmentCosts 
+                                            : $car->equipmentCosts->where('user_id', auth()->id());
+                                    @endphp
+                                    @if ($equipmentCosts->count() > 0)
                                         <div class="overflow-x-auto">
                                             <table class="w-full" id="equipment-costs-table">
                                                 <thead>
@@ -718,7 +745,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach ($car->equipmentCosts->sortByDesc('cost_date') as $cost)
+                                                    @foreach ($equipmentCosts->sortByDesc('cost_date') as $cost)
                                                         <tr class="border-b border-gray-200">
                                                             <td class="py-3 px-4">{{ $cost->description }}</td>
                                                             <td class="py-3 px-4 font-semibold">
@@ -742,7 +769,12 @@
                                         <div class="text-center py-12">
                                             <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
                                             <h4 class="text-lg font-bold text-gray-900 mb-2">No equipment costs</h4>
-                                            <p class="text-gray-600">No equipment costs have been recorded for this car.
+                                            <p class="text-gray-600">
+                                                @if(auth()->user()->hasRole('admin'))
+                                                    No equipment costs have been recorded for this car.
+                                                @else
+                                                    You haven't added any equipment costs for this car yet.
+                                                @endif
                                             </p>
                                         </div>
                                     @endif
@@ -1007,61 +1039,89 @@
     </div>
 
     <!-- Add data attributes for JavaScript initialization -->
-    <div id="car-data" data-car-id="{{ $car->id }}" data-update-url="{{ route('cars.update-inline', $car) }}"
+    <div id="car-data" data-car-id="{{ $car->id }}" data-update-url="{{ route('cars.update-inline', $car->id) }}"
         data-equipment-cost-url="{{ route('cars.add-equipment-cost', $car->id) }}" style="display: none;"></div>
 
+    @if(auth()->user()->hasRole('admin'))
     <!-- Sell Car Modal -->
-    <div id="sellCarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-            <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
-                onclick="closeSellModal()">&times;</button>
-            <h3 class="text-lg font-bold mb-4">Sell Car: <span id="sellCarModel"></span></h3>
-            <form id="sellCarForm" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" name="car_id" id="sellCarId">
-                <div class="mb-3">
-                    <label for="sale_price" class="kt-label">Sale Price *</label>
-                    <input type="number" name="sale_price" id="sale_price" class="kt-input w-full" required
-                        min="0" step="0.01">
+    <div class="kt-modal kt-modal-center" data-kt-modal="true" id="sellCarModal">
+        <div class="kt-modal-content max-w-[500px] max-h-[95%]">
+            <div class="kt-modal-header">
+                <h3 class="kt-modal-title">Sell Car: <span id="sellCarModel"></span></h3>
+                <button type="button" class="kt-modal-close" aria-label="Close modal" data-kt-modal-dismiss="#sellCarModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                         class="lucide lucide-x" aria-hidden="true">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="kt-modal-body">
+                <form id="sellCarForm" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="car_id" id="sellCarId">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="sale_price" class="kt-label">Sale Price *</label>
+                            <input type="number" name="sale_price" id="sale_price" class="kt-input w-full" required
+                                min="0" step="0.01">
+                        </div>
+                        <div>
+                            <label for="payment_method" class="kt-label">Payment Method *</label>
+                            <select name="payment_method" id="payment_method" class="kt-select w-full" required
+                                onchange="togglePaymentFields()">
+                                <option value="cash">Cash</option>
+                                <option value="check">Check</option>
+                                <option value="separated">Separated</option>
+                            </select>
+                        </div>
+                        <div class="hidden" id="separatedFields">
+                            <div>
+                                <label for="paid_amount" class="kt-label">Paid Amount</label>
+                                <input type="number" name="paid_amount" id="paid_amount" class="kt-input w-full" min="0"
+                                    step="0.01">
+                            </div>
+                            <div class="mt-3">
+                                <label for="remaining_amount" class="kt-label">Remaining Amount</label>
+                                <input type="number" name="remaining_amount" id="remaining_amount" class="kt-input w-full"
+                                    min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="attachment" class="kt-label">Attachment</label>
+                            <input type="file" name="attachment" id="attachment" class="kt-input w-full">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="kt-modal-footer">
+                <div class="flex gap-4">
+                    <button class="kt-btn kt-btn-secondary" data-kt-modal-dismiss="#sellCarModal">
+                        Cancel
+                    </button>
+                    <button type="submit" form="sellCarForm" class="kt-btn kt-btn-primary">
+                        Confirm Sale
+                    </button>
                 </div>
-                <div class="mb-3">
-                    <label for="payment_method" class="kt-label">Payment Method *</label>
-                    <select name="payment_method" id="payment_method" class="kt-select w-full" required
-                        onchange="togglePaymentFields()">
-                        <option value="cash">Cash</option>
-                        <option value="check">Check</option>
-                        <option value="separated">Separated</option>
-                    </select>
-                </div>
-                <div class="mb-3 hidden" id="separatedFields">
-                    <label for="paid_amount" class="kt-label">Paid Amount</label>
-                    <input type="number" name="paid_amount" id="paid_amount" class="kt-input w-full" min="0"
-                        step="0.01">
-                    <label for="remaining_amount" class="kt-label mt-2">Remaining Amount</label>
-                    <input type="number" name="remaining_amount" id="remaining_amount" class="kt-input w-full"
-                        min="0" step="0.01">
-                </div>
-                <div class="mb-3">
-                    <label for="attachment" class="kt-label">Attachment</label>
-                    <input type="file" name="attachment" id="attachment" class="kt-input w-full">
-                </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" class="kt-btn kt-btn-outline" onclick="closeSellModal()">Cancel</button>
-                    <button type="submit" class="kt-btn kt-btn-primary">Confirm Sale</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
+    @endif
     <script>
         function openSellModal(carId, carModel) {
             document.getElementById('sellCarId').value = carId;
             document.getElementById('sellCarModel').textContent = carModel;
             document.getElementById('sellCarForm').action = '/cars/' + carId + '/sell';
-            document.getElementById('sellCarModal').classList.remove('hidden');
-        }
-
-        function closeSellModal() {
-            document.getElementById('sellCarModal').classList.add('hidden');
+            
+            // Use KtUI modal methods
+            const modal = document.getElementById('sellCarModal');
+            if (window.KTModal) {
+                const modalInstance = KTModal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.show();
+                }
+            }
         }
 
         function togglePaymentFields() {

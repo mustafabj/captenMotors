@@ -18,21 +18,27 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
-        $edit = Permission::create(['name' => 'edit']);
-        $delete = Permission::create(['name' => 'delete']);
-        $view = Permission::create(['name' => 'view']);
-        // Create roles and assign created permissions
-        $adminRole = Role::create(['name' => 'admin']);
-        $adminRole->givePermissionTo([$edit, $delete, $view]);
+        // Create permissions (use firstOrCreate to avoid duplicates)
+        $edit = Permission::firstOrCreate(['name' => 'edit']);
+        $delete = Permission::firstOrCreate(['name' => 'delete']);
+        $view = Permission::firstOrCreate(['name' => 'view']);
 
-        $userRole = Role::create(['name' => 'user']);
-        $userRole->givePermissionTo($view);
+        // Create roles and assign created permissions (use firstOrCreate to avoid duplicates)
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->syncPermissions([$edit, $delete, $view]);
+
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $userRole->syncPermissions([$view]);
 
         // Assign role to a user (example user ID 1)
-        $user = User::find(1);
+        $user = User::find(2);
         if ($user) {
             $user->assignRole('admin');
+            $this->command->info("Admin role assigned to user: {$user->email}");
+        } else {
+            $this->command->warn("User with ID 1 not found. Please assign admin role manually.");
         }
+
+        $this->command->info('Roles and permissions seeded successfully!');
     }
 }

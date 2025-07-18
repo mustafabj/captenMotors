@@ -156,18 +156,7 @@
                             </li>
                         </ul>
                         <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
-                            <div class="flex items-center gap-2 justify-between">
-                                <span class="flex items-center gap-2">
-                                    <i class="ki-filled ki-moon text-base text-muted-foreground">
-                                    </i>
-                                    <span class="font-medium text-2sm">
-                                        Dark Mode
-                                    </span>
-                                </span>
-                                <input class="kt-switch" data-kt-theme-switch-state="dark"
-                                    data-kt-theme-switch-toggle="true" name="check" type="checkbox"
-                                    value="1" />
-                            </div>
+                            
                             <a class="kt-btn kt-btn-outline justify-center w-full"
                                 href="html/demo1/authentication/classic/sign-in.html">
                                 Log out

@@ -20,8 +20,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        // Seed cars with their options and inspections
+        // Seed roles and permissions first
         $this->call([
+            RolesAndPermissionsSeeder::class,
             BulkDealSeeder::class,
             CarSeeder::class,
         ]);

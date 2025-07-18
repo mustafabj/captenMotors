@@ -147,16 +147,43 @@ class CarController extends Controller
                     ]);
                 }
 
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Car created successfully!',
+                        'redirect' => route('cars.show', $car)
+                    ]);
+                }
+
                 return redirect()->route('cars.show', $car)->with('success', 'Car created successfully!');
             });
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Car creation error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while creating the car: ' . $e->getMessage()
+                ], 500);
+            }
             return redirect()->back()
-                ->withErrors(['general' => 'An error occurred while creating the car. Please try again.'])
+                ->withErrors(['general' => 'An error occurred while creating the car: ' . $e->getMessage()])
                 ->withInput();
         }
     }
@@ -269,16 +296,43 @@ class CarController extends Controller
                     );
                 }
 
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Car updated successfully!',
+                        'redirect' => route('cars.show', $car)
+                    ]);
+                }
+
                 return redirect()->route('cars.show', $car)->with('success', 'Car updated successfully!');
             });
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Car update error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the car: ' . $e->getMessage()
+                ], 500);
+            }
             return redirect()->back()
-                ->withErrors(['general' => 'An error occurred while updating the car. Please try again.'])
+                ->withErrors(['general' => 'An error occurred while updating the car: ' . $e->getMessage()])
                 ->withInput();
         }
     }
@@ -298,21 +352,21 @@ class CarController extends Controller
      */
     public function addEquipmentCost(Request $request, $id)
     {
-        $car = Car::findOrFail($id);
-        
-        $validated = $request->validate([
-            'description' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'cost_date' => 'required|date'
-        ]);
-
         try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'description' => 'required|string|max:255',
+                'amount' => 'required|numeric|min:0',
+                'cost_date' => 'required|date'
+            ]);
+
             // Add the authenticated user's ID to the validated data
             $validated['user_id'] = \Illuminate\Support\Facades\Auth::id();
             
             // Set status based on user role
             $user = \Illuminate\Support\Facades\Auth::user();
-            if ($user->isAdmin()) {
+            if ($user->hasRole('admin')) {
                 $validated['status'] = 'approved'; // Admin can approve immediately
             } else {
                 $validated['status'] = 'pending'; // Regular users need approval
@@ -322,14 +376,14 @@ class CarController extends Controller
             $cost->load('user');
 
             // If user is not admin, create notifications for all admins
-            if (!$user->isAdmin()) {
+            if (!$user->hasRole('admin')) {
                 $this->createApprovalNotifications($car, $cost, $user);
             }
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => $user->isAdmin() ? 'Equipment cost added successfully!' : 'Equipment cost request submitted and pending approval!',
+                    'message' => $user->hasRole('admin') ? 'Equipment cost added successfully!' : 'Equipment cost request submitted and pending approval!',
                     'cost' => [
                         'description' => $cost->description,
                         'amount' => $cost->amount,
@@ -341,9 +395,26 @@ class CarController extends Controller
             }
 
             return redirect()->route('cars.show', $car)->with('success', 
-                $user->isAdmin() ? 'Equipment cost added successfully!' : 'Equipment cost request submitted and pending approval!'
+                $user->hasRole('admin') ? 'Equipment cost added successfully!' : 'Equipment cost request submitted and pending approval!'
             );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Equipment cost creation error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -483,16 +554,23 @@ class CarController extends Controller
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Car inline update error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'car_id' => $id
+            ]);
+            
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'An error occurred while updating the car. Please try again.',
-                    'errors' => ['general' => ['An error occurred while updating the car.']]
+                    'success' => false, 
+                    'message' => 'An error occurred while updating the car: ' . $e->getMessage(),
+                    'errors' => ['general' => ['An error occurred while updating the car: ' . $e->getMessage()]]
                 ], 500);
             }
 
             return redirect()->back()
-                ->withErrors(['general' => 'An error occurred while updating the car. Please try again.'])
+                ->withErrors(['general' => 'An error occurred while updating the car: ' . $e->getMessage()])
                 ->withInput();
         }
     }
@@ -506,18 +584,16 @@ class CarController extends Controller
             $car = Car::findOrFail($id);
             
             $validated = $request->validate([
-                'options' => 'nullable|string',
+                'options' => 'nullable|array',
+                'options.*' => 'nullable|string',
             ]);
 
             return DB::transaction(function () use ($validated, $request, $car) {
                 // Delete existing options
                 $car->options()->delete();
 
-                // Parse options from JSON string
-                $options = [];
-                if (!empty($validated['options'])) {
-                    $options = json_decode($validated['options'], true) ?? [];
-                }
+                // Get options array directly
+                $options = $validated['options'] ?? [];
 
                 // Add new options
                 if (!empty($options)) {
@@ -552,16 +628,23 @@ class CarController extends Controller
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Car options update error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'car_id' => $id
+            ]);
+            
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'An error occurred while updating the options. Please try again.',
-                    'errors' => ['general' => ['An error occurred while updating the options.']]
+                    'message' => 'An error occurred while updating the options: ' . $e->getMessage(),
+                    'errors' => ['general' => ['An error occurred while updating the options: ' . $e->getMessage()]]
                 ], 500);
             }
 
             return redirect()->back()
-                ->withErrors(['general' => 'An error occurred while updating the options. Please try again.'])
+                ->withErrors(['general' => 'An error occurred while updating the options: ' . $e->getMessage()])
                 ->withInput();
         }
     }
@@ -612,16 +695,23 @@ class CarController extends Controller
                 ->withErrors($e->validator)
                 ->withInput();
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Car inspection update error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'car_id' => $id
+            ]);
+            
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'An error occurred while updating the inspection. Please try again.',
-                    'errors' => ['general' => ['An error occurred while updating the inspection.']]
+                    'message' => 'An error occurred while updating the inspection: ' . $e->getMessage(),
+                    'errors' => ['general' => ['An error occurred while updating the inspection: ' . $e->getMessage()]]
                 ], 500);
             }
 
             return redirect()->back()
-                ->withErrors(['general' => 'An error occurred while updating the inspection. Please try again.'])
+                ->withErrors(['general' => 'An error occurred while updating the inspection: ' . $e->getMessage()])
                 ->withInput();
         }
     }
