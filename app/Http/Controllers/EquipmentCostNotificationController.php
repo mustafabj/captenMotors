@@ -10,31 +10,14 @@ use Illuminate\Support\Facades\Auth;
 
 class EquipmentCostNotificationController extends Controller
 {
+
     /**
-     * Get equipment cost notifications for the authenticated user
+     * Get equipment cost notifications for the authenticated user (admin approval interface)
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $notifications = $user->equipmentCostNotifications()
-            ->with(['car', 'carEquipmentCost', 'requestedByUser'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'notifications' => $notifications->items(),
-                'unread_count' => $user->unreadEquipmentCostNotifications()->count(),
-                'pagination' => [
-                    'current_page' => $notifications->currentPage(),
-                    'last_page' => $notifications->lastPage(),
-                    'per_page' => $notifications->perPage(),
-                    'total' => $notifications->total()
-                ]
-            ]);
-        }
-
-        return view('equipment-cost-notifications.index', compact('notifications'));
+        // This will be handled by the view logic with filters
+        return view('equipment-cost-notifications.index');
     }
 
     /**

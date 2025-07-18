@@ -16,6 +16,12 @@ class OtherCostController extends Controller
     {
         $query = OtherCost::with(['car', 'user']);
         
+        // Filter by user role - non-admins can only see their own costs
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
+            $query->where('user_id', $user->id);
+        }
+        
         // Search by description or car model
         if ($request->filled('search')) {
             $search = $request->get('search');

@@ -3,9 +3,9 @@
 @section('content')
 <div class="kt-card">
     <div class="kt-card-header">
-        <div class="kt-card-title">
+        {{-- <div class="kt-card-title">
             <h3 class="text-lg font-semibold">Add Other Cost</h3>
-        </div>
+        </div> --}}
         <div class="kt-card-toolbar">
             <a href="{{ route('other-costs.index') }}" class="kt-btn kt-btn-outline">
                 <i class="ki-filled ki-arrow-left"></i>

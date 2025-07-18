@@ -40,11 +40,13 @@
                             @endfor
                         </select>
 
+                        @if(auth()->user()->hasRole('admin'))
                         <!-- Add Car Button -->
                         <a href="{{ route('cars.create') }}" class="kt-btn kt-btn-primary">
                             <i class="ki-filled ki-plus"></i>
                             Add Car
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>

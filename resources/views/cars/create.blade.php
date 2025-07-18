@@ -4,12 +4,29 @@
     <!-- FilePond CSS and JS -->
     <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
-    <link href="{{ asset('css/pages/cars-form.css') }}" rel="stylesheet" />
     
     <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
     <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
     <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+    @if ($errors->any())
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="ki-filled ki-information-5 text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
 
     <form action="{{ route('cars.store') }}" method="POST" id="car-form" enctype="multipart/form-data" 
           data-validate-url="{{ route('cars.validate-step') }}">
@@ -46,8 +63,11 @@
                 <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-outline">
                     Cancel
                 </a>
-                <button type="submit" class="kt-btn kt-btn-primary ml-2">
+                <button type="submit" class="kt-btn kt-btn-primary ml-2" id="submit-btn">
                     Create Car
+                </button>
+                <button type="button" class="kt-btn kt-btn-secondary ml-2" id="submit-normal-btn" style="display: none;">
+                    Submit (Fallback)
                 </button>
             </div>
         </div>

@@ -136,6 +136,16 @@ App.pages.carsForm = {
 
         // Form submission
         this._form.addEventListener('submit', (e) => this._handleFormSubmit(e));
+        
+        // Fallback submit button
+        const fallbackBtn = document.getElementById('submit-normal-btn');
+        if (fallbackBtn) {
+            fallbackBtn.addEventListener('click', () => {
+                // Disable AJAX and submit normally
+                this._form.removeEventListener('submit', this._handleFormSubmit);
+                this._form.submit();
+            });
+        }
 
         // Step indicator clicks
         document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
@@ -887,28 +897,67 @@ App.pages.carsForm = {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => {
+                .then(async response => {
                     if (response.redirected) {
                         window.location.href = response.url;
-                    } else if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Form submission failed');
+                        return;
                     }
-                })
-                .then(data => {
-                    if (data && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else if (data && data.success) {
-                        this._showNotification('Car saved successfully!', 'success');
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else if (data.success) {
+                            this._showNotification('Car saved successfully!', 'success');
+                        }
+                    } else {
+                        // Handle validation errors
+                        if (response.status === 422 && data.errors) {
+                            this._displayValidationErrors(data.errors);
+                            this._showNotification('Please correct the validation errors.', 'error');
+                        } else {
+                            this._showNotification(data.message || 'Error saving car. Please try again.', 'error');
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Form submission error:', error);
-                    this._showNotification('Error saving car. Please try again.', 'error');
+                    this._showNotification('Network error. You can try the fallback submit button below.', 'error');
+                    
+                    // Show fallback button
+                    const fallbackBtn = document.getElementById('submit-normal-btn');
+                    if (fallbackBtn) {
+                        fallbackBtn.style.display = 'inline-block';
+                    }
                 });
             } else {
                 this._showNotification('Please correct all errors before submitting', 'error');
+            }
+        });
+    },
+
+    // Display validation errors in the form
+    _displayValidationErrors: function(errors) {
+        // Clear existing error displays
+        this._form.querySelectorAll('.error-message').forEach(el => el.remove());
+        this._form.querySelectorAll('.kt-input, .kt-select, .kt-textarea').forEach(el => {
+            el.classList.remove('border-red-500');
+        });
+
+        // Display each error
+        Object.keys(errors).forEach(fieldName => {
+            const field = this._form.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.classList.add('border-red-500');
+                
+                // Create error message element
+                const errorEl = document.createElement('p');
+                errorEl.className = 'error-message text-red-500 text-sm mt-1';
+                errorEl.textContent = errors[fieldName][0]; // First error message
+                
+                // Insert after the field
+                field.parentNode.insertBefore(errorEl, field.nextSibling);
             }
         });
     },

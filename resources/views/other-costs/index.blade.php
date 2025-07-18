@@ -6,12 +6,14 @@
         <div class="kt-card-title">
             <h3 class="text-lg font-semibold">Other Costs</h3>
         </div>
-        <div class="kt-card-toolbar">
+        {{-- <div class="kt-card-toolbar">
+            @if(auth()->user()->hasRole('admin'))
             <a href="{{ route('other-costs.create') }}" class="kt-btn kt-btn-primary">
                 <i class="ki-filled ki-plus"></i>
                 Add Other Cost
             </a>
-        </div>
+            @endif
+        </div> --}}
     </div>
     <div class="kt-card-body">
         <!-- Search Form -->
@@ -84,6 +86,7 @@
                                        title="View">
                                         <i class="ki-filled ki-eye"></i>
                                     </a>
+                                    @if(auth()->user()->hasRole('admin'))
                                     <a href="{{ route('other-costs.edit', $cost) }}" 
                                        class="kt-btn kt-btn-sm kt-btn-icon kt-btn-outline" 
                                        title="Edit">
@@ -94,6 +97,7 @@
                                             title="Delete">
                                         <i class="ki-filled ki-trash"></i>
                                     </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -102,9 +106,9 @@
                             <td colspan="7" class="text-center kt-py-8 kt-text-gray-500">
                                 <i class="ki-filled ki-information-5 kt-text-4xl kt-mb-4 kt-block"></i>
                                 <p>No other costs found.</p>
-                                <a href="{{ route('other-costs.create') }}" class="kt-btn kt-btn-sm kt-btn-primary kt-mt-2">
+                                {{-- <a href="{{ route('other-costs.create') }}" class="kt-btn kt-btn-sm kt-btn-primary kt-mt-2">
                                     Add Your First Cost
-                                </a>
+                                </a> --}}
                             </td>
                         </tr>
                     @endforelse
