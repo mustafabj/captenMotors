@@ -17,9 +17,11 @@ return array (
     'js/utils/validation.js' => '2.0.0',
     'js/config/loader.js' => '2.0.0',
     'js/config/version.js' => '2.0.0',
+    'js/guest.js' => '2.0.0',
     'css/app.css' => '2.0.0',
+    'css/guest.css' => '2.0.0',
     'assets/css/styles.css' => '2.0.0',
   ),
-      'development_mode' => env('ASSET_DEVELOPMENT_MODE', false),
+  'development_mode' => env('ASSET_DEVELOPMENT_MODE', false),
   'strategy' => 'version',
 );
