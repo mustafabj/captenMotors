@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect requests to /public if not already in /public
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+
+    # Redirect all other requests to Laravel's index.php
+    RewriteCond %{REQUEST_URI} !public/
+    RewriteRule ^(.*)$ public/index.php [L]
+</IfModule>
