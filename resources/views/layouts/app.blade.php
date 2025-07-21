@@ -26,7 +26,9 @@
     <link href="@versioned('assets/vendors/apexcharts/apexcharts.css')" rel="stylesheet" />
     <link href="@versioned('assets/vendors/keenicons/styles.bundle.css')" rel="stylesheet" />
 
-    <!-- Main CSS -->
+    <!-- Vite CSS (load first for custom classes) -->
+    
+    <!-- Main CSS (load after to override) -->
     <link href="@versioned('assets/css/styles.css')" rel="stylesheet" />
     <link href="@versioned('css/pages/cars-form.css')" rel="stylesheet" />
 

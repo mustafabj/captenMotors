@@ -27,7 +27,7 @@ use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('index');
-})->middleware(['auth', 'verified'])->name('home');
+})->middleware(['auth', 'verified'])->name('index');
 
 
 Route::middleware('auth')->group(function () {

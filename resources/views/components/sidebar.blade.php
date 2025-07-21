@@ -3,11 +3,11 @@
        data-kt-drawer="true" data-kt-drawer-class="kt-drawer kt-drawer-start top-0 bottom-0" id="sidebar">
        <div class="kt-sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0"
            id="sidebar_header">
-           <a class="dark:hidden" href="{{ route('home') }}">
+           <a class="dark:hidden" href="{{ route('index') }}">
                <img class="default-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/default-logo.svg') }}" />
                <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
            </a>
-           <a class="hidden dark:block" href="{{ route('home') }}">
+           <a class="hidden dark:block" href="{{ route('index') }}">
                <img class="default-logo min-h-[22px] max-w-none"
                    src="{{ asset('assets/media/app/default-logo-dark.svg') }}" />
                <img class="small-logo min-h-[22px] max-w-none" src="{{ asset('assets/media/app/mini-logo.svg') }}" />
@@ -54,7 +54,7 @@
                            class="kt-menu-accordion show gap-1 ps-[10px] relative before:absolute before:start-[20px] before:top-0 before:bottom-0 before:border-s before:border-border">
                            <div class="kt-menu-item {{ request()->is('/') ? 'active' : '' }}">
                                <a class="kt-menu-link border border-transparent items-center grow kt-menu-item-active:bg-accent/60 dark:menu-item-active:border-border kt-menu-item-active:rounded-lg hover:bg-accent/60 hover:rounded-lg gap-[14px] ps-[10px] pe-[10px] py-[8px]"
-                                   href="{{ route('home') }}" tabindex="0">
+                                   href="{{ route('index') }}" tabindex="0">
                                    <span
                                        class="kt-menu-bullet flex w-[6px] -start-[3px] rtl:start-0 relative before:absolute before:top-0 before:size-[6px] before:rounded-full rtl:before:translate-x-1/2 before:-translate-y-1/2 kt-menu-item-active:before:bg-primary kt-menu-item-hover:before:bg-primary">
                                    </span>
