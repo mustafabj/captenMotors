@@ -156,11 +156,12 @@
                             </li>
                         </ul>
                         <div class="px-2.5 pt-1.5 mb-2.5 flex flex-col gap-3.5">
-                            
-                            <a class="kt-btn kt-btn-outline justify-center w-full"
-                                href="html/demo1/authentication/classic/sign-in.html">
-                                Log out
-                            </a>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="kt-btn kt-btn-outline justify-center w-full">
+                                    Log out
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
