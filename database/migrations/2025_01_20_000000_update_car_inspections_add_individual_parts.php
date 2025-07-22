@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('car_inspections', function (Blueprint $table) {
             // Remove the single chassis inspection field
-            $table->dropColumn('chassis_inspection');
+            // $table->dropColumn('chassis_inspection');
             
             // Add individual fields for each car part
             $table->enum('hood', ['clean_and_free_of_filler', 'painted', 'fully_repainted'])->default('clean_and_free_of_filler')->after('car_id');
