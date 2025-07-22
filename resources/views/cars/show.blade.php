@@ -522,6 +522,12 @@
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
                                 <h4 class="text-lg font-bold mb-6">Inspection Details</h4>
+                                @if($car->inspection)
+                                    <a href="{{ route('cars.inspection-report', $car) }}" target="_blank" class="kt-btn kt-btn-primary">
+                                        <i class="ki-filled ki-printer fs-2"></i>
+                                        Print Report
+                                    </a>
+                                @endif
                             </div>
                         </div>
                         <div class="kt-card-content">
@@ -532,18 +538,38 @@
                                         <div>
                                             <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
                                             <div class="space-y-3">
-                                                @if ($car->inspection->chassis_inspection)
-                                                    <div class="py-2">
-                                                        <span class="text-gray-600 block mb-2">Chassis Inspection</span>
-                                                        <div class="bg-gray-50 p-3 rounded ">
-                                                            {{ $car->inspection->chassis_inspection }}
-                                                        </div>
+                                                @php
+                                                    $inspectionOptions = [
+                                                        'clean_and_free_of_filler' => 'Clean and free of filler',
+                                                        'painted' => 'Painted',
+                                                        'fully_repainted' => 'Fully repainted'
+                                                    ];
+                                                    $carParts = [
+                                                        'hood' => 'Hood',
+                                                        'front_right_fender' => 'Front Right Fender',
+                                                        'front_left_fender' => 'Front Left Fender',
+                                                        'rear_right_fender' => 'Rear Right Fender',
+                                                        'rear_left_fender' => 'Rear Left Fender',
+                                                        'trunk_door' => 'Trunk Door',
+                                                        'front_right_door' => 'Front Right Door',
+                                                        'rear_right_door' => 'Rear Right Door',
+                                                        'front_left_door' => 'Front Left Door',
+                                                        'rear_left_door' => 'Rear Left Door'
+                                                    ];
+                                                @endphp
+                                                
+                                                @foreach($carParts as $partKey => $partName)
+                                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                                        <span class="text-gray-600">{{ $partName }}</span>
+                                                        <span class="text-gray-800">
+                                                            @if($car->inspection->$partKey)
+                                                                {{ $inspectionOptions[$car->inspection->$partKey] ?? $car->inspection->$partKey }}
+                                                            @else
+                                                                Not specified
+                                                            @endif
+                                                        </span>
                                                     </div>
-                                                @else
-                                                    <div class="py-2 text-gray-500 italic">
-                                                        No chassis inspection data available
-                                                    </div>
-                                                @endif
+                                                @endforeach
                                             </div>
                                         </div>
                                         <div>
@@ -587,11 +613,38 @@
                                     <div>
                                         <h5 class="text-md font-semibold mb-4">Chassis Inspection</h5>
                                         <div class="space-y-3">
-                                            <div class="kt-form-item">
-                                                <label class="kt-form-label">Chassis Inspection Notes</label>
-                                                <textarea class="kt-textarea w-full inspection-field" name="chassis_inspection" rows="4"
-                                                    placeholder="Enter chassis inspection details">{{ $car->inspection->chassis_inspection ?? '' }}</textarea>
-                                            </div>
+                                            @php
+                                                $inspectionOptions = [
+                                                    'clean_and_free_of_filler' => 'Clean and free of filler',
+                                                    'painted' => 'Painted',
+                                                    'fully_repainted' => 'Fully repainted'
+                                                ];
+                                                $carParts = [
+                                                    'hood' => 'Hood',
+                                                    'front_right_fender' => 'Front Right Fender',
+                                                    'front_left_fender' => 'Front Left Fender',
+                                                    'rear_right_fender' => 'Rear Right Fender',
+                                                    'rear_left_fender' => 'Rear Left Fender',
+                                                    'trunk_door' => 'Trunk Door',
+                                                    'front_right_door' => 'Front Right Door',
+                                                    'rear_right_door' => 'Rear Right Door',
+                                                    'front_left_door' => 'Front Left Door',
+                                                    'rear_left_door' => 'Rear Left Door'
+                                                ];
+                                            @endphp
+                                            
+                                            @foreach($carParts as $partKey => $partName)
+                                                <div class="kt-form-item">
+                                                    <label class="kt-form-label">{{ $partName }}</label>
+                                                    <select class="kt-select w-full inspection-field" name="{{ $partKey }}">
+                                                        @foreach($inspectionOptions as $optionKey => $optionName)
+                                                            <option value="{{ $optionKey }}" {{ ($car->inspection->$partKey ?? 'clean_and_free_of_filler') == $optionKey ? 'selected' : '' }}>
+                                                                {{ $optionName }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
                                     <div>

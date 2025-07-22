@@ -443,11 +443,38 @@
                         <h3 class="text-lg font-semibold">Chassis Inspection</h3>
                     </div>
                     <div class="kt-card-content p-6 space-y-4">
-                        <div>
-                            <label for="chassis_inspection" class="block text-sm font-medium text-gray-700 mb-2">Chassis Inspection</label>
-                            <textarea name="chassis_inspection" id="chassis_inspection" class="kt-textarea w-full h-32"
-                                placeholder="Enter comprehensive chassis inspection notes including front, rear, left, and right sides">{{ old('chassis_inspection') }}</textarea>
-                        </div>
+                        @php
+                            $inspectionOptions = [
+                                'clean_and_free_of_filler' => 'Clean and free of filler',
+                                'painted' => 'Painted',
+                                'fully_repainted' => 'Fully repainted'
+                            ];
+                            $carParts = [
+                                'hood' => 'Hood',
+                                'front_right_fender' => 'Front Right Fender',
+                                'front_left_fender' => 'Front Left Fender',
+                                'rear_right_fender' => 'Rear Right Fender',
+                                'rear_left_fender' => 'Rear Left Fender',
+                                'trunk_door' => 'Trunk Door',
+                                'front_right_door' => 'Front Right Door',
+                                'rear_right_door' => 'Rear Right Door',
+                                'front_left_door' => 'Front Left Door',
+                                'rear_left_door' => 'Rear Left Door'
+                            ];
+                        @endphp
+                        
+                        @foreach($carParts as $partKey => $partName)
+                            <div>
+                                <label for="{{ $partKey }}" class="block text-sm font-medium text-gray-700 mb-2">{{ $partName }}</label>
+                                <select name="{{ $partKey }}" id="{{ $partKey }}" class="kt-select w-full">
+                                    @foreach($inspectionOptions as $optionKey => $optionName)
+                                        <option value="{{ $optionKey }}" {{ old($partKey, 'clean_and_free_of_filler') == $optionKey ? 'selected' : '' }}>
+                                            {{ $optionName }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 

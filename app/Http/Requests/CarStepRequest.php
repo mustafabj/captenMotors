@@ -54,7 +54,16 @@ class CarStepRequest extends FormRequest
                 break;
             case 5:
                 $rules = [
-                    'chassis_inspection' => ['nullable', 'string'],
+                    'hood' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'front_right_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'front_left_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'rear_right_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'rear_left_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'trunk_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'front_right_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'rear_right_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'front_left_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
+                    'rear_left_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
                     'transmission' => ['nullable', 'string', 'max:255'],
                     'motor' => ['nullable', 'string', 'max:255'],
                     'body_notes' => ['nullable', 'string'],

@@ -75,6 +75,8 @@ class CarController extends Controller
         try {
             $validated = $request->validate([
                 'model' => 'required|string|max:255',
+                'color' => 'nullable|string|max:100',
+                'odometer' => 'nullable|integer|min:0',
                 'vehicle_category' => 'nullable|string|max:255',
                 'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
                 'place_of_manufacture' => 'nullable|string|max:255',
@@ -89,7 +91,16 @@ class CarController extends Controller
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
                 'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'chassis_inspection' => 'nullable|string',
+                'hood' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'trunk_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
@@ -138,13 +149,20 @@ class CarController extends Controller
                 }
 
                 // Handle inspection data
-                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor')) {
-                    $car->inspection()->create([
-                        'chassis_inspection' => $request->chassis_inspection,
-                        'transmission' => $request->transmission,
-                        'motor' => $request->motor,
-                        'body_notes' => $request->body_notes,
-                    ]);
+                $inspectionData = [
+                    'transmission' => $request->transmission,
+                    'motor' => $request->motor,
+                    'body_notes' => $request->body_notes,
+                ];
+
+                // Add car part inspection fields
+                $carParts = ['hood', 'front_right_fender', 'front_left_fender', 'rear_right_fender', 'rear_left_fender', 'trunk_door', 'front_right_door', 'rear_right_door', 'front_left_door', 'rear_left_door'];
+                foreach ($carParts as $part) {
+                    $inspectionData[$part] = $request->input($part, 'clean_and_free_of_filler');
+                }
+
+                if ($request->filled('transmission') || $request->filled('motor') || $request->filled('body_notes') || $request->hasAny($carParts)) {
+                    $car->inspection()->create($inspectionData);
                 }
 
                 if ($request->wantsJson() || $request->ajax()) {
@@ -217,6 +235,8 @@ class CarController extends Controller
         try {
             $validated = $request->validate([
                 'model' => 'required|string|max:255',
+                'color' => 'nullable|string|max:100',
+                'odometer' => 'nullable|integer|min:0',
                 'vehicle_category' => 'nullable|string|max:255',
                 'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
                 'place_of_manufacture' => 'nullable|string|max:255',
@@ -231,7 +251,16 @@ class CarController extends Controller
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
                 'car_license' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'car_images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'chassis_inspection' => 'nullable|string',
+                'hood' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'trunk_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
@@ -284,15 +313,22 @@ class CarController extends Controller
                 }
 
                 // Update inspection data
-                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor')) {
+                $inspectionData = [
+                    'transmission' => $request->transmission,
+                    'motor' => $request->motor,
+                    'body_notes' => $request->body_notes,
+                ];
+
+                // Add car part inspection fields
+                $carParts = ['hood', 'front_right_fender', 'front_left_fender', 'rear_right_fender', 'rear_left_fender', 'trunk_door', 'front_right_door', 'rear_right_door', 'front_left_door', 'rear_left_door'];
+                foreach ($carParts as $part) {
+                    $inspectionData[$part] = $request->input($part, 'clean_and_free_of_filler');
+                }
+
+                if ($request->filled('transmission') || $request->filled('motor') || $request->filled('body_notes') || $request->hasAny($carParts)) {
                     $car->inspection()->updateOrCreate(
                         ['car_id' => $car->id],
-                        [
-                            'chassis_inspection' => $request->chassis_inspection,
-                            'transmission' => $request->transmission,
-                            'motor' => $request->motor,
-                            'body_notes' => $request->body_notes,
-                        ]
+                        $inspectionData
                     );
                 }
 
@@ -658,7 +694,16 @@ class CarController extends Controller
             $car = Car::findOrFail($id);
             
             $validated = $request->validate([
-                'chassis_inspection' => 'nullable|string',
+                'hood' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'trunk_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
@@ -871,5 +916,15 @@ class CarController extends Controller
                 ->withErrors(['general' => 'An error occurred while updating the images. Please try again.'])
                 ->withInput();
         }
+    }
+
+    /**
+     * Generate and display inspection report
+     */
+    public function inspectionReport(Car $car)
+    {
+        $car->load(['inspection']);
+        
+        return view('cars.inspection-report', compact('car'));
     }
 }
