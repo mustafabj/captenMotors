@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
     @if ($errors->any())
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <i class="ki-filled ki-information-5 text-red-400"></i>
@@ -26,7 +26,8 @@
                     </div>
                 </div>
             </div>
-        @endif
+        </div>
+    @endif
 
     <form action="{{ route('cars.store') }}" method="POST" id="car-form" enctype="multipart/form-data" 
           data-validate-url="{{ route('cars.validate-step') }}">
@@ -34,7 +35,7 @@
 
         <!-- General Error Messages -->
         @if ($errors->any())
-            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <i class="ki-filled ki-information-5 text-red-400"></i>
@@ -54,86 +55,82 @@
         @endif
 
         <!-- Header -->
-        <div class="flex justify-between items-center mb-3">
+        <div class="mb-3">
             <div>
-                <h1 class="text-2xl font-bold">Add New Car</h1>
-                <p class="text-sm text-gray-500">Home - Car Management - Add Car</p>
-            </div>
-            <div>
-                <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-outline">
-                    Cancel
-                </a>
-                <button type="submit" class="kt-btn kt-btn-primary ml-2" id="submit-btn">
-                    Create Car
-                </button>
-                <button type="button" class="kt-btn kt-btn-secondary ml-2" id="submit-normal-btn" style="display: none;">
-                    Submit (Fallback)
-                </button>
+                <h1 class="text-xl sm:text-2xl font-bold">Add New Car</h1>
+                <p class="text-xs sm:text-sm text-gray-500">Home - Car Management - Add Car</p>
             </div>
         </div>
 
         <!-- Wizard Progress -->
-        <div class="kt-card mb-6">
-            <div class="kt-card-content p-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <div class="step-indicator active" data-step="1">
-                            <div class="step-number">1</div>
-                            <div class="step-label">Basic Info</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-indicator" data-step="2">
-                            <div class="step-number">2</div>
-                            <div class="step-label">Specifications</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-indicator" data-step="3">
-                            <div class="step-number">3</div>
-                            <div class="step-label">Options</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-indicator" data-step="4">
-                            <div class="step-number">4</div>
-                            <div class="step-label">Pricing & Status</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-indicator" data-step="5">
-                            <div class="step-number">5</div>
-                            <div class="step-label">Inspection</div>
-                        </div>
-                        <div class="step-line"></div>
-                        <div class="step-indicator" data-step="6">
-                            <div class="step-number">6</div>
-                            <div class="step-label">Images</div>
-                        </div>
+        <div class="mb-6">
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out" 
+                     style="width: 16.67%" id="progress-bar"></div>
+            </div>
+            
+            <!-- Step Indicators -->
+            <div class="flex items-center justify-around sm:justify-between">
+                <div class="flex items-center justify-around sm:justify-start space-x-1 sm:space-x-4 flex-1">
+                    <div class="step-indicator active flex items-center" data-step="1">
+                        <div class="step-number bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold">1</div>
+                        <div class="step-label ml-2 text-sm font-medium text-blue-600 hidden sm:block">Basic Info</div>
                     </div>
-                    <div class="text-sm text-gray-500">
-                        Step <span id="current-step">1</span> of 6
+                    
+                    <div class="step-indicator flex items-center" data-step="2">
+                        <div class="step-number bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold">2</div>
+                        <div class="step-label ml-2 text-sm font-medium text-gray-500 hidden sm:block">Specifications</div>
+                    </div>
+                    
+                    <div class="step-indicator flex items-center" data-step="3">
+                        <div class="step-number bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold">3</div>
+                        <div class="step-label ml-2 text-sm font-medium text-gray-500 hidden sm:block">Options</div>
+                    </div>
+                    
+                    <div class="step-indicator flex items-center" data-step="4">
+                        <div class="step-number bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold">4</div>
+                        <div class="step-label ml-2 text-sm font-medium text-gray-500 hidden sm:block">Pricing & Status</div>
+                    </div>
+                    
+                    <div class="step-indicator flex items-center" data-step="5">
+                        <div class="step-number bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold">5</div>
+                        <div class="step-label ml-2 text-sm font-medium text-gray-500 hidden sm:block">Inspection</div>
+                    </div>
+                    
+                    <div class="step-indicator flex items-center" data-step="6">
+                        <div class="step-number bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold">6</div>
+                        <div class="step-label ml-2 text-sm font-medium text-gray-500 hidden sm:block">Images</div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Step Counter -->
+            <div class="text-center mt-3">
+                <span class="text-sm text-gray-600">Step <span id="current-step">1</span> of 6</span>
             </div>
         </div>
 
         <!-- Step Navigation -->
         <div class="flex justify-between items-center mb-3 mt-3" id="step-navigation">
-            <button type="button" class="kt-btn kt-btn-outline" id="prev-btn" disabled>
+            <button type="button" class="kt-btn kt-btn-outline text-xs sm:text-sm px-2 sm:px-4 py-2" id="prev-btn" disabled>
                 <i class="ki-duotone ki-arrow-left fs-2"></i>
-                Previous
+                <span class="hidden sm:inline">Previous</span>
             </button>
-            <button type="button" class="kt-btn kt-btn-primary" id="next-btn">
-                Next
+            <button type="button" class="kt-btn kt-btn-primary text-xs sm:text-sm px-2 sm:px-4 py-2" id="next-btn">
+                <span class="hidden sm:inline">Next</span>
                 <i class="ki-duotone ki-arrow-right fs-2"></i>
             </button>
         </div>
 
         <!-- Step 1: Basic Information -->
         <div class="step-content active" data-step="1">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Car Model & Category</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Car Model & Category</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Car Model *</label>
                             <input type="text" name="model" id="model" value="{{ old('model') }}" required
@@ -166,9 +163,9 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Important Dates</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Important Dates</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="purchase_date" class="block text-sm font-medium text-gray-700 mb-2">Purchase Date
                                 *</label>
@@ -194,12 +191,12 @@
 
         <!-- Step 2: Specifications -->
         <div class="step-content" data-step="2">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Technical Specifications</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Technical Specifications</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="manufacturing_year"
                                 class="block text-sm font-medium text-gray-700 mb-2">Manufacturing Year *</label>
@@ -224,9 +221,9 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Additional Details</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Additional Details</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="number_of_keys" class="block text-sm font-medium text-gray-700 mb-2">Number of
                                 Keys</label>
@@ -253,15 +250,15 @@
 
         <!-- Step 3: Options -->
         <div class="step-content" data-step="3">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Predefined Features</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Predefined Features</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="options" class="block text-sm font-medium text-gray-700 mb-2">Select from Common Features</label>
-                            <div id="predefined-options-buttons" class="flex flex-wrap gap-2 mb-2">
+                            <div id="predefined-options-buttons" class="flex flex-wrap gap-1 sm:gap-2 mb-2">
                                 @php
                                     $carOptions = [
                                         'Leather Seats',
@@ -287,7 +284,7 @@
                                     ];
                                 @endphp
                                 @foreach ($carOptions as $option)
-                                    <button type="button" class="predefined-option-btn px-3 py-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 focus:outline-none" data-option="{{ $option }}">
+                                    <button type="button" class="predefined-option-btn px-2 sm:px-3 py-1 text-xs sm:text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 focus:outline-none" data-option="{{ $option }}">
                                         {{ $option }}
                                     </button>
                                 @endforeach
@@ -304,17 +301,17 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Custom Features</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Custom Features</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="custom-option-input" class="block text-sm font-medium text-gray-700 mb-2">Add Custom Feature</label>
-                            <div class="flex space-x-2">
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                                 <input type="text" id="custom-option-input" 
                                        class="kt-input flex-1" 
                                        placeholder="Enter custom feature (e.g., Custom Paint Job)">
                                 <button type="button" id="add-custom-option" 
-                                        class="kt-btn kt-btn-primary">
+                                        class="kt-btn kt-btn-primary text-xs sm:text-sm">
                                     <i class="ki-duotone ki-plus fs-2"></i>
                                     Add
                                 </button>
@@ -324,7 +321,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Selected Features</label>
                             <div id="selected-options-container" class="min-h-[100px] border border-gray-200 rounded-lg p-3 bg-gray-50">
-                                <div class="text-sm text-gray-500 text-center py-4" id="no-options-message">
+                                <div class="text-xs sm:text-sm text-gray-500 text-center py-4" id="no-options-message">
                                     No features selected yet. Choose from predefined options or add custom ones.
                                 </div>
                                 <div id="selected-options-list" class="space-y-2" style="display: none;">
@@ -342,12 +339,12 @@
 
         <!-- Step 4: Pricing & Status -->
         <div class="step-content" data-step="4">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Pricing Information</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Pricing Information</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="purchase_price" class="block text-sm font-medium text-gray-700 mb-2">Purchase
                                 Price *</label>
@@ -372,10 +369,10 @@
                                 <p class="error-message">{{ $message }}</p>
                             @enderror
                         </div>
-                        <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="bg-blue-50 p-3 sm:p-4 rounded-lg">
                             <div class="flex items-center">
                                 <i class="ki-duotone ki-calculator text-blue-500 mr-2"></i>
-                                <span class="text-sm font-medium text-blue-800">Profit Margin: <span
+                                <span class="text-xs sm:text-sm font-medium text-blue-800">Profit Margin: <span
                                         id="profit-margin">0%</span></span>
                             </div>
                         </div>
@@ -384,9 +381,9 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Status & Deal</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Status & Deal</h3>
                     </div>
-                    <div class="kt-card-content p-5 space-y-3">
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Car Status
                                 *</label>
@@ -407,7 +404,7 @@
                                 </option>
                                 <option value="ready" {{ old('status') == 'ready' ? 'selected' : '' }}>Ready</option>
                             </select>
-                            <p class="text-sm text-gray-500 mt-2">Set the car status.</p>
+                            <p class="text-xs sm:text-sm text-gray-500 mt-2">Set the car status.</p>
                             @error('status')
                                 <p class="error-message">{{ $message }}</p>
                             @enderror
@@ -425,7 +422,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-sm text-gray-500 mt-2">Associate this car with a bulk deal.</p>
+                            <p class="text-xs sm:text-sm text-gray-500 mt-2">Associate this car with a bulk deal.</p>
                             @error('bulk_deal_id')
                                 <p class="error-message">{{ $message }}</p>
                             @enderror
@@ -437,15 +434,15 @@
 
         <!-- Step 5: Inspection -->
         <div class="step-content" data-step="5">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Chassis Inspection</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Chassis Inspection</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-4">
+                    <div class="kt-card-content p-3 sm:p-6 space-y-4">
                         <div>
                             <label for="chassis_inspection" class="block text-sm font-medium text-gray-700 mb-2">Chassis Inspection</label>
-                            <textarea name="chassis_inspection" id="chassis_inspection" class="kt-textarea w-full h-32"
+                            <textarea name="chassis_inspection" id="chassis_inspection" class="kt-textarea w-full h-24 sm:h-32"
                                 placeholder="Enter comprehensive chassis inspection notes including front, rear, left, and right sides">{{ old('chassis_inspection') }}</textarea>
                         </div>
                     </div>
@@ -453,9 +450,9 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Mechanical Inspection</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Mechanical Inspection</h3>
                     </div>
-                    <div class="kt-card-content p-6 space-y-4">
+                    <div class="kt-card-content p-3 sm:p-6 space-y-4">
                         <div>
                             <label for="transmission" class="block text-sm font-medium text-gray-700 mb-2">Transmission
                                 Condition</label>
@@ -471,7 +468,7 @@
                         <div>
                             <label for="body_notes" class="block text-sm font-medium text-gray-700 mb-2">Body
                                 Notes</label>
-                            <textarea name="body_notes" id="body_notes" class="kt-textarea"
+                            <textarea name="body_notes" id="body_notes" class="kt-textarea h-20 sm:h-24"
                                 placeholder="Additional notes about the car's body condition">{{ old('body_notes') }}</textarea>
                         </div>
                     </div>
@@ -481,12 +478,12 @@
 
         <!-- Step 6: Images -->
         <div class="step-content" data-step="6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Car License Image</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Car License Image</h3>
                     </div>
-                    <div class="kt-card-content p-6">
+                    <div class="kt-card-content p-3 sm:p-6">
                         <!-- Car License Image -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Car License Image</label>
@@ -503,9 +500,9 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
-                        <h3 class="text-lg font-semibold">Car Images</h3>
+                        <h3 class="text-base sm:text-lg font-semibold">Car Images</h3>
                     </div>
-                    <div class="kt-card-content p-6">
+                    <div class="kt-card-content p-3 sm:p-6">
                         <!-- Car Images -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Car Images</label>
@@ -522,6 +519,25 @@
                             @enderror
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Action Buttons -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-outline text-center">
+                        Cancel
+                    </a>
+                    <button type="button" class="kt-btn kt-btn-secondary text-center" id="submit-normal-btn" style="display: none;">
+                        Submit (Fallback)
+                    </button>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <button type="submit" class="kt-btn kt-btn-primary text-center" id="submit-btn">
+                        Create Car
+                    </button>
                 </div>
             </div>
         </div>

@@ -2,97 +2,7 @@
 
 @section('content')
     <!-- Inline Edit Styling -->
-    <style>
-        .editable-field.edit-mode {
-            background-color: #f8f9fa;
-            border: 2px solid #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-
-        .editable-field.edit-mode:focus {
-            border-color: #0056b3;
-            box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
-        }
-
-        .status-display {
-            display: inline-block;
-        }
-
-        .edit-mode-indicator {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #007bff;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            z-index: 1000;
-            font-size: 14px;
-        }
-
-        /* Tab-specific edit mode styling */
-        .option-input,
-        .inspection-field,
-        .financial-field,
-        .images-field {
-            transition: all 0.2s ease;
-        }
-
-        .option-input:focus,
-        .inspection-field:focus,
-        .financial-field:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-
-        .option-item {
-            transition: all 0.2s ease;
-        }
-
-        .remove-option-btn {
-            opacity: 0.7;
-            transition: opacity 0.2s ease;
-        }
-
-        .remove-option-btn:hover {
-            opacity: 1;
-        }
-
-        /* Loading states */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        /* Success/Error animations */
-        @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            10% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            90% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            100% {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
-
-        .notification {
-            animation: fadeInOut 5s ease-in-out;
-        }
-    </style>
-
+ 
     <!-- LightGallery CSS and JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-zoom.css">
@@ -163,7 +73,7 @@
                 @if(auth()->user()->hasRole('admin'))
                 <!-- Price -->
                 <div class="flex flex-col items-end gap-1">
-                    <div class="text-lg font-bold text-gray-900">
+                    <div class="text-lg  text-gray-900">
                         ${{ number_format($car->expected_sale_price, 2) }}
                     </div>
                     @if ($car->purchase_price)
@@ -262,7 +172,7 @@
                         <!-- Car Details -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Basic Information</h4>
+                                <h4 class="text-lg ">Basic Information</h4>
                             </div>
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
@@ -316,7 +226,7 @@
                         <!-- Identification -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Identification</h4>
+                                <h4 class="text-lg ">Identification</h4>
                             </div>
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
@@ -356,7 +266,7 @@
                         <!-- Insurance -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Insurance Information</h4>
+                                <h4 class="text-lg ">Insurance Information</h4>
                             </div>
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
@@ -401,7 +311,7 @@
                         <!-- Purchase -->
                         <div class="kt-card">
                             <div class="kt-card-header">
-                                <h4 class="text-lg font-bold mb-6">Purchase Information</h4>
+                                <h4 class="text-lg ">Purchase Information</h4>
                             </div>
                             <div class="kt-card-content">
                                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
@@ -433,7 +343,7 @@
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
-                                <h4 class="text-lg font-bold mb-6">Car Options</h4>
+                                <h4 class="text-lg ">Car Options</h4>
                             </div>
                         </div>
                         <div class="kt-card-content">
@@ -457,7 +367,7 @@
                                 @else
                                     <div class="text-center py-12">
                                         <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No options</h4>
+                                        <h4 class="text-lg  text-gray-900 mb-2">No options</h4>
                                         <p class="text-gray-600">No options have been added to this car yet.</p>
                                     </div>
                                 @endif
@@ -521,7 +431,7 @@
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
-                                <h4 class="text-lg font-bold mb-6">Inspection Details</h4>
+                                <h4 class="text-lg ">Inspection Details</h4>
                             </div>
                         </div>
                         <div class="kt-card-content">
@@ -574,7 +484,7 @@
                                 @else
                                     <div class="text-center py-12">
                                         <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                                        <h4 class="text-lg font-bold text-gray-900 mb-2">No inspection data</h4>
+                                        <h4 class="text-lg  text-gray-900 mb-2">No inspection data</h4>
                                         <p class="text-gray-600">No inspection information has been recorded for this car.
                                         </p>
                                     </div>
@@ -642,7 +552,7 @@
                         @if(auth()->user()->hasRole('admin'))
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
-                                <h4 class="text-lg font-bold mb-6">Financial Summary</h4>
+                                <h4 class="text-lg ">Financial Summary</h4>
                             </div>
                         </div>
                         <div class="kt-card-content">
@@ -651,13 +561,13 @@
                                 <div class="grid {{ $car->purchase_price ? 'grid-cols-4' : 'grid-cols-2' }} gap-6">
                                     @if ($car->purchase_price)
                                         <div class="text-center p-4 bg-green-50 rounded-lg">
-                                            <div class="text-2xl font-bold text-green-600">
+                                            <div class="text-2xl  text-green-600">
                                                 ${{ number_format($car->purchase_price, 2) }}</div>
                                             <div class="text-sm text-gray-600">Purchase Price</div>
                                         </div>
                                     @endif
                                     <div class="text-center p-4 bg-blue-50 rounded-lg">
-                                        <div class="text-2xl font-bold text-blue-600">
+                                        <div class="text-2xl  text-blue-600">
                                             ${{ number_format($car->expected_sale_price, 2) }}</div>
                                         <div class="text-sm text-gray-600">Expected Sale Price</div>
                                     </div>
@@ -666,7 +576,7 @@
                                         $profit = $car->expected_sale_price - ($car->purchase_price ?? 0) - $totalCosts;
                                     @endphp
                                     <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                                        <div class="text-2xl font-bold text-yellow-600">
+                                        <div class="text-2xl  text-yellow-600">
                                             ${{ number_format($totalCosts, 2) }}
                                         </div>
                                         <div class="text-sm text-gray-600">Total Equipment Costs</div>
@@ -675,7 +585,7 @@
                                         <div
                                             class="text-center p-4 {{ $profit >= 0 ? 'bg-green-50' : 'bg-red-50' }} rounded-lg">
                                             <div
-                                                class="text-2xl font-bold {{ $profit >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                                class="text-2xl  {{ $profit >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                                 ${{ number_format($profit, 2) }}</div>
                                             <div class="text-sm text-gray-600">Estimated Profit</div>
                                         </div>
@@ -717,7 +627,7 @@
                             <div class="equipment mt-6">
                                 <div class="kt-card-header">
                                     <div class="flex justify-between items-center w-full">
-                                        <h4 class="text-lg font-bold">Equipment Costs</h4>
+                                        <h4 class="text-lg ">Equipment Costs</h4>
                                         <button type="button" class="kt-btn kt-btn-sm kt-btn-primary"
                                             data-kt-modal-toggle="#addCostModal">
                                             <i class="ki-filled ki-plus"></i>
@@ -768,7 +678,7 @@
                                     @else
                                         <div class="text-center py-12">
                                             <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                                            <h4 class="text-lg font-bold text-gray-900 mb-2">No equipment costs</h4>
+                                            <h4 class="text-lg  text-gray-900 mb-2">No equipment costs</h4>
                                             <p class="text-gray-600">
                                                 @if(auth()->user()->hasRole('admin'))
                                                     No equipment costs have been recorded for this car.
@@ -789,7 +699,7 @@
                 <div class="hidden" id="tab_1_5">
                     <div class="kt-card">
                         <div class="kt-card-header">
-                            <h4 class="text-lg font-bold mb-6">Status History</h4>
+                            <h4 class="text-lg ">Status History</h4>
                         </div>
                         <div class="kt-card-content">
                             @if ($car->statusHistories->count() > 0)
@@ -818,7 +728,7 @@
                             @else
                                 <div class="text-center py-12">
                                     <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
-                                    <h4 class="text-lg font-bold text-gray-900 mb-2">No status history</h4>
+                                    <h4 class="text-lg  text-gray-900 mb-2">No status history</h4>
                                     <p class="text-gray-600">No status changes have been recorded for this car.</p>
                                 </div>
                             @endif
@@ -831,7 +741,7 @@
                     <div class="kt-card">
                         <div class="kt-card-header">
                             <div class="flex justify-between items-center w-full">
-                                <h4 class="text-lg font-bold mb-6">Car Images</h4>
+                                <h4 class="text-lg ">Car Images</h4>
                             </div>
                         </div>
                         <div class="kt-card-content">
@@ -841,7 +751,7 @@
                                     <!-- Car License Image -->
                                     <div class="kt-card">
                                         <div class="kt-card-header">
-                                            <h4 class="text-lg font-bold mb-6">Car License
+                                            <h4 class="text-lg ">Car License
                                                 ({{ $car->getMedia('car_license')->count() }})</h4>
                                         </div>
                                         <div class="kt-card-content">
@@ -864,7 +774,7 @@
                                             @else
                                                 <div class="text-center py-12">
                                                     <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
-                                                    <h4 class="text-lg font-bold text-gray-900 mb-2">No License Image</h4>
+                                                    <h4 class="text-lg  text-gray-900 mb-2">No License Image</h4>
                                                     <p class="text-gray-600">No car license image has been uploaded.</p>
                                                 </div>
                                             @endif
@@ -874,7 +784,7 @@
                                     <!-- Car Images -->
                                     <div class="kt-card">
                                         <div class="kt-card-header">
-                                            <h4 class="text-lg font-bold mb-6">Car Images
+                                            <h4 class="text-lg ">Car Images
                                                 ({{ $car->getMedia('car_images')->count() }})</h4>
                                         </div>
                                         <div class="kt-card-content">
@@ -897,7 +807,7 @@
                                             @else
                                                 <div class="text-center py-12">
                                                     <i class="ki-filled ki-picture text-4xl text-gray-400 mb-4"></i>
-                                                    <h4 class="text-lg font-bold text-gray-900 mb-2">No Car Images</h4>
+                                                    <h4 class="text-lg  text-gray-900 mb-2">No Car Images</h4>
                                                     <p class="text-gray-600">No car images have been uploaded.</p>
                                                 </div>
                                             @endif
@@ -912,7 +822,7 @@
                                     <!-- Car License Upload -->
                                     <div class="kt-card">
                                         <div class="kt-card-header">
-                                            <h4 class="text-lg font-bold mb-6">Car License</h4>
+                                            <h4 class="text-lg ">Car License</h4>
                                         </div>
                                         <div class="kt-card-content">
                                             <div class="kt-form-item">
@@ -929,7 +839,7 @@
                                     <!-- Car Images Upload -->
                                     <div class="kt-card">
                                         <div class="kt-card-header">
-                                            <h4 class="text-lg font-bold mb-6">Car Images</h4>
+                                            <h4 class="text-lg ">Car Images</h4>
                                         </div>
                                         <div class="kt-card-content">
                                             <div class="kt-form-item">
