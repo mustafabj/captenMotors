@@ -22,12 +22,20 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
+  
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
     <!-- Vendor CSS -->
     <link href="@versioned('assets/vendors/apexcharts/apexcharts.css')" rel="stylesheet" />
     <link href="@versioned('assets/vendors/keenicons/styles.bundle.css')" rel="stylesheet" />
 
-    <!-- Vite CSS (load first for custom classes) -->
-    
     <!-- Main CSS (load after to override) -->
     <link href="@versioned('assets/css/styles.css')" rel="stylesheet" />
     <link href="@versioned('css/pages/cars-form.css')" rel="stylesheet" />

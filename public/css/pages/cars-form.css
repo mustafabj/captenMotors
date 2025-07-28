@@ -15,40 +15,45 @@
 /* Step Indicators */
 .step-indicator {
     display: flex;
-    flex-direction: column;
     align-items: center;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .step-number {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background-color: #e5e7eb;
+    background-color: #d1d5db;
     color: #6b7280;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    margin-bottom: 8px;
     transition: all 0.3s ease;
+    font-size: 0.875rem;
+    border: 2px solid transparent;
 }
 
 .step-indicator.active .step-number {
     background-color: #3b82f6;
     color: white;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .step-indicator.completed .step-number {
     background-color: #10b981;
     color: white;
+    border-color: #10b981;
 }
 
 .step-label {
     font-size: 0.875rem;
     color: #6b7280;
-    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .step-indicator.active .step-label {
@@ -56,15 +61,35 @@
     font-weight: 600;
 }
 
-.step-line {
-    width: 60px;
-    height: 2px;
-    background-color: #e5e7eb;
-    margin: 0 16px;
+.step-indicator.completed .step-label {
+    color: #10b981;
+    font-weight: 600;
 }
 
-.step-indicator.completed + .step-line {
-    background-color: #10b981;
+/* Progress bar animation */
+#progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .step-indicator {
+        flex-direction: column;
+        text-align: center;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+    
+    .step-label {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
 }
 
 /* Error Messages */
@@ -172,14 +197,43 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-    .step-indicator {
-        scale: 0.8;
+@media (min-width: 640px) {
+    .step-number {
+        width: 40px;
+        height: 40px;
+        font-size: 0.875rem;
+        margin-bottom: 8px;
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
     }
     
     .step-line {
-        width: 40px;
-        margin: 0 8px;
+        width: 60px;
+        margin: 0 16px;
+    }
+}
+
+@media (max-width: 639px) {
+    .step-indicator {
+        scale: 0.9;
+    }
+    
+    .step-line {
+        width: 20px;
+        margin: 0 4px;
+    }
+    
+    /* Hide step lines on very small screens */
+    @media (max-width: 480px) {
+        .step-line {
+            display: none;
+        }
+        
+        .step-indicator {
+            scale: 0.8;
+        }
     }
 }
 
@@ -247,6 +301,50 @@
     to {
         opacity: 1;
         transform: translateX(0);
+    }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+    .notification {
+        top: 0.5rem;
+        right: 0.5rem;
+        left: 0.5rem;
+        max-width: none;
+        font-size: 0.875rem;
+        padding: 0.75rem;
+    }
+    
+    /* Ensure buttons are touch-friendly */
+    .kt-btn {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Improve form spacing on mobile */
+    .kt-card-content {
+        padding: 1rem;
+    }
+    
+    /* Better spacing for form groups */
+    .space-y-3 > * + * {
+        margin-top: 0.75rem;
+    }
+    
+    /* Improve textarea height on mobile */
+    .kt-textarea {
+        min-height: 80px;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .step-indicator {
+        scale: 0.95;
+    }
+    
+    .kt-card-content {
+        padding: 1.25rem;
     }
 }
 

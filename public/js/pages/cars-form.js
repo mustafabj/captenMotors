@@ -50,6 +50,7 @@ App.pages.carsForm = {
         this._initializeProfitCalculator();
         this._initializeOptions();
         this._updateStepDisplay();
+        this._initializeResponsiveHandlers();
         
 
     },
@@ -463,15 +464,44 @@ App.pages.carsForm = {
 
     // Update step indicators and navigation
     _updateStepDisplay: function() {
+        // Update progress bar
+        const progressBar = document.getElementById('progress-bar');
+        if (progressBar) {
+            const progress = (this._currentStep / this._totalSteps) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
         // Update step indicators
         document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
             const stepNum = index + 1;
+            const stepNumberEl = indicator.querySelector('.step-number');
+            const stepLabelEl = indicator.querySelector('.step-label');
+            
             indicator.classList.remove('active', 'completed');
             
             if (stepNum < this._currentStep) {
                 indicator.classList.add('completed');
+                if (stepNumberEl) {
+                    stepNumberEl.className = 'step-number bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold';
+                }
+                if (stepLabelEl) {
+                    stepLabelEl.className = 'step-label ml-2 text-sm font-medium text-green-600 hidden sm:block';
+                }
             } else if (stepNum === this._currentStep) {
                 indicator.classList.add('active');
+                if (stepNumberEl) {
+                    stepNumberEl.className = 'step-number bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold';
+                }
+                if (stepLabelEl) {
+                    stepLabelEl.className = 'step-label ml-2 text-sm font-medium text-blue-600 hidden sm:block';
+                }
+            } else {
+                if (stepNumberEl) {
+                    stepNumberEl.className = 'step-number bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold';
+                }
+                if (stepLabelEl) {
+                    stepLabelEl.className = 'step-label ml-2 text-sm font-medium text-gray-500 hidden sm:block';
+                }
             }
         });
 
@@ -1007,6 +1037,88 @@ App.pages.carsForm = {
 
     clearValidationCache: function() {
         this._validationCache = {};
+    },
+
+    // Initialize responsive handlers
+    _initializeResponsiveHandlers: function() {
+        // Handle window resize events
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this._handleResponsiveLayout();
+            }, 250);
+        });
+
+        // Initial responsive setup
+        this._handleResponsiveLayout();
+    },
+
+    // Handle responsive layout changes
+    _handleResponsiveLayout: function() {
+        const isMobile = window.innerWidth < 640;
+        const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
+        
+        // Adjust step indicators for mobile
+        const stepIndicators = document.querySelectorAll('.step-indicator');
+        stepIndicators.forEach(indicator => {
+            if (isMobile) {
+                indicator.style.fontSize = '0.75rem';
+            } else {
+                indicator.style.fontSize = '';
+            }
+        });
+
+        // Adjust form spacing for mobile
+        const cards = document.querySelectorAll('.kt-card-content');
+        cards.forEach(card => {
+            if (isMobile) {
+                card.style.padding = '1rem';
+            } else if (isTablet) {
+                card.style.padding = '1.25rem';
+            } else {
+                card.style.padding = '';
+            }
+        });
+
+        // Adjust button sizes for mobile
+        const buttons = document.querySelectorAll('.kt-btn');
+        buttons.forEach(button => {
+            if (isMobile) {
+                button.style.minHeight = '44px';
+                button.style.padding = '0.75rem 1rem';
+            } else {
+                button.style.minHeight = '';
+                button.style.padding = '';
+            }
+        });
+
+        // Adjust textarea heights for mobile
+        const textareas = document.querySelectorAll('.kt-textarea');
+        textareas.forEach(textarea => {
+            if (isMobile) {
+                textarea.style.minHeight = '80px';
+            } else {
+                textarea.style.minHeight = '';
+            }
+        });
+
+        // Handle step navigation visibility on mobile
+        const stepNavigation = document.getElementById('step-navigation');
+        if (stepNavigation) {
+            if (isMobile) {
+                // On mobile, make navigation more compact
+                const prevBtn = stepNavigation.querySelector('#prev-btn');
+                const nextBtn = stepNavigation.querySelector('#next-btn');
+                
+                if (prevBtn) {
+                    prevBtn.innerHTML = '<i class="ki-duotone ki-arrow-left fs-2"></i>';
+                }
+                if (nextBtn) {
+                    nextBtn.innerHTML = '<i class="ki-duotone ki-arrow-right fs-2"></i>';
+                }
+            }
+        }
     }
 };
 
