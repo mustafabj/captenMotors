@@ -622,7 +622,7 @@
                                                 <div class="bg-gray-50 p-3 rounded">
                                                     <span class="text-gray-600 block text-sm mb-1">{{ $label }}</span>
                                                     <span class="text-gray-800 font-medium">
-                                                        @if($car->inspection->$field)
+                                                        @if($car->inspection && $car->inspection->$field)
                                                             {{ \App\Models\CarInspection::getInspectionDisplayName($car->inspection->$field) }}
                                                         @else
                                                             <span class="text-gray-500 italic">Not specified</span>
@@ -710,7 +710,7 @@
                                                 <select class="kt-select w-full inspection-field" name="{{ $field }}">
                                                     <option value="">Select condition</option>
                                                     @foreach($inspectionOptions as $value => $option)
-                                                        <option value="{{ $value }}" {{ $car->inspection->$field == $value ? 'selected' : '' }}>
+                                                        <option value="{{ $value }}" {{ ($car->inspection && $car->inspection->$field == $value) ? 'selected' : '' }}>
                                                             {{ $option }}
                                                         </option>
                                                     @endforeach
