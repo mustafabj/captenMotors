@@ -31,7 +31,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $userRole->syncPermissions([$view]);
 
         // Assign role to a user (example user ID 1)
-        $user = User::find(2);
+        $user = User::find(1);
         if ($user) {
             $user->assignRole('admin');
             $this->command->info("Admin role assigned to user: {$user->email}");
