@@ -71,6 +71,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('cars/{id}/update-inline', [CarController::class, 'updateInline'])->name('cars.update-inline');
     Route::post('cars/{id}/update-options', [CarController::class, 'updateOptions'])->name('cars.update-options');
     Route::post('cars/{id}/update-inspection', [CarController::class, 'updateInspection'])->name('cars.update-inspection');
+    Route::get('cars/{car}/inspection-report', [CarController::class, 'inspectionReport'])->name('cars.inspection-report');
     Route::post('cars/{id}/update-financial', [CarController::class, 'updateFinancial'])->name('cars.update-financial');
     Route::post('cars/{id}/update-images', [CarController::class, 'updateImages'])->name('cars.update-images');
     Route::delete('cars/{id}/images', [CarController::class, 'deleteImage'])->name('cars.delete-image');

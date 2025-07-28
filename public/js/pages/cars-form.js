@@ -21,7 +21,7 @@ App.pages.carsForm = {
         2: ['manufacturing_year', 'engine_capacity', 'number_of_keys', 'place_of_manufacture'], // Specifications
         3: ['options', 'all_options'], // Options
         4: ['purchase_price', 'expected_sale_price', 'status', 'bulk_deal_id'], // Pricing & Status
-        5: ['chassis_inspection', 'transmission', 'motor', 'body_notes'], // Inspection
+        5: ['chassis_inspection', 'transmission', 'motor', 'body_notes', 'hood', 'front_right_fender', 'front_left_fender', 'rear_right_fender', 'rear_left_fender', 'trunk_door', 'front_right_door', 'rear_right_door', 'front_left_door', 'rear_left_door'], // Inspection
         6: ['car_license', 'car_images'] // Images
     },
 
