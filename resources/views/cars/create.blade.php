@@ -450,6 +450,49 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
+                        <h3 class="text-base sm:text-lg font-semibold">Body Inspection</h3>
+                    </div>
+                    <div class="kt-card-content p-3 sm:p-6 space-y-4">
+                        @php
+                            $inspectionOptions = [
+                                'clean_and_free_of_filler' => 'Clean and free of filler',
+                                'painted' => 'Painted',
+                                'fully_repainted' => 'Fully repainted'
+                            ];
+                            $carParts = [
+                                'hood' => 'Hood',
+                                'front_right_fender' => 'Front Right Fender',
+                                'front_left_fender' => 'Front Left Fender',
+                                'rear_right_fender' => 'Rear Right Fender',
+                                'rear_left_fender' => 'Rear Left Fender',
+                                'trunk_door' => 'Trunk Door',
+                                'front_right_door' => 'Front Right Door',
+                                'rear_right_door' => 'Rear Right Door',
+                                'front_left_door' => 'Front Left Door',
+                                'rear_left_door' => 'Rear Left Door'
+                            ];
+                        @endphp
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @foreach($carParts as $field => $label)
+                                <div>
+                                    <label for="{{ $field }}" class="block text-sm font-medium text-gray-700 mb-2">{{ $label }}</label>
+                                    <select name="{{ $field }}" id="{{ $field }}" class="kt-select w-full">
+                                        <option value="">Select condition</option>
+                                        @foreach($inspectionOptions as $value => $option)
+                                            <option value="{{ $value }}" {{ old($field) == $value ? 'selected' : '' }}>
+                                                {{ $option }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kt-card">
+                    <div class="kt-card-header">
                         <h3 class="text-base sm:text-lg font-semibold">Mechanical Inspection</h3>
                     </div>
                     <div class="kt-card-content p-3 sm:p-6 space-y-4">

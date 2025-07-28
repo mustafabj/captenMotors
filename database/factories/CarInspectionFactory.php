@@ -17,19 +17,27 @@ class CarInspectionFactory extends Factory
      */
     public function definition(): array
     {
-        $chassisConditions = ['Good', 'Minor Damage', 'Repaired', 'Excellent', 'Needs Attention'];
+        $inspectionOptions = ['clean_and_free_of_filler', 'painted', 'fully_repainted'];
+        $chassisConditions = ['جيد', 'جيد + ملاحظات', 'ممتاز', 'بحاجة تصليح بسيط'];
         $transmissions = ['Automatic', 'Manual', 'CVT', 'Semi-Automatic'];
         $motorConditions = ['Excellent', 'Good', 'Fair', 'Needs Service', 'Recently Serviced'];
 
         return [
             'car_id' => Car::factory(),
-            'front_chassis_right' => fake()->randomElement($chassisConditions),
-            'front_chassis_left' => fake()->randomElement($chassisConditions),
-            'rear_chassis_right' => fake()->randomElement($chassisConditions),
-            'rear_chassis_left' => fake()->randomElement($chassisConditions),
+            'chassis_inspection' => fake()->randomElement($chassisConditions),
             'transmission' => fake()->randomElement($transmissions),
             'motor' => fake()->randomElement($motorConditions),
             'body_notes' => fake()->paragraph(3),
+            'hood' => fake()->randomElement($inspectionOptions),
+            'front_right_fender' => fake()->randomElement($inspectionOptions),
+            'front_left_fender' => fake()->randomElement($inspectionOptions),
+            'rear_right_fender' => fake()->randomElement($inspectionOptions),
+            'rear_left_fender' => fake()->randomElement($inspectionOptions),
+            'trunk_door' => fake()->randomElement($inspectionOptions),
+            'front_right_door' => fake()->randomElement($inspectionOptions),
+            'rear_right_door' => fake()->randomElement($inspectionOptions),
+            'front_left_door' => fake()->randomElement($inspectionOptions),
+            'rear_left_door' => fake()->randomElement($inspectionOptions),
         ];
     }
 } 

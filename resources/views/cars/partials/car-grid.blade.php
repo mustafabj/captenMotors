@@ -38,7 +38,7 @@
                                                 @method('DELETE')
                                                 <button type="submit"
                                                     class="kt-dropdown-menu-link w-full text-left text-red-600">
-                                                    <i class="ki-filled ki-trash"></i>
+                                                    <i class="ki-filled ki-trash text-red-600"></i>
                                                     Remove
                                                 </button>
                                             </form>
@@ -262,7 +262,7 @@
                                                 @method('DELETE')
                                                 <button type="submit"
                                                     class="kt-dropdown-menu-link w-full text-left text-red-600">
-                                                    <i class="ki-filled ki-trash"></i>
+                                                    <i class="ki-filled ki-trash text-red-600"></i>
                                                     Remove
                                                 </button>
                                             </form>
