@@ -150,6 +150,22 @@
                             @enderror
                         </div>
                         <div>
+                            <label for="color" class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                            <input type="text" name="color" id="color" value="{{ old('color') }}"
+                                class="kt-input w-full" placeholder="e.g., Red, Blue, Silver">
+                            @error('color')
+                                <p class="error-message">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="mileage" class="block text-sm font-medium text-gray-700 mb-2">Mileage</label>
+                            <input type="number" name="mileage" id="mileage" value="{{ old('mileage') }}"
+                                min="0" class="kt-input w-full" placeholder="e.g., 50000">
+                            @error('mileage')
+                                <p class="error-message">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
                             <label for="plate_number" class="block text-sm font-medium text-gray-700 mb-2">Plate
                                 Number</label>
                             <input type="text" name="plate_number" id="plate_number" value="{{ old('plate_number') }}"
@@ -381,6 +397,43 @@
 
                 <div class="kt-card">
                     <div class="kt-card-header">
+                        <h3 class="text-base sm:text-lg font-semibold">Purchase Costs</h3>
+                    </div>
+                    <div class="kt-card-content p-3 sm:p-5 space-y-3">
+                        <div id="purchase-costs-container">
+                            <div class="purchase-cost-item border border-gray-200 rounded-lg p-3 mb-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                        <input type="text" name="purchase_costs[0][description]" 
+                                               class="kt-input w-full" placeholder="e.g., Shipping, Customs, etc.">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                                        <input type="number" name="purchase_costs[0][amount]" 
+                                               class="kt-input w-full" min="0" step="0.01" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <button type="button" class="remove-cost-btn mt-2 text-red-600 hover:text-red-800 text-sm">
+                                    <i class="ki-duotone ki-trash fs-2"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-purchase-cost" class="kt-btn kt-btn-outline text-sm">
+                            <i class="ki-duotone ki-plus fs-2"></i> Add Purchase Cost
+                        </button>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="ki-duotone ki-dollar text-gray-500 mr-2"></i>
+                                <span class="text-xs sm:text-sm font-medium text-gray-700">Total Purchase Costs: <span
+                                        id="total-purchase-costs">$0.00</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kt-card">
+                    <div class="kt-card-header">
                         <h3 class="text-base sm:text-lg font-semibold">Status & Deal</h3>
                     </div>
                     <div class="kt-card-content p-3 sm:p-5 space-y-3">
@@ -444,49 +497,6 @@
                             <label for="chassis_inspection" class="block text-sm font-medium text-gray-700 mb-2">Chassis Inspection</label>
                             <textarea name="chassis_inspection" id="chassis_inspection" class="kt-textarea w-full h-24 sm:h-32"
                                 placeholder="Enter comprehensive chassis inspection notes including front, rear, left, and right sides">{{ old('chassis_inspection') }}</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kt-card">
-                    <div class="kt-card-header">
-                        <h3 class="text-base sm:text-lg font-semibold">Body Inspection</h3>
-                    </div>
-                    <div class="kt-card-content p-3 sm:p-6 space-y-4">
-                        @php
-                            $inspectionOptions = [
-                                'clean_and_free_of_filler' => 'Clean and free of filler',
-                                'painted' => 'Painted',
-                                'fully_repainted' => 'Fully repainted'
-                            ];
-                            $carParts = [
-                                'hood' => 'Hood',
-                                'front_right_fender' => 'Front Right Fender',
-                                'front_left_fender' => 'Front Left Fender',
-                                'rear_right_fender' => 'Rear Right Fender',
-                                'rear_left_fender' => 'Rear Left Fender',
-                                'trunk_door' => 'Trunk Door',
-                                'front_right_door' => 'Front Right Door',
-                                'rear_right_door' => 'Rear Right Door',
-                                'front_left_door' => 'Front Left Door',
-                                'rear_left_door' => 'Rear Left Door'
-                            ];
-                        @endphp
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @foreach($carParts as $field => $label)
-                                <div>
-                                    <label for="{{ $field }}" class="block text-sm font-medium text-gray-700 mb-2">{{ $label }}</label>
-                                    <select name="{{ $field }}" id="{{ $field }}" class="kt-select w-full">
-                                        <option value="">Select condition</option>
-                                        @foreach($inspectionOptions as $value => $option)
-                                            <option value="{{ $value }}" {{ old($field) == $value ? 'selected' : '' }}>
-                                                {{ $option }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endforeach
                         </div>
                     </div>
                 </div>

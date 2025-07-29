@@ -38,7 +38,7 @@
                                                 @method('DELETE')
                                                 <button type="submit"
                                                     class="kt-dropdown-menu-link w-full text-left text-red-600">
-                                                    <i class="ki-filled ki-trash text-red-600"></i>
+                                                    <i class="ki-filled ki-trash"></i>
                                                     Remove
                                                 </button>
                                             </form>
@@ -88,7 +88,14 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900">{{ $car->model }}</h3>
                                 <p class="text-sm text-gray-500">{{ $car->manufacturing_year }} •
-                                    {{ $car->engine_capacity }}</p>
+                                    {{ $car->engine_capacity }}
+                                    @if($car->color)
+                                        • {{ $car->color }}
+                                    @endif
+                                    @if($car->mileage)
+                                        • {{ number_format($car->mileage) }} km
+                                    @endif
+                                </p>
                             </div>
 
                             <!-- Chassis and Plate -->
@@ -225,6 +232,22 @@
                                             {{ $car->manufacturing_year }}
                                         </span>
                                     </span>
+                                    @if ($car->color)
+                                        <span class="text-xs font-normal text-secondary-foreground">
+                                            Color:
+                                            <span class="text-xs font-medium text-foreground">
+                                                {{ $car->color }}
+                                            </span>
+                                        </span>
+                                    @endif
+                                    @if ($car->mileage)
+                                        <span class="text-xs font-normal text-secondary-foreground">
+                                            Mileage:
+                                            <span class="text-xs font-medium text-foreground">
+                                                {{ number_format($car->mileage) }} km
+                                            </span>
+                                        </span>
+                                    @endif
                                     <span class="text-xs font-normal text-secondary-foreground">
                                         Keys:
                                         <span class="text-xs font-medium text-foreground">
@@ -262,7 +285,7 @@
                                                 @method('DELETE')
                                                 <button type="submit"
                                                     class="kt-dropdown-menu-link w-full text-left text-red-600">
-                                                    <i class="ki-filled ki-trash text-red-600"></i>
+                                                    <i class="ki-filled ki-trash"></i>
                                                     Remove
                                                 </button>
                                             </form>

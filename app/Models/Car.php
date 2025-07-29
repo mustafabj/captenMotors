@@ -14,9 +14,9 @@ class Car extends Model implements HasMedia
 
     protected $fillable = [
         'model',
-        'color',
-        'odometer',
         'vehicle_category',
+        'color',
+        'mileage',
         'manufacturing_year',
         'place_of_manufacture',
         'number_of_keys',

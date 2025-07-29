@@ -17,11 +17,11 @@ App.pages.carsForm = {
     
     // Step field mappings - must match CarStepRequest validation rules
     _stepFields: {
-        1: ['model', 'vehicle_category', 'plate_number', 'purchase_date', 'insurance_expiry_date'], // Basic Info
+        1: ['model', 'vehicle_category', 'color', 'mileage', 'plate_number', 'purchase_date', 'insurance_expiry_date'], // Basic Info
         2: ['manufacturing_year', 'engine_capacity', 'number_of_keys', 'place_of_manufacture'], // Specifications
         3: ['options', 'all_options'], // Options
-        4: ['purchase_price', 'expected_sale_price', 'status', 'bulk_deal_id'], // Pricing & Status
-        5: ['chassis_inspection', 'transmission', 'motor', 'body_notes', 'hood', 'front_right_fender', 'front_left_fender', 'rear_right_fender', 'rear_left_fender', 'trunk_door', 'front_right_door', 'rear_right_door', 'front_left_door', 'rear_left_door'], // Inspection
+        4: ['purchase_price', 'expected_sale_price', 'status', 'bulk_deal_id', 'purchase_costs'], // Pricing & Status
+        5: ['chassis_inspection', 'transmission', 'motor', 'body_notes'], // Inspection
         6: ['car_license', 'car_images'] // Images
     },
 
@@ -48,6 +48,7 @@ App.pages.carsForm = {
         this._bindEvents();
         this._initializeValidation();
         this._initializeProfitCalculator();
+        this._initializePurchaseCosts();
         this._initializeOptions();
         this._updateStepDisplay();
         this._initializeResponsiveHandlers();
@@ -248,6 +249,96 @@ App.pages.carsForm = {
         
         // Calculate on page load
         calculateProfit();
+    },
+
+    // Initialize purchase costs functionality
+    _initializePurchaseCosts: function() {
+        const addButton = document.getElementById('add-purchase-cost');
+        const container = document.getElementById('purchase-costs-container');
+        const totalDisplay = document.getElementById('total-purchase-costs');
+
+        if (!addButton || !container || !totalDisplay) {
+            console.warn('Purchase costs elements not found');
+            return;
+        }
+
+        let costIndex = 1; // Start from 1 since we already have one item
+
+        // Add new purchase cost item
+        addButton.addEventListener('click', () => {
+            const newItem = document.createElement('div');
+            newItem.className = 'purchase-cost-item border border-gray-200 rounded-lg p-3 mb-3';
+            newItem.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <input type="text" name="purchase_costs[${costIndex}][description]" 
+                               class="kt-input w-full" placeholder="e.g., Shipping, Customs, etc.">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                        <input type="number" name="purchase_costs[${costIndex}][amount]" 
+                               class="kt-input w-full" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+                <button type="button" class="remove-cost-btn mt-2 text-red-600 hover:text-red-800 text-sm">
+                    <i class="ki-duotone ki-trash fs-2"></i> Remove
+                </button>
+            `;
+            
+            container.appendChild(newItem);
+            costIndex++;
+
+            // Add event listener to the new remove button
+            const removeBtn = newItem.querySelector('.remove-cost-btn');
+            removeBtn.addEventListener('click', () => {
+                newItem.remove();
+                this._calculateTotalPurchaseCosts();
+            });
+
+            // Add event listeners to the new amount inputs
+            const amountInput = newItem.querySelector('input[name*="[amount]"]');
+            amountInput.addEventListener('input', () => this._calculateTotalPurchaseCosts());
+        });
+
+        // Handle remove buttons for existing items
+        container.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-cost-btn') || e.target.closest('.remove-cost-btn')) {
+                const item = e.target.closest('.purchase-cost-item');
+                if (item) {
+                    item.remove();
+                    this._calculateTotalPurchaseCosts();
+                }
+            }
+        });
+
+        // Handle amount input changes for total calculation
+        container.addEventListener('input', (e) => {
+            if (e.target.name && e.target.name.includes('[amount]')) {
+                this._calculateTotalPurchaseCosts();
+            }
+        });
+
+        // Calculate initial total
+        this._calculateTotalPurchaseCosts();
+    },
+
+    // Calculate total purchase costs
+    _calculateTotalPurchaseCosts: function() {
+        const container = document.getElementById('purchase-costs-container');
+        const totalDisplay = document.getElementById('total-purchase-costs');
+        
+        if (!container || !totalDisplay) return;
+
+        let total = 0;
+        const amountInputs = container.querySelectorAll('input[name*="[amount]"]');
+        
+        amountInputs.forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            total += value;
+        });
+
+        totalDisplay.textContent = '$' + total.toFixed(2);
     },
 
     // Initialize options functionality
