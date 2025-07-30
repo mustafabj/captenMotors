@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\CarStepRequest;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class CarController extends Controller
 {
@@ -171,8 +172,15 @@ class CarController extends Controller
                     }
 
                     $motor = $request->motor;
+                    // Check if motor_status checkbox is checked or unchecked
                     if ($request->has('motor_status')) {
+                        // Checkbox is checked
                         $motor = empty($motor) ? 'جيــــــــــــــــــــدة' : 'جيــــــــــــــــــــدة / ' . $motor;
+                    } else {
+                        // Checkbox is unchecked - remove any existing prefix
+                        $motor = str_replace('جيــــــــــــــــــــدة / ', '', $motor);
+                        $motor = str_replace('جيــــــــــــــــــــدة', '', $motor);
+                        $motor = trim($motor);
                     }
                     if ($request->filled('motor_percentage')) {
                         $motor = $motor . ' - النسبة : ' . $request->motor_percentage . '%';
@@ -383,8 +391,15 @@ class CarController extends Controller
                     }
 
                     $motor = $request->motor;
+                    // Check if motor_status checkbox is checked or unchecked
                     if ($request->has('motor_status')) {
+                        // Checkbox is checked
                         $motor = empty($motor) ? 'جيــــــــــــــــــــدة' : 'جيــــــــــــــــــــدة / ' . $motor;
+                    } else {
+                        // Checkbox is unchecked - remove any existing prefix
+                        $motor = str_replace('جيــــــــــــــــــــدة / ', '', $motor);
+                        $motor = str_replace('جيــــــــــــــــــــدة', '', $motor);
+                        $motor = trim($motor);
                     }
                     if ($request->filled('motor_percentage')) {
                         $motor = $motor . ' - النسبة : ' . $request->motor_percentage . '%';
@@ -589,16 +604,35 @@ class CarController extends Controller
      */
     public function deleteImage(Request $request, $id)
     {
-        $car = Car::findOrFail($id);
-        
-        $request->validate([
-            'media_id' => 'required|exists:media,id'
-        ]);
+        try {
+            $car = Car::findOrFail($id);
+            
+            $validated = $request->validate([
+                'media_id' => 'required|exists:media,id',
+                'media_type' => 'nullable|string|in:car_license,car_images'
+            ]);
 
-        $media = $car->media()->findOrFail($request->media_id);
-        $media->delete();
+            $media = $car->media()->findOrFail($validated['media_id']);
+            $media->delete();
 
-        return redirect()->route('cars.show', $car)->with('success', 'Image deleted successfully!');
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Image deleted successfully!'
+                ]);
+            }
+
+            return redirect()->route('cars.show', $car)->with('success', 'Image deleted successfully!');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while deleting the image.'
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'An error occurred while deleting the image.');
+        }
     }
 
     /**
@@ -823,8 +857,15 @@ class CarController extends Controller
                 }
 
                 $motor = $request->motor;
+                // Check if motor_status checkbox is checked or unchecked
                 if ($request->has('motor_status')) {
+                    // Checkbox is checked
                     $motor = empty($motor) ? 'جيــــــــــــــــــــدة' : 'جيــــــــــــــــــــدة / ' . $motor;
+                } else {
+                    // Checkbox is unchecked - remove any existing prefix
+                    $motor = str_replace('جيــــــــــــــــــــدة / ', '', $motor);
+                    $motor = str_replace('جيــــــــــــــــــــدة', '', $motor);
+                    $motor = trim($motor);
                 }
                 if ($request->filled('motor_percentage')) {
                     $motor = $motor . ' - النسبة : ' . $request->motor_percentage . '%';
@@ -1001,9 +1042,7 @@ class CarController extends Controller
             return DB::transaction(function () use ($validated, $request, $car) {
                 // Handle car license image
                 if ($request->hasFile('car_license')) {
-                    // Remove existing license images
-                    $car->clearMediaCollection('car_license');
-                    // Add new license image
+                    // Add new license image (don't clear existing ones for now)
                     $car->addMediaFromRequest('car_license')
                         ->toMediaCollection('car_license');
                 }
