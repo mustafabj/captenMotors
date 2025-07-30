@@ -24,6 +24,8 @@ class CarStepRequest extends FormRequest
                 $rules = [
                     'model' => ['required', 'string', 'max:255'],
                     'vehicle_category' => ['nullable', 'string', 'max:255'],
+                    'color' => ['nullable', 'string', 'max:255'],
+                    'mileage' => ['nullable', 'integer', 'min:0'],
                     'plate_number' => ['nullable', 'string', 'max:255'],
                     'purchase_date' => ['required', 'date', 'after:' . $minDate],
                     'insurance_expiry_date' => ['nullable', 'date', 'after:' . $minDate],
@@ -50,6 +52,9 @@ class CarStepRequest extends FormRequest
                     'expected_sale_price' => ['required', 'numeric', 'min:0'],
                     'status' => ['required', Rule::in(['not_received','paint','upholstery','mechanic','electrical','agency','polish','ready'])],
                     'bulk_deal_id' => ['nullable', 'exists:bulk_deals,id'],
+                    'purchase_costs' => ['nullable', 'array'],
+                    'purchase_costs.*.description' => ['required', 'string', 'max:255'],
+                    'purchase_costs.*.amount' => ['required', 'numeric', 'min:0'],
                 ];
                 break;
             case 5:
@@ -58,16 +63,6 @@ class CarStepRequest extends FormRequest
                     'transmission' => ['nullable', 'string', 'max:255'],
                     'motor' => ['nullable', 'string', 'max:255'],
                     'body_notes' => ['nullable', 'string'],
-                    'hood' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'front_right_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'front_left_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'rear_right_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'rear_left_fender' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'trunk_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'front_right_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'rear_right_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'front_left_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
-                    'rear_left_door' => ['nullable', Rule::in(['clean_and_free_of_filler', 'painted', 'fully_repainted'])],
                 ];
                 break;
             case 6:
