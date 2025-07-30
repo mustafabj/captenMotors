@@ -494,7 +494,13 @@
                     </div>
                     <div class="kt-card-content p-3 sm:p-6 space-y-4">
                         <div>
-                            <label for="chassis_inspection" class="block text-sm font-medium text-gray-700 mb-2">Chassis Inspection</label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="chassis_inspection" class="block text-sm font-medium text-gray-700">Chassis Inspection (الشاصي)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" name="chassis_status" value="good" {{ old('chassis_status') == 'good' ? 'checked' : '' }} class="kt-checkbox">
+                                    <span class="text-sm text-gray-600">جيـد</span>
+                                </div>
+                            </div>
                             <textarea name="chassis_inspection" id="chassis_inspection" class="kt-textarea w-full h-24 sm:h-32"
                                 placeholder="Enter comprehensive chassis inspection notes including front, rear, left, and right sides">{{ old('chassis_inspection') }}</textarea>
                         </div>
@@ -507,22 +513,87 @@
                     </div>
                     <div class="kt-card-content p-3 sm:p-6 space-y-4">
                         <div>
-                            <label for="transmission" class="block text-sm font-medium text-gray-700 mb-2">Transmission
-                                Condition</label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="transmission" class="block text-sm font-medium text-gray-700">Transmission
+                                    Condition</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" name="transmission_status" value="good" {{ old('transmission_status') == 'good' ? 'checked' : '' }} class="kt-checkbox">
+                                    <span class="text-sm text-gray-600">جيـد</span>
+                                </div>
+                            </div>
                             <input type="text" name="transmission" id="transmission" class="kt-input w-full"
                                 value="{{ old('transmission') }}" placeholder="Enter Transmission Type">
                         </div>
                         <div>
-                            <label for="motor" class="block text-sm font-medium text-gray-700 mb-2">Motor
-                                Condition</label>
-                            <input type="text" name="motor" id="motor" class="kt-input w-full"
-                                value="{{ old('motor') }}" placeholder="Enter Motor Condition">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="motor" class="block text-sm font-medium text-gray-700">Motor
+                                    Condition</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" name="motor_status" value="good" {{ old('motor_status') == 'good' ? 'checked' : '' }} class="kt-checkbox">
+                                    <span class="text-sm text-gray-600">جيــــــــــــــــــــدة</span>
+                                </div>
+                            </div>
+                                                                                    <div class="flex gap-2">
+                                                            <div class="flex items-center gap-1">
+                                                                <span class="text-sm text-gray-600">النسبة :</span>
+                                                                <input type="number" name="motor_percentage" id="motor_percentage" class="kt-input w-20" 
+                                                                    value="{{ old('motor_percentage') }}" placeholder="%" min="0" max="100">
+                                                            </div>
+                                                            <input type="text" name="motor" id="motor" class="kt-input flex-1"
+                                                                value="{{ old('motor') }}" placeholder="Enter Motor Condition">
+                                                        </div>
                         </div>
                         <div>
                             <label for="body_notes" class="block text-sm font-medium text-gray-700 mb-2">Body
                                 Notes</label>
-                            <textarea name="body_notes" id="body_notes" class="kt-textarea h-20 sm:h-24"
+                            <textarea name="body_notes" id="body_notes" class="kt-textarea w-full h-20 sm:h-24"
                                 placeholder="Additional notes about the car's body condition">{{ old('body_notes') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body Parts Inspection -->
+            <div class="mt-6">
+                <div class="kt-card">
+                    <div class="kt-card-header">
+                        <h3 class="text-base sm:text-lg font-semibold">Body Parts Inspection (الهيكل)</h3>
+                    </div>
+                    <div class="kt-card-content p-3 sm:p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @php
+                                $bodyParts = [
+                                    'hood' => 'Hood (كبوت)',
+                                    'front_right_fender' => 'Front Right Fender (مدكر امامي يمين)',
+                                    'front_left_fender' => 'Front Left Fender (مدكر امامي يسار)',
+                                    'rear_right_fender' => 'Rear Right Fender (مدكر خلفي يمين)',
+                                    'rear_left_fender' => 'Rear Left Fender (مدكر خلفي يسار)',
+                                    'trunk_door' => 'Trunk Door (باب الدبة)',
+                                    'front_right_door' => 'Front Right Door (باب امامي يمين)',
+                                    'rear_right_door' => 'Rear Right Door (باب خلفي يمين)',
+                                    'front_left_door' => 'Front Left Door (باب امامي يسار)',
+                                    'rear_left_door' => 'Rear Left Door (باب خلفي يسار)'
+                                ];
+                                $inspectionOptions = [
+                                    'clean_and_free_of_filler' => 'سليم وخالي من المعجون',
+                                    'painted' => 'مصبوغ',
+                                    'fully_repainted' => 'مطلي بالكامل'
+                                ];
+                            @endphp
+
+                            @foreach($bodyParts as $field => $label)
+                                <div>
+                                    <label for="{{ $field }}" class="block text-sm font-medium text-gray-700 mb-2">{{ $label }}</label>
+                                    <select name="{{ $field }}" id="{{ $field }}" class="kt-select w-full">
+                                        <option value="">Select condition</option>
+                                        @foreach($inspectionOptions as $value => $option)
+                                            <option value="{{ $value }}" {{ old($field) == $value ? 'selected' : '' }}>
+                                                {{ $option }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>

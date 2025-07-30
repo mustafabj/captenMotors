@@ -77,7 +77,7 @@ class CarController extends Controller
                 'model' => 'required|string|max:255',
                 'vehicle_category' => 'nullable|string|max:255',
                 'color' => 'nullable|string|max:255',
-                'mileage' => 'nullable|integer|min:0',
+                'odometer' => 'nullable|integer|min:0',
                 'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
                 'place_of_manufacture' => 'nullable|string|max:255',
                 'number_of_keys' => 'nullable|integer|min:1|max:10',
@@ -95,6 +95,16 @@ class CarController extends Controller
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
+                'hood' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'trunk_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
                 'options' => 'nullable|array',
                 'options.*' => 'string|max:255',
                 'all_options' => 'nullable|string',
@@ -143,12 +153,48 @@ class CarController extends Controller
                 }
 
                 // Handle inspection data
-                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor')) {
+                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor') || 
+                    $request->filled('hood') || $request->filled('front_right_fender') || $request->filled('front_left_fender') ||
+                    $request->filled('rear_right_fender') || $request->filled('rear_left_fender') || $request->filled('trunk_door') ||
+                    $request->filled('front_right_door') || $request->filled('rear_right_door') || $request->filled('front_left_door') ||
+                    $request->filled('rear_left_door') || $request->filled('body_notes')) {
+                    
+                    // Handle checkbox logic for inspection fields
+                    $chassis_inspection = $request->chassis_inspection;
+                    if ($request->has('chassis_status')) {
+                        $chassis_inspection = empty($chassis_inspection) ? 'جيــــــــــــــــــــد' : 'جيــــــــــــــــــــد / ' . $chassis_inspection;
+                    }
+
+                    $transmission = $request->transmission;
+                    if ($request->has('transmission_status')) {
+                        $transmission = empty($transmission) ? 'جيــــــــــــــــــــد' : 'جيــــــــــــــــــــد / ' . $transmission;
+                    }
+
+                    $motor = $request->motor;
+                    if ($request->has('motor_status')) {
+                        $motor = empty($motor) ? 'جيــــــــــــــــــــدة' : 'جيــــــــــــــــــــدة / ' . $motor;
+                    }
+                    if ($request->filled('motor_percentage')) {
+                        $motor = $motor . ' - النسبة : ' . $request->motor_percentage . '%';
+                    }
+
+                    $body_notes = $request->body_notes;
+
                     $car->inspection()->create([
-                        'chassis_inspection' => $request->chassis_inspection,
-                        'transmission' => $request->transmission,
-                        'motor' => $request->motor,
-                        'body_notes' => $request->body_notes,
+                        'chassis_inspection' => $chassis_inspection,
+                        'transmission' => $transmission,
+                        'motor' => $motor,
+                        'body_notes' => $body_notes,
+                        'hood' => $request->hood ?? 'clean_and_free_of_filler',
+                        'front_right_fender' => $request->front_right_fender ?? 'clean_and_free_of_filler',
+                        'front_left_fender' => $request->front_left_fender ?? 'clean_and_free_of_filler',
+                        'rear_right_fender' => $request->rear_right_fender ?? 'clean_and_free_of_filler',
+                        'rear_left_fender' => $request->rear_left_fender ?? 'clean_and_free_of_filler',
+                        'trunk_door' => $request->trunk_door ?? 'clean_and_free_of_filler',
+                        'front_right_door' => $request->front_right_door ?? 'clean_and_free_of_filler',
+                        'rear_right_door' => $request->rear_right_door ?? 'clean_and_free_of_filler',
+                        'front_left_door' => $request->front_left_door ?? 'clean_and_free_of_filler',
+                        'rear_left_door' => $request->rear_left_door ?? 'clean_and_free_of_filler',
                     ]);
                 }
 
@@ -239,7 +285,7 @@ class CarController extends Controller
                 'model' => 'required|string|max:255',
                 'vehicle_category' => 'nullable|string|max:255',
                 'color' => 'nullable|string|max:255',
-                'mileage' => 'nullable|integer|min:0',
+                'odometer' => 'nullable|integer|min:0',
                 'manufacturing_year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
                 'place_of_manufacture' => 'nullable|string|max:255',
                 'number_of_keys' => 'nullable|integer|min:1|max:10',
@@ -257,6 +303,16 @@ class CarController extends Controller
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
+                'hood' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'trunk_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
                 'options' => 'nullable|array',
                 'options.*' => 'string|max:255',
                 'all_options' => 'nullable|string',
@@ -309,14 +365,50 @@ class CarController extends Controller
                 }
 
                 // Update inspection data
-                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor')) {
+                if ($request->filled('chassis_inspection') || $request->filled('transmission') || $request->filled('motor') || 
+                    $request->filled('hood') || $request->filled('front_right_fender') || $request->filled('front_left_fender') ||
+                    $request->filled('rear_right_fender') || $request->filled('rear_left_fender') || $request->filled('trunk_door') ||
+                    $request->filled('front_right_door') || $request->filled('rear_right_door') || $request->filled('front_left_door') ||
+                    $request->filled('rear_left_door') || $request->filled('body_notes')) {
+                    
+                    // Handle checkbox logic for inspection fields
+                    $chassis_inspection = $request->chassis_inspection;
+                    if ($request->has('chassis_status')) {
+                        $chassis_inspection = empty($chassis_inspection) ? 'جيــــــــــــــــــــد' : 'جيــــــــــــــــــــد / ' . $chassis_inspection;
+                    }
+
+                    $transmission = $request->transmission;
+                    if ($request->has('transmission_status')) {
+                        $transmission = empty($transmission) ? 'جيــــــــــــــــــــد' : 'جيــــــــــــــــــــد / ' . $transmission;
+                    }
+
+                    $motor = $request->motor;
+                    if ($request->has('motor_status')) {
+                        $motor = empty($motor) ? 'جيــــــــــــــــــــدة' : 'جيــــــــــــــــــــدة / ' . $motor;
+                    }
+                    if ($request->filled('motor_percentage')) {
+                        $motor = $motor . ' - النسبة : ' . $request->motor_percentage . '%';
+                    }
+
+                    $body_notes = $request->body_notes;
+
                     $car->inspection()->updateOrCreate(
                         ['car_id' => $car->id],
                         [
-                            'chassis_inspection' => $request->chassis_inspection,
-                            'transmission' => $request->transmission,
-                            'motor' => $request->motor,
-                            'body_notes' => $request->body_notes,
+                            'chassis_inspection' => $chassis_inspection,
+                            'transmission' => $transmission,
+                            'motor' => $motor,
+                            'body_notes' => $body_notes,
+                            'hood' => $request->hood ?? 'clean_and_free_of_filler',
+                            'front_right_fender' => $request->front_right_fender ?? 'clean_and_free_of_filler',
+                            'front_left_fender' => $request->front_left_fender ?? 'clean_and_free_of_filler',
+                            'rear_right_fender' => $request->rear_right_fender ?? 'clean_and_free_of_filler',
+                            'rear_left_fender' => $request->rear_left_fender ?? 'clean_and_free_of_filler',
+                            'trunk_door' => $request->trunk_door ?? 'clean_and_free_of_filler',
+                            'front_right_door' => $request->front_right_door ?? 'clean_and_free_of_filler',
+                            'rear_right_door' => $request->rear_right_door ?? 'clean_and_free_of_filler',
+                            'front_left_door' => $request->front_left_door ?? 'clean_and_free_of_filler',
+                            'rear_left_door' => $request->rear_left_door ?? 'clean_and_free_of_filler',
                         ]
                     );
                 }
@@ -543,6 +635,8 @@ class CarController extends Controller
                 'expected_sale_price' => 'required|numeric|min:0',
                 'status' => 'required|in:not_received,paint,upholstery,mechanic,electrical,agency,polish,ready',
                 'bulk_deal_id' => 'nullable|exists:bulk_deals,id',
+                'color' => 'nullable|string|max:255',
+                'odometer' => 'nullable|integer|min:0',
             ]);
 
             return DB::transaction(function () use ($validated, $request, $car) {
@@ -574,6 +668,8 @@ class CarController extends Controller
                             'expected_sale_price' => $car->expected_sale_price,
                             'status' => $car->status,
                             'bulk_deal_id' => $car->bulk_deal_id,
+                            'color' => $car->color,
+                            'odometer' => $car->odometer,
                         ]
                     ]);
                 }
@@ -702,13 +798,61 @@ class CarController extends Controller
                 'transmission' => 'nullable|string|max:255',
                 'motor' => 'nullable|string|max:255',
                 'body_notes' => 'nullable|string',
+                'hood' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_fender' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'trunk_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_right_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'front_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
+                'rear_left_door' => 'nullable|in:clean_and_free_of_filler,painted,fully_repainted',
             ]);
 
             return DB::transaction(function () use ($validated, $request, $car) {
+                // Handle checkbox logic for inspection fields
+                $chassis_inspection = $request->chassis_inspection;
+                if ($request->has('chassis_status')) {
+                    $chassis_inspection = empty($chassis_inspection) ? 'جيــــــــــــــــــــد' : 'جيــــــــــــــــــــد / ' . $chassis_inspection;
+                }
+
+                $transmission = $request->transmission;
+                if ($request->has('transmission_status')) {
+                    $transmission = empty($transmission) ? 'جيــــــــــــــــــــد' : 'جيــــــــــــــــــــد / ' . $transmission;
+                }
+
+                $motor = $request->motor;
+                if ($request->has('motor_status')) {
+                    $motor = empty($motor) ? 'جيــــــــــــــــــــدة' : 'جيــــــــــــــــــــدة / ' . $motor;
+                }
+                if ($request->filled('motor_percentage')) {
+                    $motor = $motor . ' - النسبة : ' . $request->motor_percentage . '%';
+                }
+
+                $body_notes = $request->body_notes;
+
                 // Update or create inspection
+                $inspectionData = array_merge($validated, [
+                    'chassis_inspection' => $chassis_inspection,
+                    'transmission' => $transmission,
+                    'motor' => $motor,
+                    'body_notes' => $body_notes,
+                    'hood' => $request->hood ?? 'clean_and_free_of_filler',
+                    'front_right_fender' => $request->front_right_fender ?? 'clean_and_free_of_filler',
+                    'front_left_fender' => $request->front_left_fender ?? 'clean_and_free_of_filler',
+                    'rear_right_fender' => $request->rear_right_fender ?? 'clean_and_free_of_filler',
+                    'rear_left_fender' => $request->rear_left_fender ?? 'clean_and_free_of_filler',
+                    'trunk_door' => $request->trunk_door ?? 'clean_and_free_of_filler',
+                    'front_right_door' => $request->front_right_door ?? 'clean_and_free_of_filler',
+                    'rear_right_door' => $request->rear_right_door ?? 'clean_and_free_of_filler',
+                    'front_left_door' => $request->front_left_door ?? 'clean_and_free_of_filler',
+                    'rear_left_door' => $request->rear_left_door ?? 'clean_and_free_of_filler',
+                ]);
+                
                 $car->inspection()->updateOrCreate(
                     ['car_id' => $car->id],
-                    $validated
+                    $inspectionData
                 );
 
                 if ($request->ajax()) {
@@ -911,5 +1055,14 @@ class CarController extends Controller
                 ->withErrors(['general' => 'An error occurred while updating the images. Please try again.'])
                 ->withInput();
         }
+    }
+
+    /**
+     * Display the inspection report for a car
+     */
+    public function inspectionReport(Car $car)
+    {
+        $car->load(['inspection', 'options']);
+        return view('cars.inspection-report', compact('car'));
     }
 }
