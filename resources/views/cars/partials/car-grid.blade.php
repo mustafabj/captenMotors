@@ -43,6 +43,15 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        <li>
+                                            <form action="{{ route('insurance.test-notification', $car) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" class="kt-dropdown-menu-link w-full text-left">
+                                                    <i class="ki-filled ki-shield-tick"></i>
+                                                    Test Insurance Notification
+                                                </button>
+                                            </form>
+                                        </li>
                                         @endif
                                     </ul>
                                 </div>
@@ -133,16 +142,32 @@
 
                     <!-- Card Footer -->
                     <div class="kt-card-footer p-4 border-t border-gray-200 bg-gray-50">
-                        <div class="flex items-center justify-between text-sm">
+                        <div class="flex flex-col justify-start items-start gap-[11px] text-sm">
                             <div class="flex items-center gap-2">
                                 <i class="ki-filled ki-calendar text-gray-400"></i>
                                 <span class="text-gray-600">Purchased:
                                     {{ $car->purchase_date->format('M j, Y') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <i class="ki-filled ki-shield-tick text-gray-400"></i>
+                                @php
+                                    $insuranceStatus = $car->getInsuranceStatus();
+                                @endphp
+                                <i class="ki-filled ki-shield-tick {{ $insuranceStatus['status'] === 'valid' ? 'text-green-500' : ($insuranceStatus['status'] === 'not_set' ? 'text-gray-400' : 'text-red-500') }}"></i>
                                 <span class="text-gray-600">Insurance:
-                                    {{ $car->insurance_expiry_date ? $car->insurance_expiry_date->format('M j, Y') : 'Not set' }}</span>
+                                    @if($car->insurance_expiry_date)
+                                        {{ $car->insurance_expiry_date->format('M j, Y') }}
+                                        @if($insuranceStatus['status'] !== 'valid' && $insuranceStatus['status'] !== 'not_set')
+                                            <span class="kt-badge {{ $insuranceStatus['class'] }} ml-1">
+                                                {{ $insuranceStatus['text'] }}
+                                                @if($insuranceStatus['days'])
+                                                    ({{ number_format($insuranceStatus['days'])}} days)
+                                                @endif
+                                            </span>
+                                        @endif
+                                    @else
+                                        Not set
+                                    @endif
+                                </span>
                             </div>
                         </div>
                     </div>

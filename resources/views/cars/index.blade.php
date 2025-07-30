@@ -46,6 +46,15 @@
                             <i class="ki-filled ki-plus"></i>
                             Add Car
                         </a>
+
+                        <!-- Insurance Check Button -->
+                        <form action="{{ route('insurance.check-expiry') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="kt-btn kt-btn-warning" title="Check for insurance expiry notifications">
+                                <i class="ki-filled ki-shield-tick"></i>
+                                Check Insurance
+                            </button>
+                        </form>
                         @endif
                     </div>
                 </div>

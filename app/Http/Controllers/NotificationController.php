@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Notification;
 use App\Models\EquipmentCostNotification;
+use App\Models\InsuranceExpiryNotification;
 use App\Models\CarEquipmentCost;
 use App\Models\Car;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         
-        // Get both regular notifications and equipment cost notifications
+        // Get all types of notifications
         $regularNotifications = $user->notifications()
             ->orderBy('created_at', 'desc')
             ->get();
@@ -27,9 +28,15 @@ class NotificationController extends Controller
             ->with(['car', 'carEquipmentCost', 'requestedByUser'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $insuranceExpiryNotifications = $user->insuranceExpiryNotifications()
+            ->with(['car'])
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         // Combine and sort by created_at
         $allNotifications = $regularNotifications->concat($equipmentCostNotifications)
+            ->concat($insuranceExpiryNotifications)
             ->sortByDesc('created_at')
             ->values();
         
@@ -39,7 +46,9 @@ class NotificationController extends Controller
         $offset = ($page - 1) * $perPage;
         $paginatedNotifications = $allNotifications->slice($offset, $perPage);
         
-        $totalUnread = $user->unreadNotifications()->count() + $user->unreadEquipmentCostNotifications()->count();
+        $totalUnread = $user->unreadNotifications()->count() + 
+                      $user->unreadEquipmentCostNotifications()->count() + 
+                      $user->unreadInsuranceExpiryNotifications()->count();
 
         if ($request->ajax()) {
             return response()->json([
@@ -73,6 +82,11 @@ class NotificationController extends Controller
             $notification = EquipmentCostNotification::where('notified_user_id', $user->id)
                 ->findOrFail($id);
             $notification->markAsRead();
+        } elseif (!$notification) {
+            // Try to find in insurance expiry notifications
+            $notification = InsuranceExpiryNotification::where('user_id', $user->id)
+                ->findOrFail($id);
+            $notification->markAsRead();
         } else {
             $notification->markAsRead();
         }
@@ -81,7 +95,9 @@ class NotificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Notification marked as read',
-                'unread_count' => $user->unreadNotifications()->count() + $user->unreadEquipmentCostNotifications()->count()
+                'unread_count' => $user->unreadNotifications()->count() + 
+                                $user->unreadEquipmentCostNotifications()->count() + 
+                                $user->unreadInsuranceExpiryNotifications()->count()
             ]);
         }
 
@@ -96,12 +112,18 @@ class NotificationController extends Controller
         $user = Auth::user();
         
         // Mark all regular notifications as read
-        $user->unreadNotifications()->update(['read_at' => now()]);
+        $user->unreadNotifications()->update(['read_at' => \Carbon\Carbon::now()]);
         
         // Mark all equipment cost notifications as read
         $user->unreadEquipmentCostNotifications()->update([
             'status' => 'read',
-            'read_at' => now()
+            'read_at' => \Carbon\Carbon::now()
+        ]);
+
+        // Mark all insurance expiry notifications as read
+        $user->unreadInsuranceExpiryNotifications()->update([
+            'status' => 'read',
+            'read_at' => \Carbon\Carbon::now()
         ]);
 
         if ($request->ajax()) {
@@ -121,7 +143,9 @@ class NotificationController extends Controller
     public function unreadCount()
     {
         $user = Auth::user();
-        $count = $user->unreadNotifications()->count() + $user->unreadEquipmentCostNotifications()->count();
+        $count = $user->unreadNotifications()->count() + 
+                $user->unreadEquipmentCostNotifications()->count() + 
+                $user->unreadInsuranceExpiryNotifications()->count();
         
         return response()->json([
             'count' => $count

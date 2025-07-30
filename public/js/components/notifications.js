@@ -337,7 +337,7 @@ window.NotificationsComponent = class NotificationsComponent {
     }
 
     createNotificationHTML(notification) {
-        // Handle both regular notifications and equipment cost notifications
+        // Handle all types of notifications
         const isRead = notification.read_at !== null || notification.status === 'read';
         const readClass = isRead ? 'opacity-60' : '';
         const readIcon = isRead ? '' : '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>';
@@ -346,37 +346,43 @@ window.NotificationsComponent = class NotificationsComponent {
         let title = '';
         let message = '';
         
-        // Handle equipment cost notifications
+        // Handle different notification types
         if (notification.notification_type) {
-            // This is an equipment cost notification
-            title = this.getEquipmentCostNotificationTitle(notification);
-            message = notification.message;
-            
-            // Add action buttons for equipment cost approval requests
-            // For real-time notifications, we should show buttons for new approval requests
-            const shouldShowButtons = notification.notification_type === 'approval_requested' && 
-                                    (notification.status === null || notification.status === 'unread' || !isRead);
-            
-            if (shouldShowButtons) {
-                actionButtons = `
-                    <div class="flex gap-2 mt-2">
-                        <button class="kt-btn kt-btn-sm kt-btn-success approve-cost-btn" 
-                                data-cost-id="${notification.car_equipment_cost_id}">
-                            <i class="ki-filled ki-check"></i>
-                            Approve
-                        </button>
-                        <button class="kt-btn kt-btn-sm kt-btn-danger reject-cost-btn" 
-                                data-cost-id="${notification.car_equipment_cost_id}">
-                            <i class="ki-filled ki-cross"></i>
-                            Reject
-                        </button>
-                        <button class="kt-btn kt-btn-sm kt-btn-warning transfer-cost-btn" 
-                                data-cost-id="${notification.car_equipment_cost_id}">
-                            <i class="ki-filled ki-arrow-right"></i>
-                            Transfer
-                        </button>
-                    </div>
-                `;
+            // Check if it's an insurance expiry notification
+            if (['expired', 'critical', 'warning'].includes(notification.notification_type)) {
+                // This is an insurance expiry notification
+                title = this.getInsuranceExpiryNotificationTitle(notification);
+                message = notification.message;
+            } else {
+                // This is an equipment cost notification
+                title = this.getEquipmentCostNotificationTitle(notification);
+                message = notification.message;
+                
+                // Add action buttons for equipment cost approval requests
+                const shouldShowButtons = notification.notification_type === 'approval_requested' && 
+                                        (notification.status === null || notification.status === 'unread' || !isRead);
+                
+                if (shouldShowButtons) {
+                    actionButtons = `
+                        <div class="flex gap-2 mt-2">
+                            <button class="kt-btn kt-btn-sm kt-btn-success approve-cost-btn" 
+                                    data-cost-id="${notification.car_equipment_cost_id}">
+                                <i class="ki-filled ki-check"></i>
+                                Approve
+                            </button>
+                            <button class="kt-btn kt-btn-sm kt-btn-danger reject-cost-btn" 
+                                    data-cost-id="${notification.car_equipment_cost_id}">
+                                <i class="ki-filled ki-cross"></i>
+                                Reject
+                            </button>
+                            <button class="kt-btn kt-btn-sm kt-btn-warning transfer-cost-btn" 
+                                    data-cost-id="${notification.car_equipment_cost_id}">
+                                <i class="ki-filled ki-arrow-right"></i>
+                                Transfer
+                            </button>
+                        </div>
+                    `;
+                }
             }
         } else {
             // This is a regular notification
@@ -432,6 +438,19 @@ window.NotificationsComponent = class NotificationsComponent {
                 return 'Equipment Cost Transferred';
             default:
                 return 'Equipment Cost Notification';
+        }
+    }
+
+    getInsuranceExpiryNotificationTitle(notification) {
+        switch (notification.notification_type) {
+            case 'expired':
+                return 'Insurance Expired';
+            case 'critical':
+                return 'Insurance Expiry Critical';
+            case 'warning':
+                return 'Insurance Expiry Warning';
+            default:
+                return 'Insurance Notification';
         }
     }
 
