@@ -34,12 +34,14 @@ App.pages.carsShow = {
         this.config.inspectionUpdateUrl = `/cars/${carId}/update-inspection`;
         this.config.financialUpdateUrl = `/cars/${carId}/update-financial`;
         this.config.imagesUpdateUrl = `/cars/${carId}/update-images`;
+        this.config.deleteImageUrl = `/cars/${carId}/delete-image`;
         
         this.storeOriginalValues();
         this.bindEvents();
-                    this.initTabs();
+        this.initTabs();
         this.initLightGallery();
         this.initEquipmentCostForm();
+        this.initFilePond();
     },
 
     // Store original values for reset functionality
@@ -197,6 +199,113 @@ App.pages.carsShow = {
             });
         },
 
+        // Initialize FilePond for image uploads
+        initFilePond: function() {
+            // Check if FilePond is available
+            if (typeof FilePond === 'undefined') {
+                return;
+            }
+            
+            // Register plugins safely (only if they exist)
+            try {
+                if (typeof FilePondPluginImagePreview !== 'undefined') {
+                    FilePond.registerPlugin(FilePondPluginImagePreview);
+                }
+                if (typeof FilePondPluginFileValidateType !== 'undefined') {
+                    FilePond.registerPlugin(FilePondPluginFileValidateType);
+                }
+                if (typeof FilePondPluginFileValidateSize !== 'undefined') {
+                    FilePond.registerPlugin(FilePondPluginFileValidateSize);
+                }
+            } catch (error) {
+                // Silently handle plugin registration errors
+            }
+
+            // Initialize FilePond for license image
+            const licenseFilepond = document.getElementById('license-filepond-edit');
+            
+            if (licenseFilepond) {
+                try {
+                    // Destroy existing instance if it exists
+                    if (licenseFilepond._pond) {
+                        licenseFilepond._pond.destroy();
+                    }
+                    
+                    // Basic configuration without plugins
+                    const licenseConfig = {
+                        maxFileSize: '2MB',
+                        maxFiles: 1,
+                        allowMultiple: false,
+                        allowReplace: true,
+                        instantUpload: false,
+                        labelIdle: 'Drag & Drop your license image or <span class="filepond--label-action">Browse</span>',
+                        server: {
+                            process: null,
+                            revert: null,
+                            load: null,
+                            restore: null,
+                            fetch: null,
+                            remove: null
+                        }
+                    };
+                    
+                    // Add accepted file types if plugin is available
+                    if (typeof FilePondPluginFileValidateType !== 'undefined') {
+                        licenseConfig.acceptedFileTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+                    }
+                    
+                    const licensePond = FilePond.create(licenseFilepond, licenseConfig);
+                    
+                    // Store the pond instance on the element
+                    licenseFilepond._pond = licensePond;
+                } catch (error) {
+                    // Silently handle initialization errors
+                }
+            }
+
+            // Initialize FilePond for car images
+            const imagesFilepond = document.getElementById('images-filepond-edit');
+            
+            if (imagesFilepond) {
+                try {
+                    // Destroy existing instance if it exists
+                    if (imagesFilepond._pond) {
+                        imagesFilepond._pond.destroy();
+                    }
+                    
+                    // Basic configuration without plugins
+                    const imagesConfig = {
+                        maxFileSize: '2MB',
+                        maxFiles: 10,
+                        allowMultiple: true,
+                        allowReplace: true,
+                        instantUpload: false,
+                        labelIdle: 'Drag & Drop your car images or <span class="filepond--label-action">Browse</span>',
+                        server: {
+                            process: null,
+                            revert: null,
+                            load: null,
+                            restore: null,
+                            fetch: null,
+                            remove: null
+                        }
+                    };
+                    
+                    // Add accepted file types if plugin is available
+                    if (typeof FilePondPluginFileValidateType !== 'undefined') {
+                        imagesConfig.acceptedFileTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+                    }
+                    
+                    const imagesPond = FilePond.create(imagesFilepond, imagesConfig);
+                    
+                    // Store the pond instance on the element
+                    imagesFilepond._pond = imagesPond;
+                } catch (error) {
+                    // Silently handle initialization errors
+                }
+            }
+        },
+
         // Bind event listeners
         bindEvents: function() {
         // Listen for Escape key to cancel edit
@@ -271,6 +380,64 @@ App.pages.carsShow = {
         if (imagesViewMode && imagesEditMode) {
             imagesViewMode.classList.add('hidden');
             imagesEditMode.classList.remove('hidden');
+            
+            // Initialize FilePond after making the edit mode visible
+            setTimeout(() => {
+                this.initFilePond();
+            }, 100);
+        }
+    },
+
+    // Enable edit mode for images only (for regular users)
+    enableImagesEditMode: function() {
+        this.config.isEditMode = true;
+        
+        // Hide view actions, show edit actions
+        const viewActions = document.getElementById('view-actions');
+        const editActions = document.getElementById('edit-actions');
+        
+        if (viewActions) viewActions.classList.add('hidden');
+        if (editActions) editActions.classList.remove('hidden');
+        
+        // Show edit mode indicator
+        this.showEditModeIndicator();
+        
+        // Switch to images tab and enable edit mode
+        this.switchToImagesTab();
+        this.enableImagesTabEditMode();
+    },
+
+    // Switch to images tab
+    switchToImagesTab: function() {
+        // Remove active class from all tab toggles
+        const tabToggles = document.querySelectorAll('[data-kt-tab-toggle]');
+        tabToggles.forEach(toggle => toggle.classList.remove('active'));
+        
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('[id^="tab_1_"]');
+        tabContents.forEach(content => content.classList.add('hidden'));
+        
+        // Activate images tab
+        const imagesTabToggle = document.querySelector('[data-kt-tab-toggle="#tab_1_7"]');
+        const imagesTabContent = document.getElementById('tab_1_7');
+        
+        if (imagesTabToggle) imagesTabToggle.classList.add('active');
+        if (imagesTabContent) imagesTabContent.classList.remove('hidden');
+    },
+
+    // Enable edit mode for images tab only
+    enableImagesTabEditMode: function() {
+        // Images tab
+        const imagesViewMode = document.getElementById('images-view-mode');
+        const imagesEditMode = document.getElementById('images-edit-mode');
+        if (imagesViewMode && imagesEditMode) {
+            imagesViewMode.classList.add('hidden');
+            imagesEditMode.classList.remove('hidden');
+            
+            // Initialize FilePond after making the edit mode visible
+            setTimeout(() => {
+                this.initFilePond();
+            }, 100);
         }
     },
 
@@ -318,32 +485,58 @@ App.pages.carsShow = {
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="ki-filled ki-loading animate-spin"></i> Saving...';
         
-        // Save all sections
-        Promise.all([
-            this.saveMainDetails(),
-            this.saveOptions(),
-            this.saveInspection(),
-            this.saveFinancial(),
+        // Check if this is images-only edit mode (regular users)
+        const editImagesBtn = document.getElementById('edit-images-btn');
+        const isImagesOnlyMode = editImagesBtn && !editImagesBtn.classList.contains('hidden');
+        
+        if (isImagesOnlyMode) {
+            // Save only images for regular users
             this.saveImages()
-        ])
-        .then(results => {
-            const allSuccess = results.every(result => result.success);
-            if (allSuccess) {
+                .then(result => {
+                    if (result.success) {
+                        App.utils.showToast('Images saved successfully!', 'success');
+                        this.disableEditMode();
+                    } else {
+                        App.utils.showToast('Error saving images. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Save error:', error);
+                    App.utils.showToast('An error occurred while saving. Please try again.', 'error');
+                })
+                .finally(() => {
+                    // Reset button state
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalText;
+                });
+        } else {
+            // Save all sections for admin users
+            Promise.all([
+                this.saveMainDetails(),
+                this.saveOptions(),
+                this.saveInspection(),
+                this.saveFinancial(),
+                this.saveImages()
+            ])
+            .then(results => {
+                const allSuccess = results.every(result => result.success);
+                if (allSuccess) {
                     App.utils.showToast('All changes saved successfully!', 'success');
-                this.disableEditMode();
-            } else {
+                    this.disableEditMode();
+                } else {
                     App.utils.showToast('Some changes could not be saved. Please check the errors.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Save error:', error);
+                }
+            })
+            .catch(error => {
+                console.error('Save error:', error);
                 App.utils.showToast('An error occurred while saving. Please try again.', 'error');
-        })
-        .finally(() => {
-            // Reset button state
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = originalText;
-        });
+            })
+            .finally(() => {
+                // Reset button state
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            });
+        }
     },
 
     // Save main details
@@ -476,33 +669,91 @@ App.pages.carsShow = {
         // Save images
         saveImages: function() {
             const formData = new FormData();
-            const imageFields = document.querySelectorAll('#images-edit-mode .images-field');
             
-            imageFields.forEach(field => {
-                if (field.files.length > 0) {
-                    if (field.name === 'car_images[]') {
-                        // Multiple files
-                        for (let i = 0; i < field.files.length; i++) {
-                            formData.append('car_images[]', field.files[i]);
-                        }
-                    } else {
-                        // Single file
-                        formData.append(field.name, field.files[0]);
+            // Add CSRF token
+            formData.append('_token', this.config.csrfToken);
+            
+            // Get files from FilePond instances
+            const licenseFilepond = document.querySelector('#license-filepond-edit');
+            const imagesFilepond = document.querySelector('#images-filepond-edit');
+            
+            let filesFound = false;
+            
+            // Try to access FilePond files
+            if (licenseFilepond) {
+                // Method 1: Try accessing via _pond property
+                if (licenseFilepond._pond && licenseFilepond._pond.getFiles().length > 0) {
+                    const file = licenseFilepond._pond.getFiles()[0].file;
+                    formData.append('car_license', file);
+                    filesFound = true;
+                }
+                // Method 2: Try accessing via FilePond.find() method
+                else {
+                    const pond = FilePond.find(licenseFilepond);
+                    if (pond && pond.getFiles().length > 0) {
+                        const file = pond.getFiles()[0].file;
+                        formData.append('car_license', file);
+                        filesFound = true;
                     }
                 }
-            });
+            }
+            
+            if (imagesFilepond) {
+                // Method 1: Try accessing via _pond property
+                if (imagesFilepond._pond && imagesFilepond._pond.getFiles().length > 0) {
+                    const files = imagesFilepond._pond.getFiles();
+                    files.forEach(fileItem => {
+                        formData.append('car_images[]', fileItem.file);
+                    });
+                    filesFound = true;
+                }
+                // Method 2: Try accessing via FilePond.find() method
+                else {
+                    const pond = FilePond.find(imagesFilepond);
+                    if (pond && pond.getFiles().length > 0) {
+                        const files = pond.getFiles();
+                        files.forEach(fileItem => {
+                            formData.append('car_images[]', fileItem.file);
+                        });
+                        filesFound = true;
+                    }
+                }
+            }
+
+            // If no files found, show a message
+            if (!filesFound) {
+                App.utils.showToast('No new images selected for upload.', 'info');
+                return Promise.resolve({ success: true, message: 'No new images to upload.' });
+            }
 
             return fetch(this.config.imagesUpdateUrl, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': this.config.csrfToken,
                     'Accept': 'application/json'
                 },
                 body: formData
             })
             .then(response => response.json());
-    },
+        },
+
+        // Delete image
+        deleteImage: function(mediaId, mediaType) {
+            return fetch(this.config.deleteImageUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    media_id: mediaId,
+                    media_type: mediaType
+                })
+            })
+            .then(response => response.json());
+        },
 
     // Cancel edit mode
     cancelEdit: function() {
@@ -830,15 +1081,59 @@ window.cancelImagesEdit = function() {
         document.getElementById('images-view-mode').classList.remove('hidden');
         document.getElementById('images-edit-mode').classList.add('hidden');
         
-        // Clear file inputs
-        const fileInputs = document.querySelectorAll('#images-edit-mode input[type="file"]');
-        fileInputs.forEach(input => {
-            input.value = '';
-        });
+        // Clear FilePond instances
+        const licenseFilepond = document.querySelector('#license-filepond-edit');
+        const imagesFilepond = document.querySelector('#images-filepond-edit');
+        
+        if (licenseFilepond && licenseFilepond._pond) {
+            licenseFilepond._pond.removeFiles();
+        }
+        
+        if (imagesFilepond && imagesFilepond._pond) {
+            imagesFilepond._pond.removeFiles();
+        }
+        
+        // Re-initialize FilePond after canceling
+        if (App.pages.carsShow) {
+            App.pages.carsShow.initFilePond();
+        }
     };
+
+
 
     // Event delegation for all buttons
     document.addEventListener('click', function(e) {
+        // Handle image deletion
+        const deleteImageBtn = e.target.closest('.delete-image-btn');
+        if (deleteImageBtn && App.pages.carsShow) {
+            const mediaId = deleteImageBtn.getAttribute('data-media-id');
+            const mediaType = deleteImageBtn.getAttribute('data-media-type');
+            
+            if (confirm('Are you sure you want to delete this image?')) {
+                // Remove the image element from the DOM immediately
+                const imageContainer = deleteImageBtn.closest('[data-media-id]');
+                if (imageContainer) {
+                    imageContainer.remove();
+                }
+                
+                // Then send the delete request to the server
+                App.pages.carsShow.deleteImage(mediaId, mediaType)
+                    .then(data => {
+                        if (data.success) {
+                            App.utils.showToast('Image deleted successfully!', 'success');
+                        } else {
+                            // If server deletion failed, show error but don't restore the image
+                            App.utils.showToast('Error deleting image from server', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        App.utils.showToast('An error occurred while deleting the image', 'error');
+                    });
+            }
+            return;
+        }
+
         // Handle data-action buttons
         const actionBtn = e.target.closest('[data-action]');
         if (actionBtn) {
@@ -882,6 +1177,13 @@ window.cancelImagesEdit = function() {
         const editBtn = e.target.closest('#edit-btn');
         if (editBtn && App.pages.carsShow) {
             App.pages.carsShow.enableEditMode();
+            return;
+        }
+
+        // Handle edit images button for regular users
+        const editImagesBtn = e.target.closest('#edit-images-btn');
+        if (editImagesBtn && App.pages.carsShow) {
+            App.pages.carsShow.enableImagesEditMode();
             return;
         }
 

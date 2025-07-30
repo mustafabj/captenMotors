@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- FilePond CSS and JS -->
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+    
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+    <script src="https://unpkg.com/filepond-plugin-file-validate-size/dist/filepond-plugin-file-validate-size.js"></script>
     <!-- Responsive Design Styles -->
     <style>
         /* Edit Mode Indicator Styles */
@@ -92,6 +100,39 @@
             .equipment-costs-table td {
                 padding: 0.5rem 0.25rem;
             }
+        }
+
+        /* Image edit mode styles */
+        .delete-image-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .group:hover .delete-image-btn {
+            opacity: 1;
+        }
+
+        .delete-image-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* FilePond custom styles */
+        .filepond--root {
+            font-family: inherit;
+        }
+
+        .filepond--panel-root {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+        }
+
+        .filepond--drop-label {
+            color: #6b7280;
+        }
+
+        .filepond--label-action {
+            color: #3b82f6;
+            text-decoration: underline;
         }
     </style>
 
@@ -207,7 +248,7 @@
                     @if (auth()->user()->isAdmin())
                         <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
                             <i class="ki-filled ki-pencil"></i>
-                            <span class="hidden sm:inline">Edit</span>
+                            <span class="hidden sm:inline">Edit All</span>
                         </button>
                         @if (!$car->isSold())
                             <button class="kt-btn kt-btn-sm kt-btn-success w-full sm:w-auto"
@@ -217,6 +258,11 @@
                                 <span class="hidden sm:inline">Mark as Sold</span>
                             </button>
                         @endif
+                    @else
+                        <button id="edit-images-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
+                            <i class="ki-filled ki-picture"></i>
+                            <span class="hidden sm:inline">Edit Images</span>
+                        </button>
                     @endif
                     <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-sm kt-btn-outline w-full sm:w-auto">
                         <i class="ki-filled ki-arrow-left"></i>
@@ -750,6 +796,7 @@
 
                                 // Parse motor
                                 if ($car->inspection->motor) {
+                                    // Check if motor starts with the status prefix
                                     if (strpos($car->inspection->motor, 'جيــــــــــــــــــــدة') === 0) {
                                         $motorStatus = true;
                                         $motorDescription = $car->inspection->motor;
@@ -775,6 +822,7 @@
                                             $motorDescription = '';
                                         }
                                     } else {
+                                        $motorStatus = false; // Explicitly set to false
                                         $motorDescription = $car->inspection->motor;
                                         // Check if it has percentage without status
                                         if (preg_match('/النسبة : (\d+)%/', $car->inspection->motor, $matches)) {
@@ -786,6 +834,8 @@
                                             );
                                         }
                                     }
+                                } else {
+                                    $motorStatus = false; // Explicitly set to false when no motor data
                                 }
                             }
                         @endphp
@@ -823,7 +873,7 @@
                                                 <div class="flex items-center justify-between mb-2">
                                                     <label class="kt-form-label">Transmission Condition</label>
                                                     <div class="flex items-center justify-end gap-2 w-full">
-                                                        <input type="checkbox" name="transmission_status" value="good"
+                                                        <input type="checkbox" name="transmission_status"
                                                             class="kt-checkbox inspection-field"
                                                             {{ $transmissionStatus ? 'checked' : '' }}>
                                                         <span class="text-sm text-gray-600">جيـد</span>
@@ -837,7 +887,7 @@
                                                 <div class="flex items-center justify-between mb-2">
                                                     <label class="kt-form-label">Motor Condition</label>
                                                     <div class="flex items-center justify-end gap-2 w-full">
-                                                        <input type="checkbox" name="motor_status" value="good"
+                                                        <input type="checkbox" name="motor_status"
                                                             class="kt-checkbox inspection-field"
                                                             {{ $motorStatus ? 'checked' : '' }}>
                                                         <span class="text-sm text-gray-600">جيــــــــــــــــــــدة</span>
@@ -1211,16 +1261,39 @@
                     <!-- Edit Mode -->
                     <div id="images-edit-mode" class="hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <!-- Car License Upload -->
+                            <!-- Car License Section -->
                             <div class="kt-card">
                                 <div class="kt-card-header">
                                     <h4 class="text-lg ">Car License</h4>
                                 </div>
                                 <div class="kt-card-content">
+                                    <!-- Existing License Images -->
+                                    <div id="existing-license-images" class="mb-6">
+                                        @if ($car->getMedia('car_license')->count() > 0)
+                                            <h5 class="text-sm font-medium text-gray-700 mb-3">Current License Images</h5>
+                                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                @foreach ($car->getMedia('car_license') as $license)
+                                                    <div class="relative group" data-media-id="{{ $license->id }}">
+                                                        <img src="{{ $license->getUrl() }}" alt="Car License"
+                                                            class="w-full h-24 object-cover rounded-lg shadow-sm">
+                                                        <button type="button" 
+                                                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors delete-image-btn"
+                                                                data-media-id="{{ $license->id }}"
+                                                                data-media-type="car_license"
+                                                                title="Delete image">
+                                                            <i class="ki-filled ki-cross"></i>
+                                                        </button>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- New License Upload -->
                                     <div class="kt-form-item">
-                                        <label class="kt-form-label">Upload License Image</label>
-                                        <input type="file" class="kt-input w-full images-field" name="car_license"
-                                            accept="image/*">
+                                        <label class="kt-form-label">Upload New License Image</label>
+                                        <input type="file" id="license-filepond-edit" name="car_license"
+                                            accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB" data-max-files="1">
                                         <div class="text-sm text-gray-500 mt-1">
                                             Accepted formats: JPEG, PNG, JPG (max 2MB)
                                         </div>
@@ -1228,18 +1301,41 @@
                                 </div>
                             </div>
 
-                            <!-- Car Images Upload -->
+                            <!-- Car Images Section -->
                             <div class="kt-card">
                                 <div class="kt-card-header">
                                     <h4 class="text-lg ">Car Images</h4>
                                 </div>
                                 <div class="kt-card-content">
+                                    <!-- Existing Car Images -->
+                                    <div id="existing-car-images" class="mb-6">
+                                        @if ($car->getMedia('car_images')->count() > 0)
+                                            <h5 class="text-sm font-medium text-gray-700 mb-3">Current Car Images</h5>
+                                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                @foreach ($car->getMedia('car_images') as $image)
+                                                    <div class="relative group" data-media-id="{{ $image->id }}">
+                                                        <img src="{{ $image->getUrl() }}" alt="Car Image"
+                                                            class="w-full h-24 object-cover rounded-lg shadow-sm">
+                                                        <button type="button" 
+                                                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors delete-image-btn"
+                                                                data-media-id="{{ $image->id }}"
+                                                                data-media-type="car_images"
+                                                                title="Delete image">
+                                                            <i class="ki-filled ki-cross"></i>
+                                                        </button>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- New Car Images Upload -->
                                     <div class="kt-form-item">
-                                        <label class="kt-form-label">Upload Car Images</label>
-                                        <input type="file" class="kt-input w-full images-field" name="car_images[]"
-                                            accept="image/*" multiple>
+                                        <label class="kt-form-label">Upload New Car Images</label>
+                                        <input type="file" id="images-filepond-edit" name="car_images[]" multiple
+                                            accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB" data-max-files="10">
                                         <div class="text-sm text-gray-500 mt-1">
-                                            Accepted formats: JPEG, PNG, JPG (max 2MB each)
+                                            Accepted formats: JPEG, PNG, JPG (max 2MB each, max 10 images)
                                         </div>
                                     </div>
                                 </div>
@@ -1256,6 +1352,7 @@
                                 <i class="ki-filled ki-cross"></i>
                                 Cancel
                             </button>
+
                         </div>
                     </div>
                 </div>
