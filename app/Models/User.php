@@ -72,6 +72,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get insurance expiry notifications for the user
+     */
+    public function insuranceExpiryNotifications()
+    {
+        return $this->hasMany(InsuranceExpiryNotification::class);
+    }
+
+    /**
      * Get unread notifications for the user
      */
     public function unreadNotifications()
@@ -85,6 +93,14 @@ class User extends Authenticatable
     public function unreadEquipmentCostNotifications()
     {
         return $this->equipmentCostNotifications()->unread();
+    }
+
+    /**
+     * Get unread insurance expiry notifications for the user
+     */
+    public function unreadInsuranceExpiryNotifications()
+    {
+        return $this->insuranceExpiryNotifications()->unread();
     }
 
     /**

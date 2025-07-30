@@ -98,10 +98,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Other Costs creation and management (admin only)
     Route::get('other-costs/create', [OtherCostController::class, 'create'])->name('other-costs.create');
     Route::post('other-costs', [OtherCostController::class, 'store'])->name('other-costs.store');
-    Route::get('other-costs/{otherCost}/edit', [OtherCostController::class, 'edit'])->name('other-costs.edit');
-    Route::put('other-costs/{otherCost}', [OtherCostController::class, 'update'])->name('other-costs.update');
-    Route::delete('other-costs/{otherCost}', [OtherCostController::class, 'destroy'])->name('other-costs.destroy');
-    Route::post('other-costs/transfer-from-equipment-cost/{equipmentCostId}', [OtherCostController::class, 'transferFromEquipmentCost'])->name('other-costs.transfer-from-equipment-cost');
+
+    // Insurance expiry check (admin only)
+    Route::post('insurance/check-expiry', function () {
+        \Illuminate\Support\Facades\Artisan::call('insurance:check-expiry');
+        return redirect()->back()->with('success', 'Insurance expiry check completed successfully!');
+    })->name('insurance.check-expiry');
+
+    // Test insurance notification (admin only)
+    Route::post('insurance/test-notification/{car}', function (App\Models\Car $car) {
+        $notification = $car->createTestInsuranceNotification('warning');
+        return redirect()->back()->with('success', 'Test insurance notification created successfully!');
+    })->name('insurance.test-notification');
 
     // Sold Cars routes (admin only)
     Route::resource('sold-cars', SoldCarController::class)->only(['index', 'store']);
