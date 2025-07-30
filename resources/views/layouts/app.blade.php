@@ -39,7 +39,7 @@
     <!-- Main CSS (load after to override) -->
     <link href="@versioned('assets/css/styles.css')" rel="stylesheet" />
     <link href="@versioned('css/pages/cars-form.css')" rel="stylesheet" />
-
+    <link href="@versioned('css/custom.css')" rel="stylesheet" />
 </head>
 
 <body class="antialiased flex h-full text-base text-foreground bg-background demo1 kt-sidebar-fixed kt-header-fixed" data-route="{{ Route::currentRouteName() }}" data-asset-version="{{ config('assets.version', '1.0.0') }}">

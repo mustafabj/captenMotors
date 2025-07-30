@@ -59,7 +59,7 @@ class CarInspection extends Model
         $arabicOptions = [
             'clean_and_free_of_filler' => 'سليم وخالي من المعجون',
             'painted' => 'مصبوغ',
-            'fully_repainted' => 'مطلي بالكامل'
+            'fully_repainted' => 'مصبوغ بالكامل'
         ];
         return $arabicOptions[$value] ?? $value;
     }
@@ -77,6 +77,49 @@ class CarInspection extends Model
             'rear_right_door' => 'Rear Right Door',
             'front_left_door' => 'Front Left Door',
             'rear_left_door' => 'Rear Left Door'
+        ];
+    }
+
+    public static function getCarPartsArabic(): array
+    {
+        return [
+            'hood' => 'كبوت',
+            'front_right_fender' => 'مدكر امامي يمين',
+            'front_left_fender' => 'مدكر امامي يسار',
+            'rear_right_fender' => 'مدكر خلفي يمين',
+            'rear_left_fender' => 'مدكر خلفي يسار',
+            'trunk_door' => 'باب الدبة',
+            'front_right_door' => 'باب امامي يمين',
+            'rear_right_door' => 'باب خلفي يمين',
+            'front_left_door' => 'باب امامي يسار',
+            'rear_left_door' => 'باب خلفي يسار'
+        ];
+    }
+
+    /**
+     * Get the Arabic translation for inspection status
+     */
+    public function getInspectionStatusArabic(string $status): string
+    {
+        return self::getInspectionDisplayName($status);
+    }
+
+    /**
+     * Get all body part inspections as an array
+     */
+    public function getBodyInspections(): array
+    {
+        return [
+            'hood' => $this->hood,
+            'front_right_fender' => $this->front_right_fender,
+            'front_left_fender' => $this->front_left_fender,
+            'rear_right_fender' => $this->rear_right_fender,
+            'rear_left_fender' => $this->rear_left_fender,
+            'trunk_door' => $this->trunk_door,
+            'front_right_door' => $this->front_right_door,
+            'rear_right_door' => $this->rear_right_door,
+            'front_left_door' => $this->front_left_door,
+            'rear_left_door' => $this->rear_left_door
         ];
     }
 }
