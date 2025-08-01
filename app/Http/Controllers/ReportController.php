@@ -14,7 +14,8 @@ class ReportController extends Controller
 {
     public function __construct()
     {
-    }
+    }   
+
 
     public function profitLoss(Request $request)
     {
@@ -141,6 +142,96 @@ class ReportController extends Controller
             'totalTransferred',
             'totalAll',
             'costsByCar'
+        ));
+    }
+
+    public function allCars(Request $request)
+    {
+        // Get filters from request
+        $status = $request->get('status');
+        $year = $request->get('year');
+        $search = $request->get('search');
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        // Build query
+        $query = Car::with([
+            'options', 
+            'inspection', 
+            'statusHistories', 
+            'equipmentCosts' => function($q) {
+                $q->where('status', 'approved');
+            }, 
+            'otherCosts',
+            'soldCar',
+            'soldCar.soldByUser'
+        ]);
+
+        // Apply filters
+        if ($status && $status !== 'all') {
+            if ($status === 'not_ready') {
+                $query->where('status', '!=', 'ready');
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        if ($year) {
+            $query->where('manufacturing_year', $year);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('model', 'like', '%' . $search . '%')
+                  ->orWhere('plate_number', 'like', '%' . $search . '%')
+                  ->orWhere('vehicle_category', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Apply sorting
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Get paginated results
+        $cars = $query->paginate(20)->withQueryString();
+
+        // Calculate summary statistics
+        $totalCars = Car::count();
+        $totalSold = Car::where('status', 'sold')->count();
+        $totalAvailable = $totalCars - $totalSold;
+        $totalPurchaseValue = Car::sum('purchase_price');
+        $totalExpectedValue = Car::sum('expected_sale_price');
+        $totalEquipmentCosts = CarEquipmentCost::where('status', 'approved')->sum('amount');
+        $totalOtherCosts = OtherCost::sum('amount');
+
+        // Get status distribution
+        $statusDistribution = Car::selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // Get year distribution
+        $yearDistribution = Car::selectRaw('manufacturing_year, COUNT(*) as count')
+            ->groupBy('manufacturing_year')
+            ->orderBy('manufacturing_year', 'desc')
+            ->pluck('count', 'manufacturing_year')
+            ->toArray();
+
+        return view('reports.all-cars', compact(
+            'cars',
+            'totalCars',
+            'totalSold',
+            'totalAvailable',
+            'totalPurchaseValue',
+            'totalExpectedValue',
+            'totalEquipmentCosts',
+            'totalOtherCosts',
+            'statusDistribution',
+            'yearDistribution',
+            'status',
+            'year',
+            'search',
+            'sortBy',
+            'sortOrder'
         ));
     }
 }

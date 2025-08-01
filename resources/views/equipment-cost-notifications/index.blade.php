@@ -66,7 +66,7 @@
 
         <!-- Pending Requests -->
         @php
-            $query = \App\Models\CarEquipmentCost::with(['car', 'user'])
+            $query = \App\Models\CarEquipmentCost::with(['car', 'user', 'descriptionHistories'])
                 ->when(request('search'), function($q) {
                     $search = request('search');
                     $q->where('description', 'like', '%' . $search . '%')
@@ -168,34 +168,67 @@
                                 </td>
                                 <td class="p-4">
                                     @if($cost->status === 'pending')
-                                    <div class="flex items-center space-x-2">
-                                        <button type="button" 
-                                                onclick="approveRequest({{ $cost->id }})"
-                                                class="kt-btn kt-btn-success kt-btn-sm">
-                                            <i class="ki-filled ki-check"></i>
-                                            Approve
+                                    <div data-kt-dropdown="true" data-kt-dropdown-trigger="click"
+                                        data-kt-dropdown-placement="left-start">
+                                        <button class="kt-btn kt-btn-sm kt-btn-outline" data-kt-dropdown-toggle="true">
+                                            Actions
                                         </button>
-                                        <button type="button" 
-                                                onclick="showRejectModal({{ $cost->id }})"
-                                                class="kt-btn kt-btn-danger kt-btn-sm">
-                                            <i class="ki-filled ki-cross"></i>
-                                            Reject
-                                        </button>
-                                        <button type="button" 
-                                                onclick="showTransferModal({{ $cost->id }})"
-                                                class="kt-btn kt-btn-info kt-btn-sm">
-                                            <i class="ki-filled ki-arrow-right"></i>
-                                            Transfer
-                                        </button>
+                                        <div class="kt-dropdown-menu w-52" data-kt-dropdown-menu="true">
+                                            <ul class="kt-dropdown-menu-sub">
+                                                <li>
+                                                    <button type="button" 
+                                                            onclick="showChangeDescriptionModal({{ $cost->id }})"
+                                                            data-description="{{ $cost->description }}"
+                                                            class="kt-dropdown-menu-link w-full text-left">
+                                                        <i class="ki-filled ki-pencil"></i>
+                                                        Change Description
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" 
+                                                            onclick="approveRequest({{ $cost->id }})"
+                                                            class="kt-dropdown-menu-link w-full text-left text-green-600">
+                                                        <i class="ki-filled ki-check"></i>
+                                                        Approve
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" 
+                                                            onclick="showRejectModal({{ $cost->id }})"
+                                                            class="kt-dropdown-menu-link w-full text-left text-red-600">
+                                                        <i class="ki-filled ki-cross"></i>
+                                                        Reject
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" 
+                                                            onclick="showTransferModal({{ $cost->id }})"
+                                                            class="kt-dropdown-menu-link w-full text-left text-blue-600">
+                                                        <i class="ki-filled ki-arrow-right"></i>
+                                                        Transfer
+                                                    </button>
+                                                </li>
+                                                @php
+                                                    $hasHistory = \App\Models\CarEquipmentCostDescriptionHistory::where('car_equipment_cost_id', $cost->id)->exists();
+                                                @endphp
+                                                @if($hasHistory)
+                                                <li>
+                                                    <a href="{{ route('equipment-cost-notifications.description-history', $cost->id) }}"
+                                                        class="kt-dropdown-menu-link">
+                                                        <i class="ki-filled ki-history"></i>
+                                                        View History
+                                                    </a>
+                                                </li>
+                                                @endif
+                                            </ul>
+                                        </div>
                                     </div>
                                     @else
-                                    <div class="flex items-center space-x-2">
-                                        <a href="{{ route('cars.show', $cost->car) }}" 
-                                           class="kt-btn kt-btn-secondary kt-btn-sm">
-                                            <i class="ki-filled ki-eye"></i>
-                                            View Car
-                                        </a>
-                                    </div>
+                                    <a href="{{ route('cars.show', $cost->car) }}" 
+                                       class="kt-btn kt-btn-sm kt-btn-outline">
+                                        <i class="ki-filled ki-eye"></i>
+                                        View
+                                    </a>
                                     @endif
                                 </td>
                             </tr>
@@ -342,6 +375,74 @@
                 <button type="button" onclick="confirmTransfer()" class="kt-btn kt-btn-info">
                     <i class="ki-filled ki-arrow-right"></i>
                     Transfer to Other Costs
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Description Modal -->
+<div class="kt-modal" data-kt-modal="true" id="changeDescriptionModal">
+    <div class="kt-modal-content max-w-[600px] top-[5%]">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title">Change Description</h3>
+            <button type="button" class="kt-modal-close" aria-label="Close modal"
+                data-kt-modal-dismiss="#changeDescriptionModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" class="lucide lucide-x" aria-hidden="true">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="kt-modal-body">
+            <form id="changeDescriptionForm">
+                <input type="hidden" id="changeDescriptionCostId">
+                <div class="space-y-5">
+                    <div class="kt-form-item">
+                        <label class="kt-form-label">Current Description</label>
+                        <div class="kt-form-control">
+                            <div class="p-3 bg-gray-50 rounded border text-gray-700" id="currentDescription"></div>
+                        </div>
+                    </div>
+                    <div class="kt-form-item">
+                        <label for="newDescription" class="kt-form-label">
+                            New Description <span class="text-red-500">*</span>
+                        </label>
+                        <div class="kt-form-control">
+                            <textarea id="newDescription" 
+                                      class="kt-textarea w-full" 
+                                      rows="3" 
+                                      placeholder="Enter the new description..."
+                                      required></textarea>
+                            <div class="kt-form-message"></div>
+                        </div>
+                    </div>
+                    <div class="kt-form-item">
+                        <label for="changeReason" class="kt-form-label">
+                            Reason for Change (Optional)
+                        </label>
+                        <div class="kt-form-control">
+                            <textarea id="changeReason" 
+                                      class="kt-textarea w-full" 
+                                      rows="2" 
+                                      placeholder="Why are you changing this description?"></textarea>
+                            <div class="kt-form-message"></div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="kt-modal-footer">
+            <div></div>
+            <div class="flex gap-4">
+                <button type="button" class="kt-btn kt-btn-secondary" data-kt-modal-dismiss="#changeDescriptionModal">
+                    Cancel
+                </button>
+                <button type="button" onclick="changeDescription()" class="kt-btn kt-btn-warning">
+                    <i class="ki-filled ki-edit"></i>
+                    Change Description
                 </button>
             </div>
         </div>
@@ -585,6 +686,59 @@ function showToast(message, type = 'info') {
             toast.remove();
         }
     }, 5000);
+}
+
+// Show change description modal
+function showChangeDescriptionModal(costId) {
+    const button = event.target.closest('button');
+    const currentDescription = button.getAttribute('data-description');
+    
+    document.getElementById('changeDescriptionCostId').value = costId;
+    document.getElementById('currentDescription').textContent = currentDescription;
+    document.getElementById('newDescription').value = currentDescription;
+    document.getElementById('changeReason').value = '';
+    
+    // Show the modal
+    const modal = document.getElementById('changeDescriptionModal');
+    modal.style.display = 'block';
+    modal.classList.add('show');
+}
+
+// Change description
+function changeDescription() {
+    const costId = document.getElementById('changeDescriptionCostId').value;
+    const newDescription = document.getElementById('newDescription').value;
+    const changeReason = document.getElementById('changeReason').value;
+    
+    if (!newDescription.trim()) {
+        showToast('Please enter a new description.', 'warning');
+        return;
+    }
+    
+    fetch(`/equipment-cost-notifications/equipment-cost/${costId}/change-description`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            new_description: newDescription,
+            change_reason: changeReason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Description changed successfully!', 'success');
+            location.reload();
+        } else {
+            showToast('Error changing description: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred while changing the description.', 'error');
+    });
 }
 </script>
 @endpush 

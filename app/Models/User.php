@@ -126,4 +126,20 @@ class User extends Authenticatable
     {
         return static::role('admin')->get();
     }
+
+    /**
+     * Get advertisements created by this user
+     */
+    public function advertisements()
+    {
+        return $this->hasMany(Advertisement::class);
+    }
+
+    /**
+     * Get active advertisements created by this user
+     */
+    public function activeAdvertisements()
+    {
+        return $this->advertisements()->active();
+    }
 }

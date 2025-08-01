@@ -9,9 +9,17 @@ use Illuminate\Support\Facades\Storage;
 
 class SoldCarController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $soldCars = SoldCar::with('car')->latest()->paginate(15);
+        $query = SoldCar::with(['car', 'soldByUser'])
+            ->when($request->sold_by_user, function($q) use ($request) {
+                $q->where('sold_by_user_id', $request->sold_by_user);
+            })
+            ->when($request->payment_method, function($q) use ($request) {
+                $q->where('payment_method', $request->payment_method);
+            });
+        
+        $soldCars = $query->latest()->paginate(15);
         return view('sold-cars.index', compact('soldCars'));
     }
 
@@ -19,6 +27,7 @@ class SoldCarController extends Controller
     {
         $validated = $request->validate([
             'car_id' => 'required|exists:cars,id',
+            'sold_by_user_id' => 'required|exists:users,id',
             'sale_price' => 'required|numeric|min:0',
             'payment_method' => 'required|in:cash,check,separated',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -39,6 +48,7 @@ class SoldCarController extends Controller
 
         $soldCar = SoldCar::create([
             'car_id' => $validated['car_id'],
+            'sold_by_user_id' => $validated['sold_by_user_id'],
             'sale_price' => $validated['sale_price'],
             'payment_method' => $validated['payment_method'],
             'paid_amount' => $validated['paid_amount'] ?? null,
@@ -52,5 +62,11 @@ class SoldCarController extends Controller
         $car->save();
 
         return redirect()->route('cars.show', $car)->with('success', 'Car marked as sold.');
+    }
+
+    public function show(SoldCar $soldCar)
+    {
+        $soldCar->load(['car', 'soldByUser']);
+        return view('sold-cars.show', compact('soldCar'));
     }
 } 

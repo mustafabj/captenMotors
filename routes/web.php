@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\SoldCarController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AdvertisementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +61,17 @@ Route::middleware('auth')->group(function () {
     // Other Costs routes (view only for regular users)
     Route::get('other-costs', [OtherCostController::class, 'index'])->name('other-costs.index');
     Route::get('other-costs/{otherCost}', [OtherCostController::class, 'show'])->name('other-costs.show');
+
+    // Advertisement routes (all authenticated users can create and manage their own ads)
+    Route::get('advertisements', [AdvertisementController::class, 'index'])->name('advertisements.index');
+    Route::get('advertisements/create', [AdvertisementController::class, 'create'])->name('advertisements.create');
+    Route::post('advertisements', [AdvertisementController::class, 'store'])->name('advertisements.store');
+    Route::get('advertisements/{advertisement}', [AdvertisementController::class, 'show'])->name('advertisements.show');
+    Route::get('advertisements/{advertisement}/edit', [AdvertisementController::class, 'edit'])->name('advertisements.edit');
+    Route::put('advertisements/{advertisement}', [AdvertisementController::class, 'update'])->name('advertisements.update');
+    Route::delete('advertisements/{advertisement}', [AdvertisementController::class, 'destroy'])->name('advertisements.destroy');
+    Route::post('advertisements/{advertisement}/mark-as-sold', [AdvertisementController::class, 'markAsSold'])->name('advertisements.mark-as-sold');
+    Route::post('advertisements/{advertisement}/mark-as-cancelled', [AdvertisementController::class, 'markAsCancelled'])->name('advertisements.mark-as-cancelled');
 });
 
 // Admin-only routes
@@ -94,6 +106,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('equipment-cost-notifications/equipment-cost/{costId}/approve', [EquipmentCostNotificationController::class, 'approveEquipmentCost'])->name('equipment-cost-notifications.approve-equipment-cost');
     Route::post('equipment-cost-notifications/equipment-cost/{costId}/reject', [EquipmentCostNotificationController::class, 'rejectEquipmentCost'])->name('equipment-cost-notifications.reject-equipment-cost');
     Route::post('equipment-cost-notifications/equipment-cost/{costId}/transfer', [EquipmentCostNotificationController::class, 'transferEquipmentCost'])->name('equipment-cost-notifications.transfer-equipment-cost');
+Route::post('equipment-cost-notifications/equipment-cost/{costId}/change-description', [EquipmentCostNotificationController::class, 'changeDescription'])->name('equipment-cost-notifications.change-description');
+Route::get('equipment-cost-notifications/equipment-cost/{costId}/description-history', [EquipmentCostNotificationController::class, 'showDescriptionHistory'])->name('equipment-cost-notifications.description-history');
 
     // Other Costs creation and management (admin only)
     Route::get('other-costs/create', [OtherCostController::class, 'create'])->name('other-costs.create');
@@ -112,7 +126,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     })->name('insurance.test-notification');
 
     // Sold Cars routes (admin only)
-    Route::resource('sold-cars', SoldCarController::class)->only(['index', 'store']);
+    Route::resource('sold-cars', SoldCarController::class)->only(['index', 'store', 'show']);
     Route::post('cars/{car}/sell', [SoldCarController::class, 'store'])->name('cars.sell');
 
     // Store Capital routes (admin only)
@@ -125,7 +139,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/profit-loss', [ReportController::class, 'profitLoss'])->name('profit-loss');
         Route::get('/inventory-valuation', [ReportController::class, 'inventoryValuation'])->name('inventory-valuation');
         Route::get('/equipment-cost-summary', [ReportController::class, 'equipmentCostSummary'])->name('equipment-cost-summary');
+        Route::get('/all-cars', [ReportController::class, 'allCars'])->name('all-cars');
     });
+
+    // Admin-only advertisement routes
+    Route::post('advertisements/check-expired', [AdvertisementController::class, 'checkExpired'])->name('advertisements.check-expired');
 });
 
 // Car show route (must be last to avoid conflicts with specific routes)

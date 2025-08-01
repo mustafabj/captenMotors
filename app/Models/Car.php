@@ -114,6 +114,16 @@ class Car extends Model implements HasMedia
         return $this->hasOne(SoldCar::class);
     }
 
+    public function advertisements()
+    {
+        return $this->hasMany(Advertisement::class);
+    }
+
+    public function activeAdvertisements()
+    {
+        return $this->advertisements()->active();
+    }
+
     public function isSold()
     {
         return $this->status === 'sold' || $this->soldCar()->exists();

@@ -43,7 +43,7 @@
                                                 </button>
                                             </form>
                                         </li>
-                                        <li>
+                                        <!-- <li>
                                             <form action="{{ route('insurance.test-notification', $car) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" class="kt-dropdown-menu-link w-full text-left">
@@ -51,7 +51,7 @@
                                                     Test Insurance Notification
                                                 </button>
                                             </form>
-                                        </li>
+                                        </li> -->
                                         @endif
                                     </ul>
                                 </div>

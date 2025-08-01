@@ -256,7 +256,17 @@
                                 onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
                                 <i class="ki-filled ki-dollar"></i>
                                 <span class="hidden sm:inline">Mark as Sold</span>
-                            </button>
+                            </button> 
+                        @else
+                            @php
+                                $soldCar = \App\Models\SoldCar::where('car_id', $car->id)->first();
+                            @endphp
+                            @if($soldCar)
+                            <a href="{{ route('sold-cars.show', $soldCar) }}" class="kt-btn kt-btn-sm kt-btn-info w-full sm:w-auto">
+                                <i class="ki-filled ki-dollar"></i>
+                                <span class="hidden sm:inline">View Sale Details</span>
+                            </a>
+                            @endif
                         @endif
                     @else
                         <button id="edit-images-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
@@ -1460,6 +1470,17 @@
                         @csrf
                         <input type="hidden" name="car_id" id="sellCarId">
                         <div class="space-y-4">
+                            <div>
+                                <label for="sold_by_user_id" class="kt-label">Sold By *</label>
+                                <select name="sold_by_user_id" id="sold_by_user_id" class="kt-select w-full" required>
+                                    <option value="">Select User</option>
+                                    @foreach(\App\Models\User::orderBy('name')->get() as $user)
+                                        <option value="{{ $user->id }}" {{ $user->id == auth()->id() ? 'selected' : '' }}>
+                                            {{ $user->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div>
                                 <label for="sale_price" class="kt-label">Sale Price *</label>
                                 <input type="number" name="sale_price" id="sale_price" class="kt-input w-full" required
