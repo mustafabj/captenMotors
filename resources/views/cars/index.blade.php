@@ -7,9 +7,9 @@
             <div class="kt-card-body">
                 <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between p-4">
                     <!-- Search Bar -->
-                    <div class="flex-1 max-w-md">
+                    <div class="flex-1">
                         <div class="relative flex">
-                            <input type="text" id="search-input" placeholder="Search by model or plate number..." class="kt-input w-full pl-10" />
+                            <input type="text" id="search-input" placeholder="Search by model or plate number..." class="kt-input w-full" />
                             <i
                                 class="ki-filled ki-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         </div>
@@ -18,9 +18,10 @@
                     <!-- Filters and Actions -->
                     <div class="flex items-center gap-3">
                         <!-- Status Filter -->
-                        <select id="status-filter" class="kt-select"
+                        <select id="status-filter" class="kt-select min-w-[150px]"
                         data-kt-select="true" data-kt-select-placeholder="Select Status">
                             <option value="">All Status</option>
+                            <option value="not_ready">Not Ready</option>
                             <option value="not_received">Not Received</option>
                             <option value="paint">Paint</option>
                             <option value="upholstery">Upholstery</option>
@@ -48,13 +49,13 @@
                         </a>
 
                         <!-- Insurance Check Button -->
-                        <form action="{{ route('insurance.check-expiry') }}" method="POST" class="inline">
+                        <!-- <form action="{{ route('insurance.check-expiry') }}" method="POST" class="inline">
                             @csrf
                             <button type="submit" class="kt-btn kt-btn-warning" title="Check for insurance expiry notifications">
                                 <i class="ki-filled ki-shield-tick"></i>
                                 Check Insurance
                             </button>
-                        </form>
+                        </form> -->
                         @endif
                     </div>
                 </div>

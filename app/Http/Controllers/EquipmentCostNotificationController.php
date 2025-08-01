@@ -237,4 +237,62 @@ class EquipmentCostNotificationController extends Controller
 
         return view('equipment-cost-notifications.show', compact('notification'));
     }
+
+    /**
+     * Change equipment cost description
+     */
+    public function changeDescription(Request $request, $costId)
+    {
+        $cost = CarEquipmentCost::with(['car', 'user'])->findOrFail($costId);
+        
+        // Check if user is admin
+        if (!Auth::user()->hasRole('admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized action'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'new_description' => 'required|string|max:255',
+            'change_reason' => 'nullable|string'
+        ]);
+
+        try {
+            // Update description and track history
+            $cost->updateDescription($validated['new_description'], $validated['change_reason']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Description changed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error changing description: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show description history for an equipment cost
+     */
+    public function showDescriptionHistory($costId)
+    {
+        $equipmentCost = CarEquipmentCost::with(['car'])
+            ->findOrFail($costId);
+        
+        // Load description histories with user data directly
+        $descriptionHistories = \App\Models\CarEquipmentCostDescriptionHistory::select([
+                'car_equipment_cost_description_histories.*',
+                'users.name as user_name'
+            ])
+            ->leftJoin('users', 'car_equipment_cost_description_histories.changed_by_user_id', '=', 'users.id')
+            ->where('car_equipment_cost_id', $costId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('equipment-cost-notifications.description-history', compact('equipmentCost', 'descriptionHistories'));
+    }
 }

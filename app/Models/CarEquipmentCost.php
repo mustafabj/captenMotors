@@ -45,6 +45,11 @@ class CarEquipmentCost extends Model
         return $this->hasMany(EquipmentCostNotification::class);
     }
 
+    public function descriptionHistories()
+    {
+        return $this->hasMany(CarEquipmentCostDescriptionHistory::class);
+    }
+
     /**
      * Check if the cost is pending approval
      */
@@ -111,5 +116,25 @@ class CarEquipmentCost extends Model
             default:
                 return 'Pending';
         }
+    }
+
+    /**
+     * Update description and track history
+     */
+    public function updateDescription($newDescription, $changeReason = null)
+    {
+        $oldDescription = $this->description;
+        
+        // Update the description
+        $this->update(['description' => $newDescription]);
+        
+        // Create history record using explicit model creation
+        $history = new \App\Models\CarEquipmentCostDescriptionHistory();
+        $history->car_equipment_cost_id = $this->id;
+        $history->old_description = $oldDescription;
+        $history->new_description = $newDescription;
+        $history->changed_by_user_id = auth()->id();
+        $history->change_reason = $changeReason;
+        $history->save();
     }
 } 

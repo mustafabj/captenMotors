@@ -13,10 +13,16 @@ class SoldCar extends Model
         'paid_amount',
         'remaining_amount',
         'attachment',
+        'sold_by_user_id',
     ];
 
     public function car()
     {
         return $this->belongsTo(Car::class);
+    }
+
+    public function soldByUser()
+    {
+        return $this->belongsTo(User::class, 'sold_by_user_id');
     }
 }

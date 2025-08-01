@@ -20,7 +20,11 @@ class CarController extends Controller
      */
     public function index()
     {
-        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])->orderBy('id', 'desc')->paginate(12);
+        $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])
+            ->where('status', '!=', 'sold')
+            ->orderByRaw("CASE WHEN status = 'ready' THEN 1 ELSE 0 END")
+            ->orderBy('id', 'desc')
+            ->paginate(12);
         return view('cars.index', compact('cars'));
     }
 
@@ -34,16 +38,22 @@ class CarController extends Controller
         $year = $request->get('year');
         
         $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])
+            ->where('status', '!=', 'sold')
             ->when($query, function ($q) use ($query) {
                 $q->where('model', 'like', '%' . $query . '%')
                   ->orWhere('plate_number', 'like', '%' . $query . '%');
             })
             ->when($status, function ($q) use ($status) {
-                $q->where('status', $status);
+                if ($status === 'not_ready') {
+                    $q->where('status', '!=', 'ready');
+                } else {
+                    $q->where('status', $status);
+                }
             })
             ->when($year, function ($q) use ($year) {
                 $q->where('manufacturing_year', $year);
             })
+            ->orderByRaw("CASE WHEN status = 'ready' THEN 1 ELSE 0 END")
             ->orderBy('id', 'desc')
             ->paginate(12);
         
