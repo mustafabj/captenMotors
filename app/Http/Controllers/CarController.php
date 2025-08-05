@@ -120,8 +120,8 @@ class CarController extends Controller
                 'options.*' => 'string|max:255',
                 'all_options' => 'nullable|string',
                 'purchase_costs' => 'nullable|array',
-                'purchase_costs.*.description' => 'required|string|max:255',
-                'purchase_costs.*.amount' => 'required|numeric|min:0',
+                'purchase_costs.*.description' => 'string|max:255|nullable',
+                'purchase_costs.*.amount' => 'numeric|min:0|nullable',
             ]);
 
             return DB::transaction(function () use ($validated, $request) {
@@ -583,6 +583,54 @@ class CarController extends Controller
             return redirect()->back()
                 ->withErrors(['general' => 'An error occurred while adding the cost.'])
                 ->withInput();
+        }
+    }
+
+    /**
+     * Delete equipment cost
+     */
+    public function deleteEquipmentCost(Request $request, $id)
+    {
+        try {
+            $cost = \App\Models\CarEquipmentCost::findOrFail($id);
+            
+            // Check if user has permission to delete this cost
+            $user = auth()->user();
+            if (!$user->hasRole('admin') && $cost->user_id !== $user->id) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have permission to delete this equipment cost.'
+                    ], 403);
+                }
+                return redirect()->back()->with('error', 'You do not have permission to delete this equipment cost.');
+            }
+
+            $cost->delete();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Equipment cost deleted successfully!'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Equipment cost deleted successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Equipment cost deletion error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while deleting the equipment cost.'
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'An error occurred while deleting the equipment cost.');
         }
     }
 

@@ -320,6 +320,9 @@ App.pages.carsShow = {
     enableEditMode: function() {
         this.config.isEditMode = true;
         
+        // Add global edit mode class to body
+        document.body.classList.add('global-edit-mode');
+        
         // Hide view actions, show edit actions
             const viewActions = document.getElementById('view-actions');
             const editActions = document.getElementById('edit-actions');
@@ -391,6 +394,9 @@ App.pages.carsShow = {
     // Enable edit mode for images only (for regular users)
     enableImagesEditMode: function() {
         this.config.isEditMode = true;
+        
+        // Add global edit mode class to body
+        document.body.classList.add('global-edit-mode');
         
         // Hide view actions, show edit actions
         const viewActions = document.getElementById('view-actions');
@@ -755,9 +761,25 @@ App.pages.carsShow = {
             .then(response => response.json());
         },
 
+        // Delete equipment cost
+        deleteEquipmentCost: function(costId) {
+            return fetch(`/equipment-costs/${costId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json());
+        },
+
     // Cancel edit mode
     cancelEdit: function() {
             this.config.isEditMode = false;
+            
+            // Remove global edit mode class from body
+            document.body.classList.remove('global-edit-mode');
             
             // Hide edit actions, show view actions
             document.getElementById('view-actions').classList.remove('hidden');
@@ -793,6 +815,9 @@ App.pages.carsShow = {
     // Disable edit mode
     disableEditMode: function() {
         this.config.isEditMode = false;
+        
+        // Remove global edit mode class from body
+        document.body.classList.remove('global-edit-mode');
         
             // Hide edit actions, show view actions
         document.getElementById('view-actions').classList.remove('hidden');
@@ -1103,6 +1128,61 @@ window.cancelImagesEdit = function() {
 
     // Event delegation for all buttons
     document.addEventListener('click', function(e) {
+        // Handle equipment cost deletion
+        const deleteCostBtn = e.target.closest('.delete-cost-btn');
+        if (deleteCostBtn && App.pages.carsShow) {
+            const costId = deleteCostBtn.getAttribute('data-cost-id');
+            const costDescription = deleteCostBtn.getAttribute('data-cost-description');
+            
+            if (confirm(`Are you sure you want to delete the equipment cost "${costDescription}"?`)) {
+                // Remove the row from the DOM immediately
+                const costRow = deleteCostBtn.closest('tr');
+                if (costRow) {
+                    costRow.remove();
+                }
+                
+                // Then send the delete request to the server
+                App.pages.carsShow.deleteEquipmentCost(costId)
+                    .then(data => {
+                        if (data.success) {
+                            App.utils.showToast('Equipment cost deleted successfully!', 'success');
+                            
+                            // Check if table is now empty and show empty state
+                            const tableBody = document.querySelector('#equipment-costs-table tbody');
+                            if (tableBody && tableBody.children.length === 0) {
+                                const table = document.querySelector('#equipment-costs-table');
+                                if (table) {
+                                    table.remove();
+                                }
+                                
+                                const cardContent = document.querySelector('.equipment .kt-card-content');
+                                if (cardContent) {
+                                    cardContent.innerHTML = `
+                                        <div class="text-center py-12">
+                                            <i class="ki-filled ki-information-5 text-4xl text-gray-400 mb-4"></i>
+                                            <h4 class="text-lg text-gray-900 mb-2">No equipment costs</h4>
+                                            <p class="text-gray-600">
+                                                ${document.body.classList.contains('global-edit-mode') ? 
+                                                    'No equipment costs have been recorded for this car.' : 
+                                                    'You haven\'t added any equipment costs for this car yet.'}
+                                            </p>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        } else {
+                            // If server deletion failed, show error but don't restore the row
+                            App.utils.showToast('Error deleting equipment cost from server', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        App.utils.showToast('An error occurred while deleting the equipment cost', 'error');
+                    });
+            }
+            return;
+        }
+
         // Handle image deletion
         const deleteImageBtn = e.target.closest('.delete-image-btn');
         if (deleteImageBtn && App.pages.carsShow) {
