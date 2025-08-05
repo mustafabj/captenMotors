@@ -33,12 +33,23 @@
                         </select>
 
                         <!-- Year Filter -->
-                        <select id="year-filter" class="kt-select"
+                        <select id="year-filter" class="kt-select min-w-[100px]"
                         data-kt-select="true" data-kt-select-placeholder="Select Year">
                             <option value="">All Years</option>
                             @for ($year = date('Y'); $year >= 2015; $year--)
                                 <option value="{{ $year }}">{{ $year }}</option>
                             @endfor
+                        </select>
+
+                        <!-- Show Cars Dropdown -->
+                        <select id="per-page-filter" class="kt-select min-w-[100px]"
+                        data-kt-select="true" data-kt-select-placeholder="Show cars">
+                            <option value="6" {{ request('per_page') == 6 ? 'selected' : '' }}>Show 6</option>
+                            <option value="12" {{ request('per_page') == 12 || !request('per_page') ? 'selected' : '' }}>Show 12</option>
+                            <option value="24" {{ request('per_page') == 24 ? 'selected' : '' }}>Show 24</option>
+                            <option value="48" {{ request('per_page') == 48 ? 'selected' : '' }}>Show 48</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>Show 100</option>
+                            <option value="500" {{ request('per_page') == 500 ? 'selected' : '' }}>Show 500</option>
                         </select>
 
                         @if(auth()->user()->hasRole('admin'))

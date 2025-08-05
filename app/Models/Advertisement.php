@@ -93,7 +93,7 @@ class Advertisement extends Model
 
     public function getDaysUntilExpiration()
     {
-        return $this->expiration_date->diffInDays(now(), false);
+        return $this->expiration_date->diffInDays(now(), true);
     }
 
     public function getProfit()

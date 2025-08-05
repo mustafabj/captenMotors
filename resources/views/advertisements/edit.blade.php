@@ -49,7 +49,11 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div>
                         <label for="car_id" class="block text-sm font-medium text-gray-700 mb-2">Car *</label>
-                        <select name="car_id" id="car_id" class="kt-select w-full @error('car_id') border-red-500 @enderror" data-kt-select="true" data-kt-select-placeholder="Select a car" required>
+                        <select name="car_id" id="car_id" class="kt-select w-full @error('car_id') border-red-500 @enderror" data-kt-select="true" data-kt-select-placeholder="Select a car" 
+                        data-kt-select-config='{
+                                                            "optionsClass": "kt-scrollable overflow-auto max-h-[250px]"
+                                                        }'
+                        required>
                             <option value="">Select a car</option>
                             @foreach($availableCars as $car)
                                 <option value="{{ $car->id }}" {{ old('car_id', $advertisement->car_id) == $car->id ? 'selected' : '' }}>
@@ -77,9 +81,8 @@
                     <div>
                         <label for="offer_price" class="block text-sm font-medium text-gray-700 mb-2">Offer Price *</label>
                         <div class="relative">
-                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                             <input type="number" name="offer_price" id="offer_price" 
-                                   class="kt-input w-full pl-8 @error('offer_price') border-red-500 @enderror" 
+                                   class="kt-input w-full @error('offer_price') border-red-500 @enderror" 
                                    value="{{ old('offer_price', $advertisement->offer_price) }}" 
                                    step="0.01" min="0" placeholder="0.00" required>
                         </div>
@@ -92,9 +95,8 @@
                     <div>
                         <label for="sale_price" class="block text-sm font-medium text-gray-700 mb-2">Sale Price *</label>
                         <div class="relative">
-                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                             <input type="number" name="sale_price" id="sale_price" 
-                                   class="kt-input w-full pl-8 @error('sale_price') border-red-500 @enderror" 
+                                   class="kt-input w-full @error('sale_price') border-red-500 @enderror" 
                                    value="{{ old('sale_price', $advertisement->sale_price) }}" 
                                    step="0.01" min="0" placeholder="0.00" required>
                         </div>
@@ -108,7 +110,7 @@
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                     <textarea name="description" id="description" rows="4" 
-                              class="kt-input w-full @error('description') border-red-500 @enderror" 
+                              class="kt-textarea w-full @error('description') border-red-500 @enderror" 
                               placeholder="Optional description about the advertisement...">{{ old('description', $advertisement->description) }}</textarea>
                     @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -124,7 +126,6 @@
                         <div class="ml-3">
                             <h3 class="text-sm font-medium text-blue-800">Advertisement Details:</h3>
                             <div class="mt-2 text-sm text-blue-700">
-                                <p id="profit-display">Profit: ${{ number_format($advertisement->getProfit(), 2) }} ({{ number_format($advertisement->getProfitPercentage(), 1) }}%)</p>
                                 <p id="duration-display">Duration: {{ number_format($advertisement->getDaysUntilExpiration()) }} days</p>
                             </div>
                         </div>

@@ -99,7 +99,7 @@
                         </div>
                     </div>
 
-                    <hr class="my-6">
+                    <hr class="my-6 border-gray-200">
 
                     <!-- Pricing Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -118,14 +118,6 @@
                                 <small class="text-gray-500">Selling Price</small>
                             </div>
                         </div>
-
-                        <div class="kt-card bg-gray-50">
-                            <div class="kt-card-content p-4 text-center">
-                                <h6 class="text-sm font-medium text-gray-700 mb-2">Profit</h6>
-                                <h4 class="text-xl font-bold text-purple-600">${{ number_format($advertisement->getProfit(), 2) }}</h4>
-                                <small class="text-gray-500">{{ number_format($advertisement->getProfitPercentage(), 1) }}%</small>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Additional Information -->
@@ -137,7 +129,7 @@
                                 @if($advertisement->isExpired())
                                     <p class="text-red-600 flex items-center gap-2">
                                         <i class="ki-filled ki-exclamation-triangle"></i> 
-                                        Expired {{ number_format($advertisement->getDaysUntilExpiration()) }} days ago
+                                        Expired {{ number_format(abs($advertisement->getDaysUntilExpiration())) }} days ago
                                     </p>
                                 @elseif($advertisement->status === 'active')
                                     <p class="text-blue-600 flex items-center gap-2">
@@ -233,12 +225,8 @@
                 <div class="kt-card-header">
                     <h5 class="text-lg font-semibold text-gray-900">Quick Stats</h5>
                 </div>
-                <div class="kt-card-content p-4">
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div>
-                            <h6 class="text-sm font-medium text-gray-600">Profit Margin</h6>
-                            <h4 class="text-xl font-bold text-green-600">{{ number_format($advertisement->getProfitPercentage(), 1) }}%</h4>
-                        </div>
+                <div class="kt-card-content p-4 flex justify-center items-center">
+                    <div class="grid grid-cols-1 gap-4 text-center">
                         <div>
                             <h6 class="text-sm font-medium text-gray-600">Days Left</h6>
                             <h4 class="text-xl font-bold text-blue-600">{{ number_format($advertisement->getDaysUntilExpiration()) }}</h4>
