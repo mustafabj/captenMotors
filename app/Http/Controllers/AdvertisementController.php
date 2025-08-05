@@ -51,6 +51,7 @@ class AdvertisementController extends Controller
             ->whereDoesntHave('advertisements', function($query) {
                 $query->where('status', 'active');
             })
+            ->orderBy('model')
             ->get();
 
         return view('advertisements.create', compact('availableCars'));
@@ -65,7 +66,7 @@ class AdvertisementController extends Controller
             'car_id' => 'required|exists:cars,id',
             'expiration_date' => 'required|date|after:today',
             'offer_price' => 'required|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0|gte:offer_price',
+            'sale_price' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:1000',
         ]);
 
@@ -135,6 +136,7 @@ class AdvertisementController extends Controller
                 })
                 ->orWhere('id', $advertisement->car_id);
             })
+            ->orderBy('model')
             ->get();
 
         return view('advertisements.edit', compact('advertisement', 'availableCars'));
@@ -154,7 +156,7 @@ class AdvertisementController extends Controller
             'car_id' => 'required|exists:cars,id',
             'expiration_date' => 'required|date|after:today',
             'offer_price' => 'required|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0|gte:offer_price',
+            'sale_price' => 'required|numeric|min:0',
             'description' => 'nullable|string|max:1000',
         ]);
 

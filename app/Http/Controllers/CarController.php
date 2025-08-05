@@ -18,13 +18,16 @@ class CarController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->get('per_page', 12);
+        $perPage = in_array($perPage, [6, 12, 24, 48, 100, 500]) ? $perPage : 12;
+        
         $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])
             ->where('status', '!=', 'sold')
             ->orderByRaw("CASE WHEN status = 'ready' THEN 1 ELSE 0 END")
             ->orderBy('id', 'desc')
-            ->paginate(12);
+            ->paginate($perPage);
         return view('cars.index', compact('cars'));
     }
 
@@ -36,6 +39,8 @@ class CarController extends Controller
         $query = $request->get('search');
         $status = $request->get('status');
         $year = $request->get('year');
+        $perPage = $request->get('per_page', 12);
+        $perPage = in_array($perPage, [6, 12, 24, 48, 100, 500]) ? $perPage : 12;
         
         $cars = Car::with(['options', 'inspection', 'statusHistories', 'equipmentCosts', 'media'])
             ->where('status', '!=', 'sold')
@@ -55,7 +60,7 @@ class CarController extends Controller
             })
             ->orderByRaw("CASE WHEN status = 'ready' THEN 1 ELSE 0 END")
             ->orderBy('id', 'desc')
-            ->paginate(12);
+            ->paginate($perPage);
         
         if ($request->ajax()) {
             return response()->json([

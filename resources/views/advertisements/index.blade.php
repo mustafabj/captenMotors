@@ -35,13 +35,13 @@
                     </select>
 
                     <!-- Check Expired Button -->
-                    <form action="{{ route('advertisements.check-expired') }}" method="POST" class="inline">
+                    {{-- <form action="{{ route('advertisements.check-expired') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="kt-btn kt-btn-warning" title="Check for expired advertisements">
                             <i class="ki-filled ki-clock"></i>
                             Check Expired
                         </button>
-                    </form>
+                    </form> --}}
                     @endif
 
                     <!-- Create Advertisement Button -->
@@ -178,13 +178,7 @@
                                         <span class="text-sm text-gray-600">Sale Price:</span>
                                         <span class="text-sm font-medium text-green-600">${{ number_format($advertisement->sale_price, 2) }}</span>
                                     </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm text-gray-600">Profit:</span>
-                                        <span class="text-sm font-medium text-blue-600">
-                                            ${{ number_format($advertisement->getProfit(), 2) }}
-                                            <span class="text-xs">({{ number_format($advertisement->getProfitPercentage(), 1) }}%)</span>
-                                        </span>
-                                    </div>
+                                    
                                 </div>
 
                                 <!-- Expiration Information -->
@@ -196,7 +190,7 @@
                                     @if($advertisement->isExpired())
                                         <div class="text-xs text-red-600 mt-1">
                                             <i class="ki-filled ki-exclamation-triangle"></i>
-                                            Expired {{ number_format($advertisement->getDaysUntilExpiration()) }} days ago
+                                            Expired {{ number_format(abs($advertisement->getDaysUntilExpiration())) }} days ago
                                         </div>
                                     @elseif($advertisement->status === 'active')
                                         <div class="text-xs text-blue-600 mt-1">

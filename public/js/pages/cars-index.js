@@ -30,6 +30,7 @@ App.pages.carsIndex = {
         const searchInput = document.getElementById('search-input');
         const statusFilter = document.getElementById('status-filter');
         const yearFilter = document.getElementById('year-filter');
+        const perPageFilter = document.getElementById('per-page-filter');
         
         if (searchInput) {
             // Search input with debounce
@@ -52,6 +53,15 @@ App.pages.carsIndex = {
                 this._performSearch(this._currentPage);
             });
         }
+        
+        if (perPageFilter) {
+            perPageFilter.addEventListener('change', () => {
+                this._currentPage = 1;
+                // Save the per_page preference
+                App.utils.storage.set('carPerPage', perPageFilter.value);
+                this._performSearch(this._currentPage);
+            });
+        }
     },
 
     // Perform search
@@ -59,6 +69,7 @@ App.pages.carsIndex = {
         const search = document.getElementById('search-input').value;
         const status = document.getElementById('status-filter').value;
         const year = document.getElementById('year-filter').value;
+        const perPage = document.getElementById('per-page-filter').value;
         
         App.utils.showLoading(this._container);
         
@@ -66,6 +77,7 @@ App.pages.carsIndex = {
             search: search,
             status: status,
             year: year,
+            per_page: perPage,
             page: page
         });
 
@@ -81,6 +93,9 @@ App.pages.carsIndex = {
                 
                 // Reattach pagination click handlers
                 this._attachPaginationHandlers();
+                
+                // Reinitialize KT components for the new content
+                this._reinitializeComponents();
             })
             .catch(error => {
                 console.error('Search error:', error);
@@ -132,6 +147,28 @@ App.pages.carsIndex = {
     _loadSavedView: function() {
         const savedView = App.utils.storage.get('carViewType') || 'grid';
         this._switchView(savedView);
+        
+        // Load saved per_page preference
+        const savedPerPage = App.utils.storage.get('carPerPage');
+        if (savedPerPage) {
+            const perPageFilter = document.getElementById('per-page-filter');
+            if (perPageFilter) {
+                perPageFilter.value = savedPerPage;
+            }
+        }
+    },
+
+    // Reinitialize KT components after content update
+    _reinitializeComponents: function() {
+        // Reinitialize dropdowns
+        if (typeof KTApp !== 'undefined' && KTApp.initDropdown) {
+            KTApp.initDropdown();
+        }
+        
+        // Reinitialize selects
+        if (typeof KTApp !== 'undefined' && KTApp.initSelect) {
+            KTApp.initSelect();
+        }
     },
 
     // Public methods

@@ -4,7 +4,7 @@
     <!-- FilePond CSS and JS -->
     <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
     <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
-    
+
     <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
     <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
     <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
@@ -251,56 +251,59 @@
                     </div>
                 @endif
 
-                <!-- Actions -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto"
-                    id="view-actions">
-                    @if (auth()->user()->isAdmin())
-                        <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
-                            <i class="ki-filled ki-pencil"></i>
-                            <span class="hidden sm:inline">Edit All</span>
+
+            </div>
+            <hr class="border-gray-200">
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto p-3 justify-end"
+                id="view-actions">
+                @if (auth()->user()->isAdmin())
+                    <button id="edit-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
+                        <i class="ki-filled ki-pencil"></i>
+                        <span class="hidden sm:inline">Edit All</span>
+                    </button>
+                    @if (!$car->isSold())
+                        <button class="kt-btn kt-btn-sm kt-btn-success w-full sm:w-auto"
+                            data-kt-modal-toggle="#sellCarModal"
+                            onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
+                            <i class="ki-filled ki-dollar"></i>
+                            <span class="hidden sm:inline">Mark as Sold</span>
                         </button>
-                        @if (!$car->isSold())
-                            <button class="kt-btn kt-btn-sm kt-btn-success w-full sm:w-auto"
-                                data-kt-modal-toggle="#sellCarModal"
-                                onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
-                                <i class="ki-filled ki-dollar"></i>
-                                <span class="hidden sm:inline">Mark as Sold</span>
-                            </button> 
-                        @else
-                            @php
-                                $soldCar = \App\Models\SoldCar::where('car_id', $car->id)->first();
-                            @endphp
-                            @if($soldCar)
-                            <a href="{{ route('sold-cars.show', $soldCar) }}" class="kt-btn kt-btn-sm kt-btn-info w-full sm:w-auto">
+                    @else
+                        @php
+                            $soldCar = \App\Models\SoldCar::where('car_id', $car->id)->first();
+                        @endphp
+                        @if ($soldCar)
+                            <a href="{{ route('sold-cars.show', $soldCar) }}"
+                                class="kt-btn kt-btn-sm kt-btn-info w-full sm:w-auto">
                                 <i class="ki-filled ki-dollar"></i>
                                 <span class="hidden sm:inline">View Sale Details</span>
                             </a>
-                            @endif
                         @endif
-                    @else
-                        <button id="edit-images-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
-                            <i class="ki-filled ki-picture"></i>
-                            <span class="hidden sm:inline">Edit Images</span>
-                        </button>
                     @endif
-                    <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-sm kt-btn-outline w-full sm:w-auto">
-                        <i class="ki-filled ki-arrow-left"></i>
-                        <span class="hidden sm:inline">Back</span>
-                    </a>
-                </div>
+                @else
+                    <button id="edit-images-btn" class="kt-btn kt-btn-sm kt-btn-primary w-full sm:w-auto">
+                        <i class="ki-filled ki-picture"></i>
+                        <span class="hidden sm:inline">Edit Images</span>
+                    </button>
+                @endif
+                <a href="{{ route('cars.index') }}" class="kt-btn kt-btn-sm kt-btn-outline w-full sm:w-auto">
+                    <i class="ki-filled ki-arrow-left"></i>
+                    <span class="hidden sm:inline">Back</span>
+                </a>
+            </div>
 
-                <!-- Edit Mode Actions (hidden by default) -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 hidden w-full sm:w-auto"
-                    id="edit-actions">
-                    <button id="save-btn" class="kt-btn kt-btn-sm kt-btn-success w-full sm:w-auto">
-                        <i class="ki-filled ki-check"></i>
-                        <span class="hidden sm:inline">Save</span>
-                    </button>
-                    <button id="cancel-btn" class="kt-btn kt-btn-sm kt-btn-secondary w-full sm:w-auto">
-                        <i class="ki-filled ki-cross"></i>
-                        <span class="hidden sm:inline">Cancel</span>
-                    </button>
-                </div>
+            <!-- Edit Mode Actions (hidden by default) -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 hidden w-full sm:w-auto"
+                id="edit-actions">
+                <button id="save-btn" class="kt-btn kt-btn-sm kt-btn-success w-full sm:w-auto">
+                    <i class="ki-filled ki-check"></i>
+                    <span class="hidden sm:inline">Save</span>
+                </button>
+                <button id="cancel-btn" class="kt-btn kt-btn-sm kt-btn-secondary w-full sm:w-auto">
+                    <i class="ki-filled ki-cross"></i>
+                    <span class="hidden sm:inline">Cancel</span>
+                </button>
             </div>
         </div>
 
@@ -498,32 +501,35 @@
                             </div>
                         </div>
                         <!-- Purchase -->
-                        <div class="kt-card">
-                            <div class="kt-card-header">
-                                <h4 class="text-lg ">Purchase Information</h4>
+                        @if (auth()->user()->hasRole('admin'))
+                            <div class="kt-card">
+                                <div class="kt-card-header">
+                                    <h4 class="text-lg ">Purchase Information</h4>
+                                </div>
+                                <div class="kt-card-content">
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                        <span class="text-gray-600 font-semibold block">Purchase Date</span>
+                                        <input type="date" class="kt-input w-auto editable-field" name="purchase_date"
+                                            value="{{ $car->purchase_date->format('Y-m-d') }}"
+                                            data-original="{{ $car->purchase_date->format('Y-m-d') }}" readonly>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                        <span class="text-gray-600 font-semibold block">Purchase Price</span>
+                                        <input type="number" class="kt-input w-auto editable-field"
+                                            name="purchase_price" value="{{ $car->purchase_price }}"
+                                            data-original="{{ $car->purchase_price }}" min="0" step="0.01"
+                                            readonly>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                                        <span class="text-gray-600 font-semibold block">Expected Sale Price</span>
+                                        <input type="number" class="kt-input w-auto editable-field"
+                                            name="expected_sale_price" value="{{ $car->expected_sale_price }}"
+                                            data-original="{{ $car->expected_sale_price }}" min="0"
+                                            step="0.01" readonly>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="kt-card-content">
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <span class="text-gray-600 font-semibold block">Purchase Date</span>
-                                    <input type="date" class="kt-input w-auto editable-field" name="purchase_date"
-                                        value="{{ $car->purchase_date->format('Y-m-d') }}"
-                                        data-original="{{ $car->purchase_date->format('Y-m-d') }}" readonly>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <span class="text-gray-600 font-semibold block">Purchase Price</span>
-                                    <input type="number" class="kt-input w-auto editable-field" name="purchase_price"
-                                        value="{{ $car->purchase_price }}" data-original="{{ $car->purchase_price }}"
-                                        min="0" step="0.01" readonly>
-                                </div>
-                                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                                    <span class="text-gray-600 font-semibold block">Expected Sale Price</span>
-                                    <input type="number" class="kt-input w-auto editable-field"
-                                        name="expected_sale_price" value="{{ $car->expected_sale_price }}"
-                                        data-original="{{ $car->expected_sale_price }}" min="0" step="0.01"
-                                        readonly>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -646,7 +652,8 @@
                                                 @if ($car->inspection->chassis_inspection)
                                                     <div class="py-2 flex justify-between items-center">
                                                         <span class="text-gray-600 block w-full">Chassis Inspection</span>
-                                                        <input class="kt-input " readonly value="{{ $car->inspection->chassis_inspection }}">
+                                                        <input class="kt-input " readonly
+                                                            value="{{ $car->inspection->chassis_inspection }}">
                                                     </div>
                                                 @else
                                                     <div class="py-2 text-gray-500 italic">
@@ -662,11 +669,13 @@
                                             <div class="space-y-3 kt-card-content">
                                                 <div class="flex justify-between items-center py-2">
                                                     <span class="text-gray-600 block w-full">Transmission Condition</span>
-                                                    <input class="kt-input " readonly value="{{ $car->inspection->transmission ?? 'Not specified' }}">
+                                                    <input class="kt-input " readonly
+                                                        value="{{ $car->inspection->transmission ?? 'Not specified' }}">
                                                 </div>
                                                 <div class="flex justify-between items-center py-2">
                                                     <span class="text-gray-600 block w-full">Motor Condition</span>
-                                                    <input class="kt-input " readonly value="{{ $car->inspection->motor ?? 'Not specified' }}">
+                                                    <input class="kt-input " readonly
+                                                        value="{{ $car->inspection->motor ?? 'Not specified' }}">
                                                 </div>
                                                 @if ($car->inspection->body_notes)
                                                     <div class="mt-6">
@@ -1114,7 +1123,8 @@
                                                 <th class="text-left py-3 px-4 font-semibold">Date</th>
                                                 <th class="text-left py-3 px-4 font-semibold">Added By</th>
                                                 <th class="text-left py-3 px-4 font-semibold">Status</th>
-                                                <th class="text-left py-3 px-4 font-semibold edit-mode-only" style="display: none;">Actions</th>
+                                                <th class="text-left py-3 px-4 font-semibold edit-mode-only"
+                                                    style="display: none;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1135,8 +1145,8 @@
                                                     </td>
                                                     <td class="py-3 px-4 edit-mode-only" style="display: none;">
                                                         @if (auth()->user()->hasRole('admin') || $cost->user_id === auth()->id())
-                                                            <button type="button" 
-                                                                class="kt-btn kt-btn-sm kt-btn-danger delete-cost-btn" 
+                                                            <button type="button"
+                                                                class="kt-btn kt-btn-sm kt-btn-danger delete-cost-btn"
                                                                 data-cost-id="{{ $cost->id }}"
                                                                 data-cost-description="{{ $cost->description }}">
                                                                 <i class="ki-filled ki-trash"></i>
@@ -1307,11 +1317,10 @@
                                                     <div class="relative group" data-media-id="{{ $license->id }}">
                                                         <img src="{{ $license->getUrl() }}" alt="Car License"
                                                             class="w-full h-24 object-cover rounded-lg shadow-sm">
-                                                        <button type="button" 
-                                                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors delete-image-btn"
-                                                                data-media-id="{{ $license->id }}"
-                                                                data-media-type="car_license"
-                                                                title="Delete image">
+                                                        <button type="button"
+                                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors delete-image-btn"
+                                                            data-media-id="{{ $license->id }}"
+                                                            data-media-type="car_license" title="Delete image">
                                                             <i class="ki-filled ki-cross"></i>
                                                         </button>
                                                     </div>
@@ -1324,7 +1333,8 @@
                                     <div class="kt-form-item">
                                         <label class="kt-form-label">Upload New License Image</label>
                                         <input type="file" id="license-filepond-edit" name="car_license"
-                                            accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB" data-max-files="1">
+                                            accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB"
+                                            data-max-files="1">
                                         <div class="text-sm text-gray-500 mt-1">
                                             Accepted formats: JPEG, PNG, JPG (max 2MB)
                                         </div>
@@ -1347,11 +1357,10 @@
                                                     <div class="relative group" data-media-id="{{ $image->id }}">
                                                         <img src="{{ $image->getUrl() }}" alt="Car Image"
                                                             class="w-full h-24 object-cover rounded-lg shadow-sm">
-                                                        <button type="button" 
-                                                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors delete-image-btn"
-                                                                data-media-id="{{ $image->id }}"
-                                                                data-media-type="car_images"
-                                                                title="Delete image">
+                                                        <button type="button"
+                                                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors delete-image-btn"
+                                                            data-media-id="{{ $image->id }}"
+                                                            data-media-type="car_images" title="Delete image">
                                                             <i class="ki-filled ki-cross"></i>
                                                         </button>
                                                     </div>
@@ -1364,7 +1373,8 @@
                                     <div class="kt-form-item">
                                         <label class="kt-form-label">Upload New Car Images</label>
                                         <input type="file" id="images-filepond-edit" name="car_images[]" multiple
-                                            accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB" data-max-files="10">
+                                            accept="image/png, image/jpeg, image/jpg" data-max-file-size="2MB"
+                                            data-max-files="10">
                                         <div class="text-sm text-gray-500 mt-1">
                                             Accepted formats: JPEG, PNG, JPG (max 2MB each, max 10 images)
                                         </div>
@@ -1495,8 +1505,9 @@
                                 <label for="sold_by_user_id" class="kt-label">Sold By *</label>
                                 <select name="sold_by_user_id" id="sold_by_user_id" class="kt-select w-full" required>
                                     <option value="">Select User</option>
-                                    @foreach(\App\Models\User::orderBy('name')->get() as $user)
-                                        <option value="{{ $user->id }}" {{ $user->id == auth()->id() ? 'selected' : '' }}>
+                                    @foreach (\App\Models\User::orderBy('name')->get() as $user)
+                                        <option value="{{ $user->id }}"
+                                            {{ $user->id == auth()->id() ? 'selected' : '' }}>
                                             {{ $user->name }}
                                         </option>
                                     @endforeach
@@ -1548,6 +1559,15 @@
             </div>
         </div>
     @endif
+    @if (auth()->user()->hasRole('admin'))
+        <div class="flex justify-end">
+            <button type="button" onclick="openDeleteModal()"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 w-full sm:w-auto flex items-center justify-center gap-2">
+                <i class="ki-filled ki-trash"></i>
+                <span class="hidden sm:inline">Delete Car</span>
+            </button>
+        </div>
+    @endif
     <script>
         function openSellModal(carId, carModel) {
             document.getElementById('sellCarId').value = carId;
@@ -1568,5 +1588,114 @@
             var method = document.getElementById('payment_method').value;
             document.getElementById('separatedFields').classList.toggle('hidden', method !== 'separated');
         }
+
+        // Open delete confirmation modal
+        function openDeleteModal() {
+            const modal = document.getElementById('deleteCarModal');
+            const input = document.getElementById('deleteConfirmation');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Reset input and button state
+                if (input) {
+                    input.value = '';
+                }
+                if (confirmBtn) {
+                    confirmBtn.disabled = true;
+                    confirmBtn.className = 'px-4 py-2 bg-gray-400 text-white rounded-lg transition-colors duration-200 cursor-not-allowed';
+                }
+            }
+        }
+
+        // Close delete confirmation modal
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteCarModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Check delete confirmation input
+        function checkDeleteConfirmation() {
+            const input = document.getElementById('deleteConfirmation');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (input && confirmBtn) {
+                if (input.value.toLowerCase() === 'delete') {
+                    confirmBtn.disabled = false;
+                    confirmBtn.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200';
+                } else {
+                    confirmBtn.disabled = true;
+                    confirmBtn.className = 'px-4 py-2 bg-gray-400 text-white rounded-lg transition-colors duration-200 cursor-not-allowed';
+                }
+            }
+        }
+
+        // Confirm delete
+        function confirmDelete() {
+            const form = document.getElementById('deleteCarForm');
+            if (form) {
+                form.submit();
+            }
+        }
     </script>
+
+    <!-- Delete Car Confirmation Modal -->
+    <div id="deleteCarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Delete Car</h3>
+                <button type="button" onclick="closeDeleteModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ki-filled ki-cross text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="ki-filled ki-trash text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900">Are you sure?</h4>
+                        <p class="text-sm text-gray-600">This action cannot be undone.</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-sm text-gray-700">
+                        You are about to delete the car: <strong>{{ $car->model }}</strong>
+                    </p>
+                    <p class="text-sm text-gray-600 mt-2">
+                        This will permanently remove the car and all associated data from the system.
+                    </p>
+                    <div class="mt-4">
+                        <label for="deleteConfirmation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Type "delete" to confirm
+                        </label>
+                        <input type="text" id="deleteConfirmation" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                               placeholder="Type 'delete' to confirm"
+                               oninput="checkDeleteConfirmation()">
+                    </div>
+                </div>
+            </div>
+            
+            <form id="deleteCarForm" action="{{ route('cars.destroy', $car) }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeDeleteModal()" 
+                            class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmDeleteBtn" onclick="confirmDelete()" 
+                            class="px-4 py-2 bg-gray-400 text-white rounded-lg transition-colors duration-200 cursor-not-allowed"
+                            disabled>
+                        Delete Car
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection

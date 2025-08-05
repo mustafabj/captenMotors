@@ -3,60 +3,19 @@
     @if ($cars->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @foreach ($cars as $car)
-                <div class="kt-card group hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                <div class="kt-card group hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer" 
+                     onclick="window.location.href='{{ route('cars.show', $car) }}'">
                     <!-- Card Header with Status -->
                     <div class="kt-card-header p-4 border-b border-gray-200">
                         <div class="flex items-center justify-between w-full">
-                            <!-- Actions Dropdown -->
-                            <div data-kt-dropdown="true" data-kt-dropdown-trigger="click">
-                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-outline"
-                                    data-kt-dropdown-toggle="true">
-                                    <i class="ki-filled ki-dots-square"></i>
-                                </button>
-                                <div class="kt-dropdown-menu w-52" data-kt-dropdown-menu="true">
-                                    <ul class="kt-dropdown-menu-sub">
-                                        <li>
-                                            <a href="{{ route('cars.show', $car) }}" class="kt-dropdown-menu-link">
-                                                <i class="ki-filled ki-search-list"></i>
-                                                View
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="kt-dropdown-menu-link w-full text-left"
-                                                    data-kt-modal-toggle="#addEquipmentModal"
-                                                    onclick="openAddEquipmentModal({{ $car->id }}, '{{ $car->model }}')">
-                                                <i class="ki-filled ki-plus"></i>
-                                                Add Equipment
-                                            </button>
-                                        </li>
-                                        @if(auth()->user()->hasRole('admin'))
-                                        <li>
-                                            <form action="{{ route('cars.destroy', $car) }}" method="POST"
-                                                class="inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this car?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="kt-dropdown-menu-link w-full text-left text-red-600">
-                                                    <i class="ki-filled ki-trash"></i>
-                                                    Remove
-                                                </button>
-                                            </form>
-                                        </li>
-                                        <!-- <li>
-                                            <form action="{{ route('insurance.test-notification', $car) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="kt-dropdown-menu-link w-full text-left">
-                                                    <i class="ki-filled ki-shield-tick"></i>
-                                                    Test Insurance Notification
-                                                </button>
-                                            </form>
-                                        </li> -->
-                                        @endif
-                                    </ul>
-                                </div>
-
-                            </div>
+                            <!-- Add Equipment Button -->
+                            <button type="button" 
+                                    class="kt-btn kt-btn-sm kt-btn-outline kt-btn-success w-10 h-8"
+                                    data-kt-modal-toggle="#addEquipmentModal"
+                                    onclick="event.stopPropagation(); openAddEquipmentModal({{ $car->id }}, '{{ $car->model }}')"
+                                    title="Add Equipment">
+                                <i class="ki-filled ki-plus"></i>
+                            </button>
                             @php
                                 $statusConfig = [
                                     'not_received' => ['class' => 'kt-badge-warning', 'text' => 'Not Received'],
@@ -199,7 +158,7 @@
     @if ($cars->count() > 0)
         <div class="grid grid-cols-1 gap-5">
             @foreach ($cars as $car)
-                <div class="kt-card">
+                <div class="kt-card cursor-pointer" onclick="window.location.href='{{ route('cars.show', $car) }}'">
                     <div
                         class="kt-card-content flex flex-col sm:flex-row items-center flex-wrap justify-between p-2 pe-5 gap-4.5">
                         <!-- Image -->
@@ -215,10 +174,9 @@
                         <!-- Details -->
                         <div class="flex flex-col gap-2 flex-1 min-w-0">
                             <div class="flex items-center gap-2.5 -mt-1">
-                                <a class="hover:text-primary text-sm font-medium text-mono leading-5.5 truncate"
-                                    href="{{ route('cars.show', $car) }}">
+                                <span class="hover:text-primary text-sm font-medium text-mono leading-5.5 truncate">
                                     {{ $car->model }}
-                                </a>
+                                </span>
                             </div>
                             <div class="flex items-center flex-wrap gap-3">
                                 @php
@@ -287,42 +245,14 @@
                             <span class="text-sm font-medium text-mono">
                                 ${{ number_format($car->expected_sale_price, 2) }}
                             </span>
-                            <!-- Actions Dropdown -->
-                            <div data-kt-dropdown="true" data-kt-dropdown-trigger="click"
-                                data-kt-dropdown-placement="left-start">
-                                <button class="kt-btn kt-btn-sm kt-btn-outline" data-kt-dropdown-toggle="true">
-                                    Actions
-                                </button>
-                                <div class="kt-dropdown-menu w-52" data-kt-dropdown-menu="true">
-                                    <ul class="kt-dropdown-menu-sub">
-                                        <li>
-                                            <a href="{{ route('cars.show', $car) }}"
-                                                class="kt-dropdown-menu-link">
-                                                <i class="ki-filled ki-search-list"></i>
-                                                View
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <form action="{{ route('cars.destroy', $car) }}" method="POST"
-                                                class="inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this car?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="kt-dropdown-menu-link w-full text-left text-red-600">
-                                                    <i class="ki-filled ki-trash"></i>
-                                                    Remove
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            {{-- @if($car->isSold())
-                                <button class="kt-btn kt-btn-sm kt-btn-success" onclick="openSellModal({{ $car->id }}, '{{ $car->model }}')">
-                                    <i class="ki-filled ki-dollar"></i> Mark as Sold
-                                </button>
-                            @endif --}}
+                            <!-- Add Equipment Button -->
+                            <button type="button" 
+                                    class="kt-btn kt-btn-sm kt-btn-outline kt-btn-success w-8 h-6"
+                                    data-kt-modal-toggle="#addEquipmentModal"
+                                    onclick="event.stopPropagation(); openAddEquipmentModal({{ $car->id }}, '{{ $car->model }}')"
+                                    title="Add Equipment">
+                                <i class="ki-filled ki-plus"></i>
+                            </button>
                         </div>
 
                     </div>
