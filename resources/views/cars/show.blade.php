@@ -90,6 +90,15 @@
             }
         }
 
+        /* Edit mode only elements */
+        .edit-mode-only {
+            display: none !important;
+        }
+
+        body.global-edit-mode .edit-mode-only {
+            display: table-cell !important;
+        }
+
         /* Improve table responsiveness */
         @media (max-width: 768px) {
             .equipment-costs-table {
@@ -1105,6 +1114,7 @@
                                                 <th class="text-left py-3 px-4 font-semibold">Date</th>
                                                 <th class="text-left py-3 px-4 font-semibold">Added By</th>
                                                 <th class="text-left py-3 px-4 font-semibold">Status</th>
+                                                <th class="text-left py-3 px-4 font-semibold edit-mode-only" style="display: none;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1122,6 +1132,17 @@
                                                         <span class="kt-badge {{ $cost->getStatusBadgeClass() }}">
                                                             {{ $cost->getStatusText() }}
                                                         </span>
+                                                    </td>
+                                                    <td class="py-3 px-4 edit-mode-only" style="display: none;">
+                                                        @if (auth()->user()->hasRole('admin') || $cost->user_id === auth()->id())
+                                                            <button type="button" 
+                                                                class="kt-btn kt-btn-sm kt-btn-danger delete-cost-btn" 
+                                                                data-cost-id="{{ $cost->id }}"
+                                                                data-cost-description="{{ $cost->description }}">
+                                                                <i class="ki-filled ki-trash"></i>
+                                                                Delete
+                                                            </button>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @endforeach

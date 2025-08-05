@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::get('cars', [CarController::class, 'index'])->name('cars.index');
     Route::get('cars/search', [CarController::class, 'search'])->name('cars.search');
     Route::post('cars/{id}/equipment-costs', [CarController::class, 'addEquipmentCost'])->name('cars.add-equipment-cost');
+    Route::delete('equipment-costs/{id}', [CarController::class, 'deleteEquipmentCost'])->name('equipment-costs.destroy');
     
     // Image editing routes (available to all authenticated users)
     Route::post('cars/{id}/update-images', [CarController::class, 'updateImages'])->name('cars.update-images');

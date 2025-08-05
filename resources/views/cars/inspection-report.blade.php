@@ -495,7 +495,8 @@
 
             <div class="report-row">
                 <div class="report-cell label">الملاحظات:</div>
-                <div class="report-cell value">{{ $car->inspection->body_notes ?? 'لا توجد ملاحظات' }}</div>
+                <div class="report-cell value">متـــــابـــــعة سيـــــرفــــس + لم يتم فحص الكهرباء والشركة غير مسؤلة عن الحرارة والمبردات
+                    {{ $car->inspection->body_notes ? "+" . $car->inspection->body_notes . "." : "." }}</div>
             </div>
 
         </div>
